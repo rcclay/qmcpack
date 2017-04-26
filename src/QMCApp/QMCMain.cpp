@@ -184,6 +184,20 @@ bool QMCMain::execute()
   }
 #endif
 
+//IONMOVER
+#ifdef BUILD_IONMOVER
+  app_log() << std::endl << "/*************************************************\n"
+                         << " **********  This run is for ion moves   *********\n"
+                    << " *************************************************" <<std::endl;
+  app_log()<< "Doing CEIMC....  PSYCHE!\n";
+  app_log()<<"Aborting";
+  return true;
+#else
+  if(simulationType == "ionmover")
+    app_error()<<"  Executable not compiled with IonMovers.  Recompile with BUILD_IONMOVER set to 1."<<std::endl;
+  return false;
+#endif
+
   NewTimer *t2 = TimerManager.createTimer("Total", timer_level_coarse);
   t2->start();
 
