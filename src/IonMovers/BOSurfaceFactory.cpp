@@ -16,9 +16,9 @@ bool BOSurfaceFactory::parse(xmlNodePtr cur)
   aAttrib.add(imtype,"type");
   aAttrib.put(cur);
 
-  if(imtype=="pairpot")
+  if(imtype=="classicalpot")
   {
-    std::cout<<" Found a pair potential\n";
+    std::cout<<" Found a classical potential\n";
   }
   else if(imtype=="qmc")
   {
