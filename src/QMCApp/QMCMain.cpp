@@ -194,8 +194,10 @@ bool QMCMain::execute()
   return true;
 #else
   if(simulationType == "ionmover")
+  {
     app_error()<<"  Executable not compiled with IonMovers.  Recompile with BUILD_IONMOVER set to 1."<<std::endl;
-  return false;
+    return false;
+  }
 #endif
 
   NewTimer *t2 = TimerManager.createTimer("Total", timer_level_coarse);
