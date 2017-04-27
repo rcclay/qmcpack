@@ -198,6 +198,9 @@
 /* For FCIQMC compilation  */
 #cmakedefine BUILD_FCIQMC @BUILD_FCIQMC@
 
+/* For Ion Mover compilation */
+#cmakedefine BUILD_IONMOVER @BUILD_IONMOVER@
+
 #cmakedefine DEBUG_PSIBUFFER_ON @DEBUG_PSIBUFFER_ON@
 
 /* Disable trace manager and associated features */
