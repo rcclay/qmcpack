@@ -60,6 +60,9 @@ extern "C" {
 #ifdef BUILD_FCIQMC
 #include "FCIQMC/App/SQCFactory.h" 
 #endif
+#ifdef BUILD_IONMOVER
+#include "IonMovers/BOSurfaceBase.h"
+#endif
 
 #define STR_VAL(arg) #arg
 #define GET_MACRO_VAL(arg) STR_VAL(arg)
@@ -190,7 +193,9 @@ bool QMCMain::execute()
                          << " **********  This run is for ion moves   *********\n"
                     << " *************************************************" <<std::endl;
   app_log()<< "Doing CEIMC....  PSYCHE!\n";
-  app_log()<<"Aborting";
+  app_log()<<"Initializing BOSurfaceBase";
+  BOSurfaceBase x;
+  
   return true;
 #else
   if(simulationType == "ionmover")
