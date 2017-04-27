@@ -15,9 +15,11 @@ class BOSurfaceBase
 //    BOSurfaceBase(const BOSurfaceBase& u){}; //copy constructor
 //    BOSurfaceBase& operator=(const BOSurfaceBase& u){}; //copy assignment
     
-//    virtual bool put(xml){return 1;}
-//    virtual bool compute(){return 1;};
-//    virtual bool update(){return 1;};
+    virtual bool put(xmlNodePtr){return 1;}
+    virtual bool initialize(){return 1;}
+    virtual bool reset(){return 1;}
+    virtual bool compute(){return 1;};
+    virtual bool update(){return 1;};
 
     virtual bool E(const ParticlePos_t& R1, double& dE, double& err){return 0;};
     virtual bool dE(const ParticlePos_t& R0, const ParticlePos_t& R1, double& dE, double& err){return 1;};
