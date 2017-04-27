@@ -5,12 +5,13 @@ namespace qmcplusplus
 {
 class IonMoverFactory
 {
-  IonMoverFactory();
-  ~IonMoverFactory();
+  public:
+    IonMoverFactory();
+    ~IonMoverFactory();
   
-  bool parse(xmlNodePtr cur);
+    bool parse(xmlNodePtr cur);
   
-}
+};
 }
 
 #endif

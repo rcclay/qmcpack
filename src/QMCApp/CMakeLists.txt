@@ -54,7 +54,7 @@ ELSE()
 ENDIF()
 
   TARGET_LINK_LIBRARIES(${p} qmc qmcdriver qmcham qmcwfs qmcbase qmcutil adios_config)
-
+  
   IF(BUILD_AFQMC)
     TARGET_LINK_LIBRARIES(${p} afqmc)
   ENDIF(BUILD_AFQMC)
@@ -62,6 +62,10 @@ ENDIF()
   IF(BUILD_FCIQMC)
     TARGET_LINK_LIBRARIES(${p} fciqmc)
   ENDIF(BUILD_FCIQMC)
+
+  IF(BUILD_IONMOVER)
+    TARGET_LINK_LIBRARIES(${p} ionmover)
+  ENDIF(BUILD_IONMOVER)
 
   FOREACH(l ${QMC_UTIL_LIBS})
     TARGET_LINK_LIBRARIES(${p} ${l})
