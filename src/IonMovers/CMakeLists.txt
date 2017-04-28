@@ -1,5 +1,6 @@
 SET(IONMOVER_SRCS
   IonMoverFactory.cpp
+  IonSystem.cpp
   BOSurfaceFactory.cpp
 )
 

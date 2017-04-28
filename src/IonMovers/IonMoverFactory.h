@@ -2,13 +2,14 @@
 #define QMCPLUSPLUS_ION_MOVER_FACTORY_H
 
 #include "OhmmsData/libxmldefs.h"
+#include "IonMovers/IonSystem.h"
 
 namespace qmcplusplus
 {
 class IonMoverFactory
 {
   public:
-    IonMoverFactory(){};
+    IonMoverFactory();
     ~IonMoverFactory(){};
   
     bool parse(xmlNodePtr cur);
