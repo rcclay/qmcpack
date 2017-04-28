@@ -4,7 +4,7 @@
 namespace qmcplusplus
 {
 
-class QMCSystemBase: public X
+class QMCSystemBase
 { 
   public:
     QMCSystemBase();
@@ -15,13 +15,15 @@ class QMCSystemBase: public X
     setPWH(ParticleSet& P, TrialWavefunction& Psi, Hamiltonian& H);
     
   private:
-    //We need to think about where we want P,Psi,H data to live.  Objects here?  Pointers here?  What?
-    Hamiltonian H;
-    TrialWavefuntion Psi;
-    ParticleSet P;
+    //QMCSystemBase should also include MPI information 
+    ParticleSet::ParticleLayout_t* SimulationCell;
 
+    Hamiltonian* H;
+    TrialWavefuntioni* Psi;
+    ParticleSet* P; //for the ions
+    ParticleSet::ParticleLayout_t* SimulationCell;
     
-}
+};
 
 
 }
