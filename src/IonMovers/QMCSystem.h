@@ -4,18 +4,18 @@
 namespace qmcplusplus
 {
 
-class QMCSystemBase
+class QMCSystem: public IonSystem
 { 
   public:
-    QMCSystemBase();
-    ~QMCSystemBase();
-    QMCSystemBase(QMCSystemBase& q);
-    QMCSystemBase operator=(QMCSystemBase& q);
+    QMCSystem();
+    ~QMCSystem();
+    QMCSystem(QMCSystem& q);
+    QMCSystem operator=(QMCSystem& q);
 
     setPWH(ParticleSet& P, TrialWavefunction& Psi, Hamiltonian& H);
     
   private:
-    //QMCSystemBase should also include MPI information 
+    //QMCSystem should also include MPI information 
     ParticleSet::ParticleLayout_t* SimulationCell;
 
     Hamiltonian* H;
