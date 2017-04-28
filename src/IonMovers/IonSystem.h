@@ -1,5 +1,7 @@
 #ifndef QMCPLUSPLUS_ION_SYSTEM_H
-#define
+#define QMCPLUSPLUS_ION_SYSTEM_H
+
+#include "OhmmsData/libxmldefs.h"
 
 namespace qmcplusplus
 {
@@ -9,13 +11,14 @@ class IonSystem
     IonSystem();
     ~IonSystem();
     
-    virtual bool parse_cell(xmlNodePtr cur);
-    virtual bool parse_ions(xmlNodePtr cur);
+    virtual bool parseCell(xmlNodePtr cur);
+    virtual bool parseIons(xmlNodePtr cur);
+    virtual bool put(xmlNodePtr cur);
     
-    virtual void update_all();
+    virtual void updateAll();
   private:
-    ParticleSet* P; //for the ions
-    ParticleSet::ParticleLayout_t* SimulationCell;
+    ParticleSet P; //for the ions
+    ParticleSet::ParticleLayout_t simulation_cell;
 
     
     

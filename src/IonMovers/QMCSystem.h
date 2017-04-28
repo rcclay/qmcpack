@@ -20,7 +20,7 @@ class QMCSystem: public IonSystem
 
     Hamiltonian* H;
     TrialWavefuntioni* Psi;
-    ParticleSet* P; //for the ions
+    ParticleSet& P; //for the ions
     ParticleSet::ParticleLayout_t* SimulationCell;
     
 };

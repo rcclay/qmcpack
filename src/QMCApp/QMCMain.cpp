@@ -61,9 +61,7 @@ extern "C" {
 #include "FCIQMC/App/SQCFactory.h" 
 #endif
 #ifdef BUILD_IONMOVER
-#include "IonMovers/BOSurfaceFactory.h"
-#include "IonMovers/BOSurfaceBase.h"
-
+#include "IonMovers/IonMoverFactory.h"
 #endif
 
 #define STR_VAL(arg) #arg
@@ -200,21 +198,23 @@ bool QMCMain::execute()
   xmlXPathContextPtr m_context = XmlDocStack.top()->getXPathContext();
   //initialize the random number generator
   xmlNodePtr rptr = myRandomControl.initialize(m_context);
-  
-  cur=cur->xmlChildrenNode;
-  while (cur!=NULL)
-  {
-    std::string nodename((const char*)cur->name);
-    std::cout<<"  "<<nodename<<"\n";
-    if(nodename=="bosurface")
-    {
-      app_log()<<"Initializing BOSurfaceBase";
-      BOSurfaceFactory x;
-      x.parse(cur);
+ 
+  IonMoverFactory imfac;
+  imfac.parse(cur);  
+//  cur=cur->xmlChildrenNode;
+//  while (cur!=NULL)
+//  {
+//    std::string nodename((const char*)cur->name);
+//    std::cout<<"  "<<nodename<<"\n";
+//    if(nodename=="bosurface")
+//    {
+//      app_log()<<"Initializing BOSurfaceBase";
+//      BOSurfaceFactory x;
+//      x.parse(cur);
    //   BOSurfaceBase* pes= new BOSurfaceBase();
-    }
-    cur=cur->next;
-  } 
+//    }
+//    cur=cur->next;
+//  } 
   
   return true;
 #else

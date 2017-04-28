@@ -13,9 +13,9 @@ class IonDriverBase
 
     virtual bool put(xmlNodePtr cur){}; //to parse options from XML
     virtual bool run(){};
-    virtual bool update_ions(){};  //to update the ions
+    virtual bool updateIons(){};  //to update the ions
     virtual bool reset(){};
-    virtual bool set_bosurface(BOSurfaceBase* bo){bosurface=bo};; 
+    virtual bool setBOSurface(BOSurfaceBase* bo){bosurface=bo};; 
   private:
     int numSteps; //number of steps
     double tau; //timestep

@@ -32,14 +32,16 @@ bool BOSurfaceFactory::parse(xmlNodePtr cur)
   else if(imtype=="none")
   {
     std::cout<<" Error:  No BOSurface specified, or type=\"none\"\n";
+    return 0;
   }
   else
   {
     std::cout<<" Error:  Unrecognized option\n";
-    return 0;
+    return 1;
   }
   
-  return 1;
+  //all's good 
+  return 0;
 }
 
 }
