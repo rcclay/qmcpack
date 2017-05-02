@@ -2,6 +2,7 @@
 #include "IonMovers/IonDriverBase.h"
 #include "OhmmsData/AttributeSet.h"
 #include "IonMovers/IonUpdateBase.h"
+#include "IonMovers/CEIMC/CEIMCUpdateAll.h"
 
 #include <iostream>
 #include <algorithm>
@@ -40,9 +41,10 @@ bool CEIMC::put(xmlNodePtr cur)
   if (!usedrift && !prereject)
   {
     std::cout<<"Yeehaw.  Would have built a CEIMCUpdateAllDriver here\n";
-//    mover=new CEIMCUpdateAll(ions,bosurface);
+    mover=new CEIMCUpdateAll(ions,bosurface);
   }
-  
+ 
+  return 0; 
 }
 
 bool CEIMC::run()
@@ -53,7 +55,8 @@ bool CEIMC::run()
   std::cout<<" ionic timestep = "<<tau<<" a.u.\n";
   for(int i=0; i<numSteps; i++)
   {
-    std::cout<<i<<" step\n";
+    std::cout<<i<<" step.  Advancing ions\n";
+    mover->advanceIons();
   }
 
   return 0;

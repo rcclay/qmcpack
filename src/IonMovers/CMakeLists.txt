@@ -4,6 +4,7 @@ SET(IONMOVER_SRCS
   BOSurfaceFactory.cpp
   IonDriverBase.cpp
   CEIMC/CEIMC.cpp
+  CEIMC/CEIMCUpdateAll.cpp
 )
 
 ADD_LIBRARY(ionmovers ${IONMOVER_SRCS})
