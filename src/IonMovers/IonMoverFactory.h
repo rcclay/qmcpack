@@ -6,6 +6,11 @@
 
 namespace qmcplusplus
 {
+
+class BOSurfaceBase;
+class IonSystem;
+class IonDriverBase;
+
 class IonMoverFactory
 {
   public:
@@ -13,17 +18,17 @@ class IonMoverFactory
     ~IonMoverFactory(){};
   
     bool parse(xmlNodePtr cur);
-    bool execute(xmlNodePtr cur){return 0;};
+    bool execute();
 
   private:
-    bool parseCell(xmlNodePtr cur){return 0;};
-    bool parseIons(xmlNodePtr cur){return 0;};
-    bool parseIonDriver(xmlNodePtr cur){return 0;};
-    bool parseBOSurface(xmlNodePtr cur){return 0;};
 
-   // BOSurfaceBase* bosurface;
-   // ParticleSet* ion0;
-   // IonDriver* 
+    BOSurfaceBase* bosurface;
+    IonSystem* ions;
+    IonDriverBase* iondriver;
+
+    xmlNodePtr boxml;
+    xmlNodePtr iondriverxml;
+    xmlNodePtr ionsysxml;  
   
 };
 }

@@ -6,16 +6,30 @@
 namespace qmcplusplus
 {
 
+//forward declaration
+class IonUpdateBase;
 
 class CEIMC: public IonDriverBase
 {
   public:
-    CEIMC(){}; //default constructor.
+    CEIMC(IonSystem* i,BOSurfaceBase*); //default constructor.
     ~CEIMC(){};
 
     void test();
-    //CEIMC(const CEIMC&); //copy constructor
-    //CEIMC operator=(const CEIMC&);
+    bool put(xmlNodePtr cur);
+    bool run();
+  private:
+    
+    IonUpdateBase* mover;
+
+    bool usedrift;
+    bool prereject;
+  protected:
+  //These derive from IonDriverBase.
+
+    //BOSurfaceBase bosurface;
+    //IonSystem ions;   
+
   
 };
 

@@ -202,7 +202,8 @@ bool QMCMain::execute()
      xmlNodePtr rptr = myRandomControl.initialize(m_context);
  
      IonMoverFactory imfac;
-     imfac.parse(cur);  
+     imfac.parse(cur);
+     imfac.execute();  
 //  cur=cur->xmlChildrenNode;
 //  while (cur!=NULL)
 //  {

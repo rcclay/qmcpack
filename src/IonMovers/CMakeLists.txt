@@ -2,7 +2,7 @@ SET(IONMOVER_SRCS
   IonMoverFactory.cpp
   IonSystem.cpp
   BOSurfaceFactory.cpp
-  CEIMC/CEIMCFactory.cpp
+  IonDriverBase.cpp
   CEIMC/CEIMC.cpp
 )
 

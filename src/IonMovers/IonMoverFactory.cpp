@@ -1,35 +1,46 @@
 #include "IonMovers/IonMoverFactory.h"
 #include "IonMovers/BOSurfaceFactory.h"
+#include "IonMovers/BOSurfaceBase.h"
+#include "IonMovers/IonDriverBase.h"
+#include "OhmmsData/AttributeSet.h"
+
+#include "IonMovers/CEIMC/CEIMC.h"
+
 #include "Configuration.h"
 #include <string>
-
+#include <iostream>
 
 namespace qmcplusplus
 {
 
 IonMoverFactory::IonMoverFactory()
+: boxml(NULL), ionsysxml(NULL), iondriverxml(NULL), iondriver(NULL),bosurface(NULL),ions(0)
 {
+  std::cout<<"IonMoverFactory constructor\n";
 }
 
 bool IonMoverFactory::parse(xmlNodePtr cur)
 {
-  IonSystem ionsystem;
+  ions = new IonSystem();
+  bosurface = new BOSurfaceBase();
+
   cur=cur->xmlChildrenNode;
   bool foundIons(false);
   bool foundCell(false);
   bool foundPES(false);
-
+  
   while (cur!=NULL)
   {
     std::string nodename((const char*)cur->name);
     std::cout<<"  "<<nodename<<"\n";
     if(nodename=="simulationcell")
     {
-      foundCell=ionsystem.parseCell(cur);
+      foundCell=ions->parseCell(cur);
     }
     else if(nodename=="particleset")
     {
-      foundIons=ionsystem.parseIons(cur);
+      foundIons=ions->parseIons(cur);
+      ionsysxml=cur;
     }
     else if(nodename=="bosurface")
     {
@@ -37,8 +48,15 @@ bool IonMoverFactory::parse(xmlNodePtr cur)
       app_log()<<"Initializing BOSurfaceBase\n";
       BOSurfaceFactory x;
       x.parse(cur);
+      
       //for debugging, set to true.
       foundPES=true;
+    }
+    else if(nodename=="ionmover")
+    {
+      //we're going to parse this after initial data is set up and consistent.
+      //for now, just store the xml node.
+      iondriverxml=cur;
     }
     else;
 
@@ -64,16 +82,52 @@ bool IonMoverFactory::parse(xmlNodePtr cur)
   //We need all the pieces for a run.
   if( foundCell && foundPES && foundIons )
   { 
-    ionsystem.put(cur);
+    ions->put(cur);
+    
   }
   else
   {
     APP_ABORT("IonMoverFactory::parse(cur):  Unable to build IonMover from xml file.\n");
     return 1;
   }
+
+  ///////////////////////////////////////////////////////////////////////////////
+  //Now that we have the system set up.  build the factory.
+  ///////////////////////////////////////////////////////////////////////////////
+  if (!iondriverxml)
+  {
+    APP_ABORT("IonMoverFactory::parse(cur):  Missing an ion driver.  Please check <ionmover type=...\n");
+    return 1;
+  }
+  std::string ionmovertype("none");
+  OhmmsAttributeSet imAttribute;
+  imAttribute.add(ionmovertype,"type");
+  imAttribute.put(iondriverxml);
+  
+
+  if (ionmovertype=="ceimc")
+  {
+    CEIMC* ceimc = new CEIMC(ions,bosurface);
+    ceimc->put(iondriverxml);
+    iondriver = static_cast<IonDriverBase*>(ceimc);
+    app_log()<<" iondriver="<<iondriver<<std::endl; 
+  }
+  else
+  {
+    APP_ABORT("IonMoverFactory::parse(cur):  Unrecognized ion driver.  Please check <ionmover type=...\n");
+    return 1; 
+  }  
+   
   //all's good
   return 0; 
 }
 
+bool IonMoverFactory::execute()
+{
+  app_log()<<" In IonMoverFactory::execute()\n";
+  app_log()<<" iondriver = "<<iondriver<<std::endl;
+  iondriver->run();
+  return 0;
+}
  
 }

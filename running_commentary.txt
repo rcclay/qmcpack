@@ -1,2 +1,7 @@
 0.0 BUILD INSTRUCTIONS
   Currently, ion mover code needs to be built with -DBUILD_IONMOVER:BOOL=1 in the cmake 
+
+Fun facts:
+1.)  For successful runs, 0 is standard return value in C.  Using this convention.  
+
+
