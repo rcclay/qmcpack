@@ -189,18 +189,20 @@ bool QMCMain::execute()
 
 //IONMOVER
 #ifdef BUILD_IONMOVER
-  app_log() << std::endl << "/*************************************************\n"
-                         << " **********  This run is for ion moves   *********\n"
-                    << " *************************************************" <<std::endl;
-  app_log()<< "Doing CEIMC....  PSYCHE!\n";
+  if(simulationType == "ionmover")
+  {
+    app_log() << std::endl << "/*************************************************\n"
+                           << " **********  This run is for ion moves   *********\n"
+                           << " *************************************************" <<std::endl;
+     app_log()<< "Doing CEIMC....  PSYCHE!\n";
   
-  xmlNodePtr cur=XmlDocStack.top()->getRoot();
-  xmlXPathContextPtr m_context = XmlDocStack.top()->getXPathContext();
+     xmlNodePtr cur=XmlDocStack.top()->getRoot();
+     xmlXPathContextPtr m_context = XmlDocStack.top()->getXPathContext();
   //initialize the random number generator
-  xmlNodePtr rptr = myRandomControl.initialize(m_context);
+     xmlNodePtr rptr = myRandomControl.initialize(m_context);
  
-  IonMoverFactory imfac;
-  imfac.parse(cur);  
+     IonMoverFactory imfac;
+     imfac.parse(cur);  
 //  cur=cur->xmlChildrenNode;
 //  while (cur!=NULL)
 //  {
@@ -216,7 +218,8 @@ bool QMCMain::execute()
 //    cur=cur->next;
 //  } 
   
-  return true;
+    return true;
+  }
 #else
   if(simulationType == "ionmover")
   {
