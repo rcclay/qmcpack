@@ -1,4 +1,4 @@
-#include "Ionmovers/CEIMC/CEIMC.h" 
+#include "IonMovers/CEIMC/CEIMC.h" 
 #include "IonMovers/IonDriverBase.h"
 #include "OhmmsData/AttributeSet.h"
 #include "IonMovers/IonUpdateBase.h"
