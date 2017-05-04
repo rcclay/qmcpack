@@ -6,6 +6,8 @@
 #include "OhmmsApp/RandomNumberControl.h"
 #include "IonMovers/CEIMC/CEIMC.h"
 
+#include "IonMovers/BOSurfaces/LJPot.h"
+
 #include "Configuration.h"
 #include <string>
 #include <iostream>
@@ -23,7 +25,14 @@ ions(0),myRandControl(m)
 bool IonMoverFactory::parse(xmlNodePtr cur)
 {
   ions = new IonSystem();
-  bosurface = new BOSurfaceBase();
+
+ // bosurface = new BOSurfaceBase();
+  //DEBUG ONLY.  REMOVE AND GENERALIZE
+  double sigma=1.0;
+  double epsilon=1.0;
+  double error=1.0;
+
+  bosurface = new LJPot(sigma,epsilon,error);
 
   cur=cur->xmlChildrenNode;
   bool foundIons(false);
@@ -108,6 +117,7 @@ bool IonMoverFactory::parse(xmlNodePtr cur)
 
   if (ionmovertype=="ceimc")
   {
+    app_log()<<"Building CEIMC driver.  address of bosurface = "<<bosurface<<std::endl;
     CEIMC* ceimc = new CEIMC(ions,bosurface,*(RandomNumberControl::Children[0]));
     ceimc->put(iondriverxml);
     iondriver = static_cast<IonDriverBase*>(ceimc);

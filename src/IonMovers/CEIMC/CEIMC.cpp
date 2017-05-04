@@ -15,7 +15,9 @@ namespace qmcplusplus
 CEIMC::CEIMC(IonSystem* i, BOSurfaceBase* bo, RandomGenerator_t & m)
 :IonDriverBase(i,bo,m),usedrift(false),prereject(false)
 {
-
+  app_log()<<" CEIMC CONSTRUCTOR\n";
+  app_log()<<"   bo = "<<bo<<std::endl;
+  app_log()<<"   bosurface = "<<bosurface<<std::endl;
 }
 void CEIMC::test()
 {
@@ -42,6 +44,7 @@ bool CEIMC::put(xmlNodePtr cur)
   if (!usedrift && !prereject)
   {
     std::cout<<"Yeehaw.  Would have built a CEIMCUpdateAllDriver here\n";
+    std::cout<<"  passing bosurface = "<<bosurface<<std::endl;
     mover=new CEIMCUpdateAll(ions,bosurface,Rng);
     std::cout<<"Setting local tau\n";
     mover->setTau(tau);

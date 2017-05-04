@@ -40,7 +40,12 @@ bool CEIMCUpdateAll::advanceIons()
   app_log()<<"deltar = "<<dR<<std::endl;
   app_log()<<"  Rold = "<<ions->R<<std::endl;
   app_log()<<"  Rnew = "<<ions->Rnew<<std::endl;
-  std::cout<<" ceimcupdateall::accept move()\n";
+  app_log()<<" ceimcupdateall::accept move()\n";
+  double dE;
+  double dE_err;
+  bosurface->dE(*Pcur, *Ptmp, dE, dE_err);
+  
+  app_log()<<"   dE = "<<dE<<" err = "<<dE_err<<std::endl;
   ions->acceptMove();
    
    
