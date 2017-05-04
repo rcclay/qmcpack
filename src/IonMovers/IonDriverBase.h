@@ -4,17 +4,21 @@
 #include "OhmmsData/libxmldefs.h"
 #include "OhmmsData/AttributeSet.h"
 #include "OhmmsData/ParameterSet.h"
+#include "Message/Communicate.h"
+#include "OhmmsApp/RandomNumberControl.h"
+#include "Configuration.h"
+
 namespace qmcplusplus
 {
 //Forward declaration
 class BOSurfaceBase;
 class IonSystem;
 
-class IonDriverBase
+class IonDriverBase: public QMCTraits
 {
   public:
     IonDriverBase();
-    IonDriverBase(IonSystem* ions, BOSurfaceBase* bosurface);
+    IonDriverBase(IonSystem* ions, BOSurfaceBase* bosurface, RandomNumberControl& m);
     ~IonDriverBase(){};
     //IonDriverBase(IonDriverBase&);
     //IonDriverBase operator=(IonDriverBase& u);
@@ -39,7 +43,9 @@ class IonDriverBase
     OhmmsAttributeSet pAttrib;
     ParameterSet m_param;  
 
-    bool moveall;  
+    bool moveall; 
+
+    RandomNumberControl Rng;
 };
 
 }

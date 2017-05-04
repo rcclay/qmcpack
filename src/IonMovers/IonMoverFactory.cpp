@@ -13,8 +13,9 @@
 namespace qmcplusplus
 {
 
-IonMoverFactory::IonMoverFactory()
-: boxml(NULL), ionsysxml(NULL), iondriverxml(NULL), iondriver(NULL),bosurface(NULL),ions(0)
+IonMoverFactory::IonMoverFactory(RandomNumberControl& m)
+: boxml(NULL), ionsysxml(NULL), iondriverxml(NULL), iondriver(NULL),bosurface(NULL),
+ions(0),Rng(m)
 {
   std::cout<<"IonMoverFactory constructor\n";
 }
@@ -107,7 +108,7 @@ bool IonMoverFactory::parse(xmlNodePtr cur)
 
   if (ionmovertype=="ceimc")
   {
-    CEIMC* ceimc = new CEIMC(ions,bosurface);
+    CEIMC* ceimc = new CEIMC(ions,bosurface,Rng);
     ceimc->put(iondriverxml);
     iondriver = static_cast<IonDriverBase*>(ceimc);
     app_log()<<" iondriver="<<iondriver<<std::endl; 

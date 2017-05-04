@@ -12,7 +12,7 @@ class IonUpdateBase;
 class CEIMC: public IonDriverBase
 {
   public:
-    CEIMC(IonSystem* i,BOSurfaceBase*); //default constructor.
+    CEIMC(IonSystem* i,BOSurfaceBase*,RandomNumberControl& m); //default constructor.
     ~CEIMC(){};
 
     void test();

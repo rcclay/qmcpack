@@ -4,11 +4,12 @@
 #include "OhmmsData/libxmldefs.h"
 #include "Particle/ParticleSet.h"
 #include "ParticleIO/ParticleLayoutIO.h"
+#include "Configuration.h"
 
 namespace qmcplusplus
 {
 
-class IonSystem
+class IonSystem: public QMCTraits
 {
   public:
     typedef ParticleSet::ParticleLayout_t CellType;
@@ -20,6 +21,10 @@ class IonSystem
     virtual bool put(xmlNodePtr cur);
     
     virtual void updateAll(){};
+
+    //accessor function
+    ParticleSet* getIonSet(){return &P;};
+
   private:
     ParticleSet P; //for the ions
     CellType simulation_cell;

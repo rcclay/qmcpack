@@ -201,7 +201,7 @@ bool QMCMain::execute()
   //initialize the random number generator
      xmlNodePtr rptr = myRandomControl.initialize(m_context);
  
-     IonMoverFactory imfac;
+     IonMoverFactory imfac(myRandomControl);
      imfac.parse(cur);
      imfac.execute();  
 //  cur=cur->xmlChildrenNode;

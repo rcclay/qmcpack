@@ -3,6 +3,7 @@
 
 #include "OhmmsData/libxmldefs.h"
 #include "IonMovers/IonSystem.h"
+#include "OhmmsApp/RandomNumberControl.h"
 
 namespace qmcplusplus
 {
@@ -10,18 +11,20 @@ namespace qmcplusplus
 class BOSurfaceBase;
 class IonSystem;
 class IonDriverBase;
+class RandomNumberControl;
 
 class IonMoverFactory
 {
   public:
-    IonMoverFactory();
+    IonMoverFactory(RandomNumberControl& rand);
     ~IonMoverFactory(){};
   
     bool parse(xmlNodePtr cur);
     bool execute();
 
   private:
-
+    RandomNumberControl Rng;
+ 
     BOSurfaceBase* bosurface;
     IonSystem* ions;
     IonDriverBase* iondriver;

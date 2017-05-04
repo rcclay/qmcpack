@@ -1,3 +1,4 @@
+#include "Message/Communicate.h"
 #include "IonMovers/CEIMC/CEIMC.h" 
 #include "IonMovers/IonDriverBase.h"
 #include "OhmmsData/AttributeSet.h"
@@ -11,8 +12,8 @@
 namespace qmcplusplus
 {
 
-CEIMC::CEIMC(IonSystem* i, BOSurfaceBase* bo)
-:IonDriverBase(i,bo),usedrift(false),prereject(false)
+CEIMC::CEIMC(IonSystem* i, BOSurfaceBase* bo, RandomNumberControl & m)
+:IonDriverBase(i,bo,m),usedrift(false),prereject(false)
 {
 
 }
@@ -41,7 +42,7 @@ bool CEIMC::put(xmlNodePtr cur)
   if (!usedrift && !prereject)
   {
     std::cout<<"Yeehaw.  Would have built a CEIMCUpdateAllDriver here\n";
-    mover=new CEIMCUpdateAll(ions,bosurface);
+    mover=new CEIMCUpdateAll(ions,bosurface,Rng);
   }
  
   return 0; 

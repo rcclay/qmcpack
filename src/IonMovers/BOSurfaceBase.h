@@ -2,11 +2,12 @@
 #define QMCPLUSPLUS_BOUPDATE_BASE_H
 
 #include "OhmmsData/libxmldefs.h"
+#include "Configuration.h"
 
 namespace qmcplusplus
 {
 
-class BOSurfaceBase 
+class BOSurfaceBase: public QMCTraits 
 {
 //  typedef std::vector<std::vector<double> > ParticlePos_t;
   public:
