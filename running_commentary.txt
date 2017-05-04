@@ -4,4 +4,7 @@
 Fun facts:
 1.)  For successful runs, 0 is standard return value in C.  Using this convention.  
 
-
+TODO:
+  I need to figure out how the correct way to initialize and pass the random number generators
+  into the IonDriverBase classes.  Currently, I'm *copying* the RNG initialized at the beginning of
+  the application into IonMoverFactory, which then copies it into IonDriverBase.  :-/
