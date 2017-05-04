@@ -35,7 +35,7 @@
    <ionmover type="ceimc">
      <parameter name="temperature">1000</parameter>
      <parameter name="steps">10</parameter>
-     <parameter name="timestep">0.01</parameter>
+     <parameter name="timestep">1.0</parameter>
    </ionmover>
 
 </simulation>
