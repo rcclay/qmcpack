@@ -13,25 +13,53 @@ namespace qmcplusplus
 CEIMCUpdateAll::CEIMCUpdateAll(IonSystem* i, BOSurfaceBase* bo, RandomGenerator_t& m)
 :IonUpdateBase(i,bo,m)
 {
-  ParticleSet* P = ions->getIonSet();
-  int Natom = P->getTotalNum();
-  Rnew.resize(Natom);
-  deltaR.resize(Natom);
+  int Natom = ions->getNumAtoms();
+  SqrtTauOverM.resize(Natom);
+
+//  Rnew.resize(Natom);
+//  deltaR.resize(Natom);
+//  G.resize(Natom);
 }
 
 bool CEIMCUpdateAll::advanceIons()
 {
-  ParticleSet* P = ions->getIonSet();
-  Rnew=P->R;
-  app_log()<< "type of deltaR :  "<<typeid(deltaR).name()<<std::endl;
-  app_log()<< "type of Rng :  "<<typeid(Rng).name()<<std::endl;
-//  makeGaussWithRandomEngine(deltaR,Rng);
-//  makeGaussRandom(deltaR);
-  makeGaussRandomWithEngine(deltaR,Rng);
-  app_log()<<"deltar = "<<deltaR<<std::endl;
-  std::cout<<" ceimcupdateall::advanceIons()\n";
+//  ParticleSetPos_t& ions->R
+  ParticleSet* Pcur = ions->getCurParticleSet();
+  ParticleSet* Ptmp = ions->getTmpParticleSet();
+ // Rnew=P->R;  //Backup R with the old coordinates.
+  
+  //Generate a random 3N-dim vector.
+  ions->Rnew=ions->R;
+
+  makeGaussRandomWithEngine(ions->deltaR,Rng);
+  ions->makeMove(ions->Rnew,ions->deltaR,SqrtTauOverM);
+  
+  ParticlePos_t dR(ions->R);
+  dR=ions->Rnew- ions->R;
+  
+  app_log()<<"deltar = "<<dR<<std::endl;
+  app_log()<<"  Rold = "<<ions->R<<std::endl;
+  app_log()<<"  Rnew = "<<ions->Rnew<<std::endl;
+  std::cout<<" ceimcupdateall::accept move()\n";
+  ions->acceptMove();
+   
    
   return 0;
+}
+
+bool CEIMCUpdateAll::resetRun()
+{
+  int Natom = ions->getNumAtoms();
+  ParticleSet* P = ions->getCurParticleSet();
+
+  SqrtTauOverM.resize(Natom);
+  app_log()<<"Reset CEIMCUpdateAll\n";
+  for(int iat=0; iat<Natom; iat++)
+  {
+    SqrtTauOverM[iat]=std::sqrt(tau/RealType(P->Mass[iat]));
+    app_log()<<"  "<<iat<<" "<<P->Mass[iat]<<" "<<SqrtTauOverM[iat]<<std::endl;
+  }  
+
 }
 
 }

@@ -14,18 +14,19 @@ class RandomNumberControl;
 class CEIMCUpdateAll: public IonUpdateBase
 {
   typedef ParticleSet::ParticlePos_t ParticlePos_t;
-
+  typedef ParticleSet::ParticleGradient_t ParticleGradient_t;
   public:
 
     CEIMCUpdateAll(IonSystem* i, BOSurfaceBase* bo, RandomGenerator_t& m);
     ~CEIMCUpdateAll(){};
   
     bool advanceIons();
-
+    bool resetRun();
   protected:
     //Temporary data for ion moves;
-    ParticlePos_t Rnew;
-    ParticlePos_t deltaR;
+  //  ParticlePos_t Rnew;
+  //  ParticlePos_t deltaR;
+  //  ParticleGradient_t G;
 
   //Inherited from IonUpdateBase:
   

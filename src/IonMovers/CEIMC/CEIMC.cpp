@@ -43,6 +43,8 @@ bool CEIMC::put(xmlNodePtr cur)
   {
     std::cout<<"Yeehaw.  Would have built a CEIMCUpdateAllDriver here\n";
     mover=new CEIMCUpdateAll(ions,bosurface,Rng);
+    std::cout<<"Setting local tau\n";
+    mover->setTau(tau);
   }
  
   return 0; 
@@ -54,6 +56,8 @@ bool CEIMC::run()
   std::cout<<" nsteps = "<<numSteps<<std::endl;
   std::cout<<" temperature = "<<t<<" K"<<std::endl;
   std::cout<<" ionic timestep = "<<tau<<" a.u.\n";
+
+  mover->resetRun();
   for(int i=0; i<numSteps; i++)
   {
     std::cout<<i<<" step.  Advancing ions\n";
