@@ -12,7 +12,7 @@
 namespace qmcplusplus
 {
 
-CEIMC::CEIMC(IonSystem* i, BOSurfaceBase* bo, RandomNumberControl & m)
+CEIMC::CEIMC(IonSystem* i, BOSurfaceBase* bo, RandomGenerator_t & m)
 :IonDriverBase(i,bo,m),usedrift(false),prereject(false)
 {
 

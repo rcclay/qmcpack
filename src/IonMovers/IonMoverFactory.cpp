@@ -3,7 +3,7 @@
 #include "IonMovers/BOSurfaceBase.h"
 #include "IonMovers/IonDriverBase.h"
 #include "OhmmsData/AttributeSet.h"
-
+#include "OhmmsApp/RandomNumberControl.h"
 #include "IonMovers/CEIMC/CEIMC.h"
 
 #include "Configuration.h"
@@ -15,7 +15,7 @@ namespace qmcplusplus
 
 IonMoverFactory::IonMoverFactory(RandomNumberControl& m)
 : boxml(NULL), ionsysxml(NULL), iondriverxml(NULL), iondriver(NULL),bosurface(NULL),
-ions(0),Rng(m)
+ions(0),myRandControl(m)
 {
   std::cout<<"IonMoverFactory constructor\n";
 }
@@ -108,7 +108,7 @@ bool IonMoverFactory::parse(xmlNodePtr cur)
 
   if (ionmovertype=="ceimc")
   {
-    CEIMC* ceimc = new CEIMC(ions,bosurface,Rng);
+    CEIMC* ceimc = new CEIMC(ions,bosurface,*(RandomNumberControl::Children[0]));
     ceimc->put(iondriverxml);
     iondriver = static_cast<IonDriverBase*>(ceimc);
     app_log()<<" iondriver="<<iondriver<<std::endl; 

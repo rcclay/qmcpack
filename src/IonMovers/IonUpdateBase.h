@@ -15,7 +15,7 @@ class BOSurfaceBase;
 class IonUpdateBase: public QMCTraits
 {
   public:
-    IonUpdateBase(IonSystem* i,BOSurfaceBase* bo,RandomNumberControl& m):
+    IonUpdateBase(IonSystem* i,BOSurfaceBase* bo,RandomGenerator_t& m):
         ions(i),bosurface(bo),Rng(m)
     {};
     ~IonUpdateBase(){};
@@ -26,7 +26,7 @@ class IonUpdateBase: public QMCTraits
     IonSystem* ions;
     BOSurfaceBase* bosurface;
     
-    RandomNumberControl& Rng;
+    RandomGenerator_t Rng;
 
 };
 

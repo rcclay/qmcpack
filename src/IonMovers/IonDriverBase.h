@@ -18,7 +18,7 @@ class IonDriverBase: public QMCTraits
 {
   public:
     IonDriverBase();
-    IonDriverBase(IonSystem* ions, BOSurfaceBase* bosurface, RandomNumberControl& m);
+    IonDriverBase(IonSystem* ions, BOSurfaceBase* bosurface, RandomGenerator_t& m);
     ~IonDriverBase(){};
     //IonDriverBase(IonDriverBase&);
     //IonDriverBase operator=(IonDriverBase& u);
@@ -45,7 +45,7 @@ class IonDriverBase: public QMCTraits
 
     bool moveall; 
 
-    RandomNumberControl Rng;
+    RandomGenerator_t Rng;
 };
 
 }

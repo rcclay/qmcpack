@@ -17,7 +17,7 @@ class CEIMCUpdateAll: public IonUpdateBase
 
   public:
 
-    CEIMCUpdateAll(IonSystem* i, BOSurfaceBase* bo, RandomNumberControl& m);
+    CEIMCUpdateAll(IonSystem* i, BOSurfaceBase* bo, RandomGenerator_t& m);
     ~CEIMCUpdateAll(){};
   
     bool advanceIons();
@@ -28,6 +28,7 @@ class CEIMCUpdateAll: public IonUpdateBase
     ParticlePos_t deltaR;
 
   //Inherited from IonUpdateBase:
+  
   //IonSystem* ions
   //BOSurfaceBase* bosurface.
   //RandomNumberControl Rng;

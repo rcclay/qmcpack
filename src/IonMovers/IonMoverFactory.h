@@ -23,7 +23,7 @@ class IonMoverFactory
     bool execute();
 
   private:
-    RandomNumberControl Rng;
+    RandomNumberControl& myRandControl;
  
     BOSurfaceBase* bosurface;
     IonSystem* ions;

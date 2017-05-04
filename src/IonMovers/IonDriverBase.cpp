@@ -12,7 +12,7 @@ IonDriverBase::IonDriverBase()
   m_param.add(numSteps,"steps","int");
 }
 
-IonDriverBase::IonDriverBase(IonSystem* i, BOSurfaceBase* bo, RandomNumberControl& m)
+IonDriverBase::IonDriverBase(IonSystem* i, BOSurfaceBase* bo, RandomGenerator_t& m)
 : ions(i), bosurface(bo), numSteps(0), tau(0), t(0),Rng(m)
 {
   m_param.add(t,"temperature","double");
