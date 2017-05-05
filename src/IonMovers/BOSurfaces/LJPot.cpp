@@ -9,7 +9,7 @@ namespace qmcplusplus
 {
 
 LJPot::LJPot(double sig, double eps, double err)
-: sigma(sig),epsilon(eps)
+: sigma(sig),epsilon(eps), error(err)
 {
 
 }
@@ -19,7 +19,7 @@ bool LJPot::E(const ParticleSet& P, double & E, double & err)
   const DistanceTableData * d_aa(P.DistTables[0]);
   int Natom=P.getTotalNum();
   E=0;
-  err=0;
+  err=error;
   double d=0;
 
   for(int ipart=0; ipart<Natom; ipart++)
@@ -39,8 +39,8 @@ bool LJPot::dE(const ParticleSet& P1, const ParticleSet& P2, double &dE, double 
   app_log()<<" LJPot::dE called\n";
   double E1(0);
   double E2(0);
-  double err1(0);
-  double err2(0);
+  double err1(error);
+  double err2(error);
 
   dE=0;
   derr=0;
