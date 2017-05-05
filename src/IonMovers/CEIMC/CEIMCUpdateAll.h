@@ -22,7 +22,10 @@ class CEIMCUpdateAll: public IonUpdateBase
   
     bool advanceIons();
     bool resetRun();
+    bool finalizeRun();
   protected:
+
+    int counter;
     //Temporary data for ion moves;
   //  ParticlePos_t Rnew;
   //  ParticlePos_t deltaR;

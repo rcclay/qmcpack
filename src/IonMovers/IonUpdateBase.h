@@ -3,6 +3,7 @@
 
 #include "Configuration.h"
 #include "OhmmsApp/RandomNumberControl.h"
+#include "IonMovers/physicalconstants.h"
 
 namespace qmcplusplus
 {
@@ -16,15 +17,18 @@ class IonUpdateBase: public QMCTraits
 {
   public:
     IonUpdateBase(IonSystem* i,BOSurfaceBase* bo,RandomGenerator_t& m):
-        ions(i),bosurface(bo),Rng(m),tau(0.0)
+        ions(i),bosurface(bo),Rng(m),tau(0.0),beta(0.0)
     {};
     ~IonUpdateBase(){};
 
     virtual bool advanceIons()=0;
     virtual bool resetRun()=0;
+    virtual bool finalizeRun()=0;
 
     inline RealType getTau(){return tau;};
-    inline RealType setTau(RealType t){tau=t;};
+    inline void setTau(RealType t){tau=t;};
+    inline void setTemperature(RealType T){ t=T*KELVIN_TO_HARTREE;
+                                            if(t!=0) beta=1.0/t;};
 
   protected:
     IonSystem* ions;
@@ -32,7 +36,10 @@ class IonUpdateBase: public QMCTraits
     
     RandomGenerator_t Rng;
    
-    RealType tau; 
+    RealType tau;
+    RealType t;
+    RealType beta; 
+
     std::vector<RealType> SqrtTauOverM;
 };
 

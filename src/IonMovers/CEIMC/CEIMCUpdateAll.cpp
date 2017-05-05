@@ -7,6 +7,8 @@
 #include "ParticleBase/RandomSeqGenerator.h"
 #include <typeinfo>
 
+#include "ceimc_helper_funcs.h"
+
 namespace qmcplusplus
 {
 
@@ -15,7 +17,7 @@ CEIMCUpdateAll::CEIMCUpdateAll(IonSystem* i, BOSurfaceBase* bo, RandomGenerator_
 {
   int Natom = ions->getNumAtoms();
   SqrtTauOverM.resize(Natom);
-
+  counter=0;
 //  Rnew.resize(Natom);
 //  deltaR.resize(Natom);
 //  G.resize(Natom);
@@ -37,17 +39,40 @@ bool CEIMCUpdateAll::advanceIons()
   ParticlePos_t dR(ions->R);
   dR=ions->Rnew- ions->R;
   
-  app_log()<<"deltar = "<<dR<<std::endl;
+  app_log()<<"deltaR = "<<dR<<std::endl;
   app_log()<<"  Rold = "<<ions->R<<std::endl;
   app_log()<<"  Rnew = "<<ions->Rnew<<std::endl;
   app_log()<<" ceimcupdateall::accept move()\n";
+  
   double dE;
   double dE_err;
-  bosurface->dE(*Pcur, *Ptmp, dE, dE_err);
   
-  app_log()<<"   dE = "<<dE<<" err = "<<dE_err<<std::endl;
-  ions->acceptMove();
-   
+  bosurface->dE(*Pcur, *Ptmp, dE, dE_err);
+  //No penalty yet.
+  double accept_prob(0.0);
+  double penalty=ceimc_penalty(dE_err,beta);
+
+  accept_prob=std::exp(-beta*dE - penalty);
+
+  app_log()<<"Before accept/reject step.  here's what i get:\n";
+  app_log()<<" dE= "<<dE<<"  err= "<<dE_err<<std::endl;
+  app_log()<<" penalty = "<<penalty<<std::endl;
+  app_log()<<" accept_prob = "<<accept_prob<<std::endl;
+
+  if( Rng() < accept_prob)
+  { 
+    app_log()<<"MOVE ACCEPTED\n";
+    ions->acceptMove();
+    counter++; 
+  }
+  else
+  {
+    app_log()<<"MOVE REJECTED\n";
+    //reject
+  }
+ // app_log()<<"   dE = "<<dE<<" err = "<<dE_err<<std::endl;
+ // ions->acceptMove();
+  app_log()<<" ------done with step------\n";  
    
   return 0;
 }
@@ -63,8 +88,15 @@ bool CEIMCUpdateAll::resetRun()
   {
     SqrtTauOverM[iat]=std::sqrt(tau/RealType(P->Mass[iat]));
     app_log()<<"  "<<iat<<" "<<P->Mass[iat]<<" "<<SqrtTauOverM[iat]<<std::endl;
-  }  
+  }
+  app_log()<<"Temperature = "<<t<<std::endl;
+  app_log()<<"Beta        = "<<beta<<std::endl; 
 
+}
+
+bool CEIMCUpdateAll::finalizeRun()
+{
+  app_log()<<" Accepted "<<counter<<" steps\n";
 }
 
 }

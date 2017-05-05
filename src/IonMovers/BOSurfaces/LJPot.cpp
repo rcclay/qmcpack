@@ -21,7 +21,7 @@ bool LJPot::E(const ParticleSet& P, double & E, double & err)
   E=0;
   err=error;
   double d=0;
-
+  app_log()<<"   ====comp 1 ===\n";
   for(int ipart=0; ipart<Natom; ipart++)
   {
     for(int nn=d_aa->M[ipart],jpart=ipart+1; nn<d_aa->M[ipart+1]; nn++,jpart++)
@@ -39,8 +39,8 @@ bool LJPot::dE(const ParticleSet& P1, const ParticleSet& P2, double &dE, double 
   app_log()<<" LJPot::dE called\n";
   double E1(0);
   double E2(0);
-  double err1(error);
-  double err2(error);
+  double err1(0);
+  double err2(0);
 
   dE=0;
   derr=0;

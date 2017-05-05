@@ -54,22 +54,13 @@ bool IonSystem::parseIons(xmlNodePtr cur)
   
   app_log() << "  Creating " << id << " particleset" << std::endl;
 
-  //THIS WILL BE CALLED AFTER INITIALIZATION OF SIMULATION CELL.  
-//    if(SimulationCell)
-//    {
-//      app_log() << "  Initializing the lattice of " << id << " by the global supercell" << std::endl;
-//      pTemp->Lattice.copy(*SimulationCell);
-//    }
-//    myPool[id] = pTemp;
   P0.resize(1);
-  app_log()<<" after calling resize\n";
 
   XMLParticleParser pread(P0[0],TileMatrix);
   bool success = pread.put(cur);
    
   //override whatever the user calls the particle set.
   P0[0].setName("ionset0");
-  app_log() << P0[0].getName() << std::endl;
 
     //Now to store the particle set.    
     //I'm assuming that adding a vector deep copies.  Hopefully I'm not mistaken.
@@ -88,19 +79,22 @@ bool IonSystem::parseIons(xmlNodePtr cur)
 
 bool IonSystem::put(xmlNodePtr cur)
 {
-  P0[0].Lattice.copy(simulation_cell);
-  P0[0].get(app_log());
-  
-  DistanceTable::add(P0[0]); //try to add the distance tables for ion-ion.
   //We wait this long to initialize the secondary particleset
   //because we want the lattice to get copied over first.  
   //Now we finish.
-  ParticleSet P(P0[0]);
-  P.setName("ionset1");
-  
-  P0.push_back(P);
-
+  P0[0].Lattice.copy(simulation_cell);
+  P0[0].get(app_log());
+  P0.push_back(P0[0]);
   R=P0[0].R;
+  DistanceTable::add(P0[0]); //try to add the distance tables for ion-ion.
+  DistanceTable::add(P0[1]);
+
+  //update the distance tables before running.
+  for(int i=0; i<P0[0].DistTables.size(); i++)
+  {
+    P0[0].DistTables[i]->evaluate(P0[0]);
+    P0[1].DistTables[i]->evaluate(P0[1]);
+  }
   return 0;
 }
 

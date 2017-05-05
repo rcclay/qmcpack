@@ -48,6 +48,7 @@ bool CEIMC::put(xmlNodePtr cur)
     mover=new CEIMCUpdateAll(ions,bosurface,Rng);
     std::cout<<"Setting local tau\n";
     mover->setTau(tau);
+    mover->setTemperature(t);
   }
  
   return 0; 
@@ -66,7 +67,7 @@ bool CEIMC::run()
     std::cout<<i<<" step.  Advancing ions\n";
     mover->advanceIons();
   }
-
+  mover->finalizeRun();
   return 0;
 }
 

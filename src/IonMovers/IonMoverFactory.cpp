@@ -30,7 +30,7 @@ bool IonMoverFactory::parse(xmlNodePtr cur)
   //DEBUG ONLY.  REMOVE AND GENERALIZE
   double sigma=1.0;
   double epsilon=1.0;
-  double error=1.0;
+  double error=1.0e-5;
 
   bosurface = new LJPot(sigma,epsilon,error);
 
@@ -56,8 +56,8 @@ bool IonMoverFactory::parse(xmlNodePtr cur)
     {
       //I need to work on the bosurfacefactory logic here.  
       app_log()<<"Initializing BOSurfaceBase\n";
-      BOSurfaceFactory x;
-      x.parse(cur);
+//      BOSurfaceFactory x;
+//      x.parse(cur);
       
       //for debugging, set to true.
       foundPES=true;
@@ -92,6 +92,7 @@ bool IonMoverFactory::parse(xmlNodePtr cur)
   //We need all the pieces for a run.
   if( foundCell && foundPES && foundIons )
   { 
+    app_log()<<"~~Calling put on ions~~\n";
     ions->put(cur);
     
   }
