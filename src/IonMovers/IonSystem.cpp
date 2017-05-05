@@ -6,6 +6,7 @@
 #include "OhmmsData/AttributeSet.h"
 #include "OhmmsData/OhmmsParameter.h"
 #include "ParticleIO/XMLParticleIO.h"
+#include "Particle/DistanceTable.h"
 
 namespace qmcplusplus
 {
@@ -61,6 +62,8 @@ bool IonSystem::parseIons(xmlNodePtr cur)
 //    }
 //    myPool[id] = pTemp;
   P0.resize(1);
+  app_log()<<" after calling resize\n";
+
   XMLParticleParser pread(P0[0],TileMatrix);
   bool success = pread.put(cur);
    
@@ -87,7 +90,8 @@ bool IonSystem::put(xmlNodePtr cur)
 {
   P0[0].Lattice.copy(simulation_cell);
   P0[0].get(app_log());
-
+  
+  DistanceTable::add(P0[0]); //try to add the distance tables for ion-ion.
   //We wait this long to initialize the secondary particleset
   //because we want the lattice to get copied over first.  
   //Now we finish.
