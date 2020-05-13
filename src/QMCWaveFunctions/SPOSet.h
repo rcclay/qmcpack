@@ -112,7 +112,7 @@ public:
   /** print SPOSet information
    */
   virtual void report(const std::string& pad = "") { basic_report(pad); }
-
+  virtual void reportStatus(std::ostream& os){};
 
   /** return the size of the orbitals
    */

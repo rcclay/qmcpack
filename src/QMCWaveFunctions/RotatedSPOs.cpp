@@ -1045,7 +1045,16 @@ void RotatedSPOs::table_method_evalWF(std::vector<ValueType>& dlogpsi,
   }
 }
 
-
+void RotatedSPOs::reportStatus(std::ostream& os)
+{
+  os<<"    Hey guys!  I'm in RotatedSPO! #AAAAAAAAAA\n";
+  os<<"   So these are the orbital rotation coefficients:\n";
+  for (int i = 0; i < m_act_rot_inds.size(); i++)
+    os<<myVars[i]<<" ";
+  os<<std::endl;
+  os<<"\n And here's the SPOset coefficients:\n";
+  Phi->reportStatus(os);
+}
 SPOSet* RotatedSPOs::makeClone() const
 {
   RotatedSPOs* myclone = new RotatedSPOs(Phi->makeClone());

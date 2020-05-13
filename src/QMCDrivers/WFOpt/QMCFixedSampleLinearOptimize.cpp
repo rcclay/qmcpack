@@ -1164,7 +1164,9 @@ bool QMCFixedSampleLinearOptimize::adaptive_three_shift_run()
   // set the number samples to be initial one
   optTarget->setNumSamples(init_num_samp);
   nTargetSamples = init_num_samp;
+  app_log()<<"@#()$)(#*@)$(*@)#($)(@#*$)*@#$)(@#*)$(*@#)($*()@#*$)(*#@()$*@#)(*$)(#@*$)(@#*$)(*(@)#*$)(@#*$)(*#@()$*()@#*$()@#*)$\n";
 
+  Psi.reportStatus(app_log());
   //app_log() << "block first second third end " << block_first << block_second << block_third << endl;
   // return whether the cost function's report counter is positive
   return (optTarget->getReportCounter() > 0);

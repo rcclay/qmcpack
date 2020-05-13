@@ -112,7 +112,7 @@ public:
   /** set the basis set
     */
   void setBasisSet(basis_type* bs);
-
+  inline void reportStatus(std::ostream& os) override { os<<std::setprecision(12)<<*C<<std::endl;};
   /** return the size of the basis set
     */
   int getBasisSetSize() const override { return (myBasisSet == nullptr) ? 0 : myBasisSet->getBasisSetSize(); }

@@ -96,7 +96,13 @@ void SlaterDet::resetParameters(const opt_variables_type& active)
       Dets[i]->resetParameters(active);
 }
 
-void SlaterDet::reportStatus(std::ostream& os) {}
+void SlaterDet::reportStatus(std::ostream& os)
+{
+  app_log()<<" ====================== DET 1 ==========================\n";
+  Dets[0]->reportStatus(os);
+  app_log()<<" ====================== DET 2 ==========================\n";
+  Dets[1]->reportStatus(os);
+}
 
 void SlaterDet::resetTargetParticleSet(ParticleSet& P)
 {

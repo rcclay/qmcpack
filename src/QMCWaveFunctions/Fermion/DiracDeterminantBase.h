@@ -86,7 +86,7 @@ public:
     targetPtcl = &P;
   }
 
-  inline void reportStatus(std::ostream& os) override final {}
+  inline void reportStatus(std::ostream& os) override {Phi->reportStatus(os);};
 
   // expose CPU interfaces
   using WaveFunctionComponent::evaluateDerivatives;
