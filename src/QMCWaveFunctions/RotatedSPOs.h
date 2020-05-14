@@ -64,7 +64,7 @@ public:
   GradMatrix_t dpsiM_all;
   ValueMatrix_t d2psiM_all;
 
-
+  void reportStatus(std::ostream& os) override;
   // Single Slater creation
   void buildOptVariables(const size_t nel) override;
   // For the MSD case rotations must be created in MultiSlaterFast class
