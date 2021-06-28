@@ -37,6 +37,7 @@ PWOrbitalBuilder::PWOrbitalBuilder(Communicate* comm, ParticleSet& els, PtclPool
   myParam = new PWParameterSet(myComm);
 }
 
+
 PWOrbitalBuilder::~PWOrbitalBuilder() { delete myParam; }
 
 //All data parsing is handled here, outside storage classes.
@@ -161,6 +162,14 @@ WaveFunctionComponent* PWOrbitalBuilder::putSlaterDet(xmlNodePtr cur)
  */
 bool PWOrbitalBuilder::createPWBasis(xmlNodePtr cur)
 {
+    //check the current href
+   hfileID = getH5(cur, "href");
+    //    //no file, check the root
+    //      if (hfileID < 0)
+    //          hfileID = getH5(rootNode, "href");
+    //
+  std::string cname((const char*)(cur->name));
+  app_log()<<"cname = "<<cname<<std::endl;
   //recycle int and double reader
   int idata;
   double ddata;
@@ -178,13 +187,13 @@ bool PWOrbitalBuilder::createPWBasis(xmlNodePtr cur)
   RealType ecut = 0.0;
   //end of parameters
   //check if input parameters are valid
-  int nup   = targetPtcl.last(0);
-  int ndown = targetPtcl.getTotalNum() - nup;
-  if (nbands < nup || nbands < ndown)
-  {
-    app_error() << "Not enough bands in h5 file" << std::endl;
-    OHMMS::Controller->abort();
-  }
+ // int nup   = targetPtcl.last(0);
+//  int ndown = targetPtcl.getTotalNum() - nup;
+//  if (nbands < nup || nbands < ndown)
+//  {
+//    app_error() << "Not enough bands in h5 file" << std::endl;
+//    OHMMS::Controller->abort();
+//  }
   std::string tname = myParam->getTwistAngleName();
   TinyVector<double, OHMMS_DIM> TwistAngle_DP;
   HDFAttribIO<TinyVector<double, OHMMS_DIM>> hdfobj_twist(TwistAngle_DP);
@@ -200,6 +209,7 @@ bool PWOrbitalBuilder::createPWBasis(xmlNodePtr cur)
   //return the ecut to be used by the basis set
   RealType real_ecut = myParam->getEcut(ecut);
   //create at least one basis set but do resize the containers
+  app_log()<<"hfileID = "<<hfileID<<" "<<real_ecut<<" "<<myParam->pwTag<<" "<<myParam->pwMultTag<<std::endl;
   int nh5gvecs = myBasisSet->readbasis(hfileID, real_ecut, targetPtcl.Lattice, myParam->pwTag, myParam->pwMultTag);
   app_log() << "  num_twist = " << nkpts << std::endl;
   app_log() << "  twist angle = " << TwistAngle << std::endl;
@@ -212,7 +222,8 @@ bool PWOrbitalBuilder::createPWBasis(xmlNodePtr cur)
 
 SPOSet* PWOrbitalBuilder::createPW(xmlNodePtr cur, int spinIndex)
 {
-  int nb = targetPtcl.last(spinIndex) - targetPtcl.first(spinIndex);
+  int spinIndex2=0;
+  int nb = targetPtcl.last(spinIndex2) - targetPtcl.first(spinIndex2);
   std::vector<int> occBand(nb);
   for (int i = 0; i < nb; i++)
     occBand[i] = i;
@@ -323,10 +334,12 @@ SPOSet* PWOrbitalBuilder::createPW(xmlNodePtr cur, int spinIndex)
       psi->addVector(complex_coefs, ib);
       H5Gclose(band_grp_id);
       ++ib;
+      app_log()<<" ============\n";
     }
   }
   H5Gclose(twist_grp_id);
   H5Gclose(es_grp_id);
+  app_log()<<"Almost done\n";
 #if defined(QMC_COMPLEX)
   if (transform2grid)
   {

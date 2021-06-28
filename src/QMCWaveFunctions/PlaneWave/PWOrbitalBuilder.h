@@ -65,11 +65,11 @@ public:
   ///implement vritual function
   WaveFunctionComponent* buildComponent(xmlNodePtr cur) override;
 
+  SPOSet* createPW(xmlNodePtr cur, int spinIndex);
+  bool createPWBasis(xmlNodePtr cur);
 private:
   hid_t getH5(xmlNodePtr cur, const char* aname);
   WaveFunctionComponent* putSlaterDet(xmlNodePtr cur);
-  bool createPWBasis(xmlNodePtr cur);
-  SPOSet* createPW(xmlNodePtr cur, int spinIndex);
 #if defined(QMC_COMPLEX)
   void transform2GridData(PWBasis::GIndex_t& nG, int spinIndex, PWOrbitalSet& pwFunc);
 #endif

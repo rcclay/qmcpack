@@ -25,6 +25,8 @@
 #include "QMCWaveFunctions/einspline_helper.hpp"
 #include "QMCWaveFunctions/BsplineFactory/BsplineReaderBase.h"
 #include "QMCWaveFunctions/BsplineFactory/createBsplineReader.h"
+#include "QMCWaveFunctions/PlaneWave/PWOrbitalBuilder.h"
+#include "Particle/ParticleSetPool.h"
 
 namespace qmcplusplus
 {
@@ -194,18 +196,46 @@ std::unique_ptr<SPOSet> EinsplineSpinorSetBuilder::createSPOSetFromXML(xmlNodePt
   //Norm for spinor wavefunctions is different from SPO's by a factor of sqrt(2).  Disable the unit norm check.
   MixedSplineReader->setCheckNorm(false);
 
+  PWOrbitalBuilder porb(myComm,TargetPtcl,ParticleSets);
+  
+  const char* particles = "<tmp> \
+  <sposet_builder name=\"spo_builder\" type=\"bspline\" href=\"out/Pd.save/eshdf.h5\" tilematrix=\"1 0 0 0 1 0 0 0 1\" twistnum=\"0\" source=\"i\" size=\"18\" meshfactor=\"4.0\" precision=\"single\"/> \
+</tmp> \
+";
+
+  Libxml2Document doc;
+  bool okay = doc.parseFromString(particles);
+
+  xmlNodePtr root = doc.getRoot();
+
+  xmlNodePtr ein1 = xmlFirstElementChild(root);
+
+   
+  PWOrbitalBuilder porb2(myComm,TargetPtcl,ParticleSets);
+  porb.createPWBasis(ein1);
+  porb2.createPWBasis(ein1);
+  app_log()<<" OK.  Cleared PWBasis.  Next\n"; 
+  SPOSet* myup = porb.createPW(spo_cur,spinSet);
+  app_log()<<" Cleared spinSet="<<spinSet<<std::endl;
+  SPOSet* mydn = porb2.createPW(spo_cur,spinSet2);
+  app_log()<<" Cleared spinSet="<<spinSet2<<std::endl;
+
+  std::unique_ptr<SPOSet> umyup(myup);
+  std::unique_ptr<SPOSet> umydn(mydn);
   //Make the up spin set.
-  HasCoreOrbs = bcastSortBands(spinSet, NumDistinctOrbitals, myComm->rank() == 0);
-  auto bspline_zd_u = MixedSplineReader->create_spline_set(spinSet, spo_cur);
+//  HasCoreOrbs = bcastSortBands(spinSet, NumDistinctOrbitals, myComm->rank() == 0);
+//  auto bspline_zd_u = MixedSplineReader->create_spline_set(spinSet, spo_cur);
 
   //Make the down spin set.
-  OccupyBands(spinSet2, sortBands, numOrbs, skipChecks);
-  HasCoreOrbs = bcastSortBands(spinSet2, NumDistinctOrbitals, myComm->rank() == 0);
-  auto bspline_zd_d = MixedSplineReader->create_spline_set(spinSet2, spo_cur);
+//  OccupyBands(spinSet2, sortBands, numOrbs, skipChecks);
+//  HasCoreOrbs = bcastSortBands(spinSet2, NumDistinctOrbitals, myComm->rank() == 0);
+//  auto bspline_zd_d = MixedSplineReader->create_spline_set(spinSet2, spo_cur);
 
   //register with spin set and we're off to the races.
   auto spinor_set = std::make_unique<SpinorSet>();
-  spinor_set->set_spos(std::move(bspline_zd_u), std::move(bspline_zd_d));
+//  spinor_set->set_spos(std::move(bspline_zd_u), std::move(bspline_zd_d));
+  spinor_set->set_spos(std::move(umyup), std::move(umydn));
+  
   return spinor_set;
 };
 } // namespace qmcplusplus
