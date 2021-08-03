@@ -199,7 +199,7 @@ std::unique_ptr<SPOSet> EinsplineSpinorSetBuilder::createSPOSetFromXML(xmlNodePt
   PWOrbitalBuilder porb(myComm,TargetPtcl,ParticleSets);
   
   const char* particles = "<tmp> \
-  <sposet_builder name=\"spo_builder\" type=\"bspline\" href=\"out/Pd.save/eshdf.h5\" tilematrix=\"1 0 0 0 1 0 0 0 1\" twistnum=\"0\" source=\"i\" size=\"18\" meshfactor=\"4.0\" precision=\"single\"/> \
+  <sposet_builder name=\"spo_builder\" type=\"bspline\" href=\"eshdf.h5\" tilematrix=\"1 0 0 0 1 0 0 0 1\" twistnum=\"0\" source=\"i\" size=\"18\" meshfactor=\"4.0\" precision=\"single\"/> \
 </tmp> \
 ";
 

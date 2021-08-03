@@ -156,7 +156,10 @@ void SpinorSet::evaluate_notranspose(const ParticleSet& P,
   spo_up->evaluate_notranspose(P, first, last, logpsi_work_up, dlogpsi_work_up, d2logpsi_work_up);
   spo_dn->evaluate_notranspose(P, first, last, logpsi_work_down, dlogpsi_work_down, d2logpsi_work_down);
 
-
+  app_log()<<"Start:\n";
+  app_log()<<" R  =  "<<P.R<<std::endl;
+  app_log()<<" spins="<<P.spins<<std::endl;
+  app_log()<<"\nNow for the orbitals...\n";
   for (int iat = 0; iat < nelec; iat++)
   {
     ParticleSet::Scalar_t s = P.activeSpin(iat);
@@ -168,14 +171,18 @@ void SpinorSet::evaluate_notranspose(const ParticleSet& P,
 
     ValueType eis(coss, sins);
     ValueType emis(coss, -sins);
-
+    app_log()<<"=====================\n";
     for (int no = 0; no < OrbitalSetSize; no++)
     {
       logdet(iat, no)   = eis * logpsi_work_up(iat, no) + emis * logpsi_work_down(iat, no);
       dlogdet(iat, no)  = eis * dlogpsi_work_up(iat, no) + emis * dlogpsi_work_down(iat, no);
       d2logdet(iat, no) = eis * d2logpsi_work_up(iat, no) + emis * d2logpsi_work_down(iat, no);
+      app_log()<<"VAL  iat="<<iat<<" orb="<<no<<" spo_up="<<logpsi_work_up(iat, no)<<" spo_dn="<<logpsi_work_down(iat, no)<<" logdet="<<logdet(iat, no)<<std::endl;
+      app_log()<<"GRAD iat="<<iat<<" orb="<<no<<" spo_up="<<dlogpsi_work_up(iat, no)<<" spo_dn="<<dlogpsi_work_down(iat, no)<<" logdet="<<dlogdet(iat, no)<<std::endl;
+      app_log()<<"LAPL iat="<<iat<<" orb="<<no<<" spo_up="<<d2logpsi_work_up(iat, no)<<" spo_dn="<<d2logpsi_work_down(iat, no)<<" logdet="<<d2logdet(iat, no)<<std::endl;
     }
   }
+  app_log()<<"=======END==============\n";
 }
 
 void SpinorSet::evaluate_notranspose_spin(const ParticleSet& P,

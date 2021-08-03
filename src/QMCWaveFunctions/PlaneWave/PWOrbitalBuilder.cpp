@@ -262,8 +262,8 @@ SPOSet* PWOrbitalBuilder::createPW(xmlNodePtr cur, int spinIndex)
         }
         if (deleted.size() != added.size())
         {
-          app_error() << "  Numbers of deleted and added bands are not identical." << std::endl;
-          OHMMS::Controller->abort();
+  //        app_error() << "  Numbers of deleted and added bands are not identical." << std::endl;
+  //        OHMMS::Controller->abort();
         }
         for (int i = 0; i < deleted.size(); i++)
         {
