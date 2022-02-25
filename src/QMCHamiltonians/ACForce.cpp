@@ -92,8 +92,8 @@ ACForce::Return_t ACForce::evaluate(ParticleSet& P)
   sw_grad     = 0;
   //This function returns d/dR of the sum of all observables in the physical hamiltonian.
   //Note that the sign will be flipped based on definition of force = -d/dR.
-  Value = ham.evaluateIonDerivs(P, ions, psi, hf_force, pulay_force, wf_grad);
-
+  //Value = ham.evaluateIonDerivs(P, ions, psi, hf_force, pulay_force, wf_grad);
+  Value = ham.evaluateIonDerivsDeterministicFast(P,ions,psi,hf_force,wf_grad);
   if (useSpaceWarp)
   {
     Force_t el_grad;
