@@ -33,7 +33,8 @@ set(QMCEST_SRC
     MagnetizationDensity.cpp
     MagnetizationDensityInput.cpp
     PerParticleHamiltonianLoggerInput.cpp
-    PerParticleHamiltonianLogger.cpp)
+    PerParticleHamiltonianLogger.cpp
+    ACForceInput.cpp)
 
 ####################################
 # create libqmcestimators
