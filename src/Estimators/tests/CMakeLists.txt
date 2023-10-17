@@ -41,7 +41,8 @@ set(SRCS
     test_EstimatorManagerCrowd.cpp
     test_MagnetizationDensityInput.cpp
     test_MagnetizationDensity.cpp
-    test_ACForceInput.cpp)
+    test_ACForceInput.cpp
+    test_ACForce.cpp)
 
 add_executable(${UTEST_EXE} ${SRCS})
 target_link_libraries(${UTEST_EXE} catch_main qmcutil qmcestimators utilities_for_test sposets_for_testing)
