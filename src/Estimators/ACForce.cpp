@@ -33,6 +33,7 @@ size_t ACForce::getFullDataSize() { return 0; }
 void ACForce::accumulate(const RefVector<MCPWalker>& walkers,
                                       const RefVector<ParticleSet>& psets,
                                       const RefVector<TrialWaveFunction>& wfns,
+                                      const RefVector<QMCHamiltonian>& hamss,
                                       RandomBase<FullPrecReal>& rng)
 {
   for (int iw = 0; iw < walkers.size(); ++iw)
