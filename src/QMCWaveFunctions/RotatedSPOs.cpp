@@ -511,8 +511,8 @@ void RotatedSPOs::exponentiate_antisym_matrix(ValueMatrix& mat)
   {
     for (int j = i; j < n; ++j)
     {
-      mat_h[i + n * j] = std::complex<RealType>(0, -1.0 * mat[j][i]);
-      mat_h[j + n * i] = std::complex<RealType>(0, 1.0 * mat[j][i]);
+      mat_h[i + n * j] = std::complex<RealType>(mat[j][i].imag(), -1.0 * mat[j][i].real());
+      mat_h[j + n * i] = std::complex<RealType>(mat[j][i].imag(), 1.0 * mat[j][i].real());
     }
   }
   // diagonalize the matrix
@@ -546,12 +546,12 @@ void RotatedSPOs::exponentiate_antisym_matrix(ValueMatrix& mat)
   for (int i = 0; i < n; ++i)
     for (int j = 0; j < n; ++j)
     {
-      if (mat_d[i + n * j].imag() > 1e-12)
+    /*  if (mat_d[i + n * j].imag() > 1e-12)
       {
         app_log() << "warning: large imaginary value in orbital rotation matrix: (i,j) = (" << i << "," << j
                   << "), im = " << mat_d[i + n * j].imag() << std::endl;
-      }
-      mat[j][i] = mat_d[i + n * j].real();
+      }*/
+      mat[j][i] = mat_d[i + n * j];
     }
 }
 
