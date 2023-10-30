@@ -33,7 +33,7 @@ size_t ACForce::getFullDataSize() { return 0; }
 void ACForce::accumulate(const RefVector<MCPWalker>& walkers,
                                       const RefVector<ParticleSet>& psets,
                                       const RefVector<TrialWaveFunction>& wfns,
-                                      const RefVector<QMCHamiltonian>& hamss,
+                                      const RefVector<QMCHamiltonian>& hams,
                                       RandomBase<FullPrecReal>& rng)
 {
   for (int iw = 0; iw < walkers.size(); ++iw)
@@ -41,7 +41,7 @@ void ACForce::accumulate(const RefVector<MCPWalker>& walkers,
     MCPWalker& walker      = walkers[iw];
     ParticleSet& pset      = psets[iw];
     TrialWaveFunction& wfn = wfns[iw];
-
+    QMCHamiltonian& ham    = hams[iw];
     QMCT::RealType weight = walker.Weight;
     assert(weight >= 0);
 
