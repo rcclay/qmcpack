@@ -35,7 +35,9 @@ set(QMCEST_SRC
     PerParticleHamiltonianLoggerInput.cpp
     PerParticleHamiltonianLogger.cpp
     ACForceInput.cpp
-    ACForce.cpp)
+    ACForce.cpp
+    ReferencePointsInput.cpp
+    NEReferencePoints.cpp)
 
 ####################################
 # create libqmcestimators

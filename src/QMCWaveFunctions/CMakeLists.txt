@@ -37,11 +37,8 @@ set(WFBASE_SRCS
     HarmonicOscillator/SHOSet.cpp
     HarmonicOscillator/SHOSetBuilder.cpp
     ExampleHeBuilder.cpp
-    ExampleHeComponent.cpp)
-
-if(NOT QMC_COMPLEX)
-  set(WFBASE_SRCS ${WFBASE_SRCS} RotatedSPOs.cpp)
-endif(NOT QMC_COMPLEX)
+    ExampleHeComponent.cpp
+    RotatedSPOs.cpp)
 
 if(QMC_COMPLEX)
   set(WFBASE_SRCS ${WFBASE_SRCS} SpinorSet.cpp)
@@ -148,11 +145,7 @@ target_include_directories(qmcwfs PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(qmcwfs PUBLIC qmcutil qmcparticle platform_runtime platform_LA)
 target_link_libraries(qmcwfs PRIVATE einspline Math::FFTW3)
 
-if(USE_OBJECT_TARGET)
-  add_library(qmcwfs_omptarget OBJECT ${JASTROW_OMPTARGET_SRCS} ${FERMION_OMPTARGET_SRCS})
-else(USE_OBJECT_TARGET)
-  add_library(qmcwfs_omptarget ${JASTROW_OMPTARGET_SRCS} ${FERMION_OMPTARGET_SRCS})
-endif(USE_OBJECT_TARGET)
+add_library(qmcwfs_omptarget OBJECT ${JASTROW_OMPTARGET_SRCS} ${FERMION_OMPTARGET_SRCS})
 
 target_include_directories(qmcwfs_omptarget PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(qmcwfs_omptarget PUBLIC qmcutil qmcparticle containers platform_LA)

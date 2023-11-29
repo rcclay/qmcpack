@@ -24,6 +24,7 @@
 #include "Concurrency/Info.hpp"
 #include "type_traits/ConvertToReal.h"
 #include "NaNguard.h"
+#include "Fermion/MultiSlaterDetTableMethod.h"
 
 namespace qmcplusplus
 {
@@ -104,6 +105,15 @@ const SPOSet& TrialWaveFunction::getSPOSet(const std::string& name) const
   if (spoit == spomap_->end())
     throw std::runtime_error("SPOSet " + name + " cannot be found!");
   return *spoit->second;
+}
+
+RefVector<MultiSlaterDetTableMethod> TrialWaveFunction::findMSD() const
+{
+  RefVector<MultiSlaterDetTableMethod> refs;
+  for (auto& component : Z)
+    if (auto* comp_ptr = dynamic_cast<MultiSlaterDetTableMethod*>(component.get()); comp_ptr)
+      refs.push_back(*comp_ptr);
+  return refs;
 }
 
 /** return log(|psi|)
@@ -709,7 +719,8 @@ void TrialWaveFunction::mw_calcRatioGrad(const RefVectorWithLeader<TrialWaveFunc
     wf_list[iw].PhaseDiff = std::arg(ratios[iw]);
     NaNguard::checkOneParticleRatio(ratios[iw], "TWF::mw_calcRatioGrad at particle " + std::to_string(iat));
     if (ratios[iw] != PsiValue(0))
-      NaNguard::checkOneParticleGradients(grad_new.grads_positions[iw], "TWF::mw_calcRatioGrad at particle " + std::to_string(iat));
+      NaNguard::checkOneParticleGradients(grad_new.grads_positions[iw],
+                                          "TWF::mw_calcRatioGrad at particle " + std::to_string(iat));
   }
 }
 

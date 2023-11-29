@@ -38,6 +38,8 @@
 
 namespace qmcplusplus
 {
+class MultiSlaterDetTableMethod;
+
 /** @ingroup MBWfs
  * @brief Class to represent a many-body trial wave function
  *
@@ -501,6 +503,9 @@ public:
 
   /// spomap_ reference accessor
   const SPOMap& getSPOMap() const { return *spomap_; }
+
+  /// find MSD WFCs if exist
+  RefVector<MultiSlaterDetTableMethod> findMSD() const;
 
 private:
   static void debugOnlyCheckBuffer(WFBufferType& buffer);
