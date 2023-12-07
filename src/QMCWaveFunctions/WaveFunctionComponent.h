@@ -251,7 +251,6 @@ public:
    *  source particleset (ions) of the logarithmic gradient
    *  and laplacian w.r.t. the target paritlceset (electrons).
    * @param P quantum particle set (electrons)
-   * @param source classical particle set (ions)
    * @param iat particle index of source (ion)
    * @param the ion gradient of the elctron gradient
    * @param the ion gradient of the elctron laplacian.
