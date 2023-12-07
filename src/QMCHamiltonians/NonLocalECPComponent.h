@@ -202,6 +202,7 @@ public:
    * to total energy from ion "iat" and electron "iel".
    *
    * @param W electron particle set.
+   * @param ions ion particle set.
    * @param iat index of ion.
    * @param Psi trial wave function object
    * @param iel index of electron

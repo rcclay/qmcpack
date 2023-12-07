@@ -125,7 +125,6 @@ public:
   /** @brief Returns x,y,z components of ion gradient of slater matrices.
    *
    *  @param[in] P particle set.
-   *  @param[in] source ion particle set.
    *  @param[in]*** iat ion ID w.r.t. which to take derivative.
    *  @param[in,out] dmvec Slater matrix d/dR_{iat,a} M_ij=d/dR_{iat,a} phi_j(r_i) for each species group.  First index is a=x,y,z.
    *  @return Void
@@ -137,7 +136,6 @@ public:
   /** @brief Returns x,y,z components of ion gradient of slater matrices and their laplacians..
    *
    *  @param[in] P particle set.
-   *  @param[in] source ion particle set.
    *  @param[in] iat ion ID w.r.t. which to take derivative.
    *  @param[in,out] dmvec Slater matrix d/dR_{iat,a} M_ij=d/dR_{iat,a} phi_j(r_i) for each species group.  
    *                 First index is a=x,y,z.
@@ -184,7 +182,6 @@ public:
   /** @brief Return ionic gradient of J(r).
     *
     * @param[in] P electron particle set.
-    * @param[in] source ion particle set.
     * @param[in] iat Ion to take derivative w.r.t.
     * @return Gradient of J(r) w.r.t. ion iat.
     */
@@ -193,7 +190,6 @@ public:
   /** @brief Return ionic gradients of J(r), grad_iel(J(r)), and lapl_iel(J(r)).
     *
     * @param[in] P electron particle set.
-    * @param[in] source ion particle set.
     * @param[in] iat Ion to take derivative w.r.t.
     * @param[in,out] grad_grad iat ion gradient of electron gradients of J(r).  
     * @param[in,out] grad_lapl iat ion gradient of electron laplacians of J(r).

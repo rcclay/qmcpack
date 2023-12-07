@@ -289,7 +289,6 @@ public:
 
   /** evaluate local energy and derivatives w.r.t ionic coordinates, but deterministically.  
   * @param P target particle set (electrons)
-  * @param ions source particle set (ions)
   * @param psi Trial wave function
   * @param hf_terms  Re [(dH)Psi]/Psi
   * @param pulay_terms Re [(H-E_L)dPsi]/Psi 
@@ -313,7 +312,6 @@ public:
 
   /** evaluate local energy and derivatives w.r.t ionic coordinates.  
   * @param P target particle set (electrons)
-  * @param ions source particle set (ions)
   * @param psi Trial wave function
   * @param hf_terms  Re [(dH)Psi]/Psi
   * @param pulay_terms Re [(H-E_L)dPsi]/Psi 
@@ -328,7 +326,6 @@ public:
 
   /** evaluate local energy and derivatives w.r.t ionic coordinates, but deterministically.  
   * @param P target particle set (electrons)
-  * @param ions source particle set (ions)
   * @param psi Trial wave function
   * @param hf_terms  Re [(dH)Psi]/Psi
   * @param pulay_terms Re [(H-E_L)dPsi]/Psi 

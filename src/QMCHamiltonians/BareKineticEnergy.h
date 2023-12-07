@@ -105,7 +105,6 @@ public:
  *  referred to as Value, HF term, and pulay term respectively.
  *
  * @param P electron particle set.
- * @param ions ion particle set
  * @param psi Trial wave function object.
  * @param hf_terms 3Nion dimensional object. All direct force terms, or ionic gradient of operator itself.
  *                 Contribution of this operator is ADDED onto hf_terms.
