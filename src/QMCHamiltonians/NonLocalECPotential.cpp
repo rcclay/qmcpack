@@ -518,7 +518,7 @@ NonLocalECPotential::Return_t NonLocalECPotential::evaluateWithIonDerivs(Particl
                                                                          ParticleSet::ParticlePos& hf_terms,
                                                                          ParticleSet::ParticlePos& pulay_terms)
 {
-  evalIonDerivsImpl(P, ions, psi, hf_terms, pulay_terms);
+  evalIonDerivsImpl(P, IonConfig, psi, hf_terms, pulay_terms);
   return value_;
 }
 
@@ -529,7 +529,7 @@ NonLocalECPotential::Return_t NonLocalECPotential::evaluateWithIonDerivsDetermin
     ParticleSet::ParticlePos& hf_terms,
     ParticleSet::ParticlePos& pulay_terms)
 {
-  evalIonDerivsImpl(P, ions, psi, hf_terms, pulay_terms, true);
+  evalIonDerivsImpl(P, IonConfig, psi, hf_terms, pulay_terms, true);
   return value_;
 }
 

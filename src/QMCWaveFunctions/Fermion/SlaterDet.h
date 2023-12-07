@@ -152,23 +152,22 @@ public:
     Dets[det_id]->mw_evalGrad(extract_DetRef_list(wfc_list, det_id), p_list, iat, grad_now);
   }
 
-  GradType evalGradSource(ParticleSet& P, ParticleSet& src, int iat) override
+  GradType evalGradSource(ParticleSet& P, int iat) override
   {
     GradType G = GradType();
     for (int iz = 0; iz < size(); iz++)
-      G += Dets[iz]->evalGradSource(P, src, iat);
+      G += Dets[iz]->evalGradSource(P, iat);
     return G;
   }
 
   GradType evalGradSource(ParticleSet& P,
-                          ParticleSet& src,
                           int iat,
                           TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                           TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) override
   {
     GradType G = GradType();
     for (int iz = 0; iz < size(); iz++)
-      G += Dets[iz]->evalGradSource(P, src, iat, grad_grad, lapl_grad);
+      G += Dets[iz]->evalGradSource(P, iat, grad_grad, lapl_grad);
     return G;
   }
 

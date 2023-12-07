@@ -895,14 +895,13 @@ void DiracDeterminantBatched<DET_ENGINE>::resizeScratchObjectsForIonDerivs()
 template<typename DET_ENGINE>
 typename DiracDeterminantBatched<DET_ENGINE>::Grad DiracDeterminantBatched<DET_ENGINE>::evalGradSource(
     ParticleSet& P,
-    ParticleSet& source,
     int iat)
 {
   Grad g(0.0);
   if (Phi->hasIonDerivs())
   {
     resizeScratchObjectsForIonDerivs();
-    Phi->evaluateGradSource(P, FirstIndex, LastIndex, source, iat, grad_source_psiM);
+    Phi->evaluateGradSource(P, FirstIndex, LastIndex, iat, grad_source_psiM);
     auto& psiMinv = det_engine_.get_psiMinv();
     // psiMinv columns have padding but grad_source_psiM ones don't
     for (int i = 0; i < psiMinv.rows(); i++)
@@ -943,7 +942,6 @@ void DiracDeterminantBatched<DET_ENGINE>::evaluateHessian(ParticleSet& P, HessVe
 template<typename DET_ENGINE>
 typename DiracDeterminantBatched<DET_ENGINE>::Grad DiracDeterminantBatched<DET_ENGINE>::evalGradSource(
     ParticleSet& P,
-    ParticleSet& source,
     int iat,
     TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
     TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad)
@@ -952,7 +950,7 @@ typename DiracDeterminantBatched<DET_ENGINE>::Grad DiracDeterminantBatched<DET_E
   if (Phi->hasIonDerivs())
   {
     resizeScratchObjectsForIonDerivs();
-    Phi->evaluateGradSource(P, FirstIndex, LastIndex, source, iat, grad_source_psiM, grad_grad_source_psiM,
+    Phi->evaluateGradSource(P, FirstIndex, LastIndex, iat, grad_source_psiM, grad_grad_source_psiM,
                             grad_lapl_source_psiM);
 
     auto& psiMinv = det_engine_.get_psiMinv();

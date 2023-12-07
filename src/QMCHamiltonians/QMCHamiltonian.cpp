@@ -912,7 +912,7 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivs(ParticleSet& 
 
   for (int iat = 0; iat < ions.getTotalNum(); iat++)
   {
-    wfgradraw_[iat] = psi.evalGradSource(P, ions, iat);
+    wfgradraw_[iat] = psi.evalGradSource(P, iat);
     convertToReal(wfgradraw_[iat], wf_grad[iat]);
   }
   return localEnergy;
@@ -934,7 +934,7 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministic(
 
   for (int iat = 0; iat < ions.getTotalNum(); iat++)
   {
-    wfgradraw_[iat] = psi.evalGradSource(P, ions, iat);
+    wfgradraw_[iat] = psi.evalGradSource(P, iat);
     convertToReal(wfgradraw_[iat], wf_grad[iat]);
   }
   return localEnergy;
@@ -1230,7 +1230,7 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministicF
     //One from the Jastrow.  Jastrow is easy, so we evaluate it here, then add on the
     //determinantal piece at the end of this block.
 
-    wfgradraw_[iat] = psi_wrapper_in.evaluateJastrowGradSource(P, ions, iat);
+    wfgradraw_[iat] = psi_wrapper_in.evaluateJastrowGradSource(P, iat);
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
       psi_wrapper_in.wipeMatrices(dM_[idim]);
@@ -1241,7 +1241,7 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministicF
 
     {
       //ion derivative of slater matrix.
-      psi_wrapper_in.getIonGradM(P, ions, iat, dM_);
+      psi_wrapper_in.getIonGradM(P, iat, dM_);
     }
     for (int i = 0; i < H.size(); ++i)
     {

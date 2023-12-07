@@ -241,8 +241,8 @@ TEST_CASE("Eloc_Derivatives:slater_noj", "[hamiltonian]")
   hf_term.resize(Nions);
   pulay_term.resize(Nions);
 
-  wfgradraw[0] = psi->evalGradSource(elec, ions, 0); //On the C atom.
-  wfgradraw[1] = psi->evalGradSource(elec, ions, 1); //On the N atom.
+  wfgradraw[0] = psi->evalGradSource(elec, 0); //On the C atom.
+  wfgradraw[1] = psi->evalGradSource(elec, 1); //On the N atom.
 
   convertToReal(wfgradraw[0], wf_grad[0]);
   convertToReal(wfgradraw[1], wf_grad[1]);
@@ -410,8 +410,8 @@ TEST_CASE("Eloc_Derivatives:slater_wj", "[hamiltonian]")
   hf_term.resize(Nions);
   pulay_term.resize(Nions);
 
-  wfgradraw[0] = psi->evalGradSource(elec, ions, 0); //On the C atom.
-  wfgradraw[1] = psi->evalGradSource(elec, ions, 1); //On the N atom.
+  wfgradraw[0] = psi->evalGradSource(elec, 0); //On the C atom.
+  wfgradraw[1] = psi->evalGradSource(elec, 1); //On the N atom.
 
   convertToReal(wfgradraw[0], wf_grad[0]);
   convertToReal(wfgradraw[1], wf_grad[1]);
@@ -578,8 +578,8 @@ TEST_CASE("Eloc_Derivatives:multislater_noj", "[hamiltonian]")
   hf_term.resize(Nions);
   pulay_term.resize(Nions);
 
-  wfgradraw[0] = psi->evalGradSource(elec, ions, 0); //On the C atom.
-  wfgradraw[1] = psi->evalGradSource(elec, ions, 1); //On the N atom.
+  wfgradraw[0] = psi->evalGradSource(elec, 0); //On the C atom.
+  wfgradraw[1] = psi->evalGradSource(elec, 1); //On the N atom.
 
   convertToReal(wfgradraw[0], wf_grad[0]);
   convertToReal(wfgradraw[1], wf_grad[1]);
@@ -718,8 +718,8 @@ TEST_CASE("Eloc_Derivatives:multislater_wj", "[hamiltonian]")
   hf_term.resize(Nions);
   pulay_term.resize(Nions);
 
-  wfgradraw[0] = psi->evalGradSource(elec, ions, 0); //On the C atom.
-  wfgradraw[1] = psi->evalGradSource(elec, ions, 1); //On the N atom.
+  wfgradraw[0] = psi->evalGradSource(elec, 0); //On the C atom.
+  wfgradraw[1] = psi->evalGradSource(elec, 1); //On the N atom.
 
   convertToReal(wfgradraw[0], wf_grad[0]);
   convertToReal(wfgradraw[1], wf_grad[1]);
@@ -938,7 +938,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_noj", "[hamiltonian]")
       twf.wipeMatrices(dM[idim]);
     }
 
-    twf.getIonGradM(elec, ions, ionid, dM);
+    twf.getIonGradM(elec, ionid, dM);
     kinop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
@@ -1006,7 +1006,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_noj", "[hamiltonian]")
       twf.wipeMatrices(dM[idim]);
     }
 
-    twf.getIonGradM(elec, ions, ionid, dM);
+    twf.getIonGradM(elec, ionid, dM);
     nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
@@ -1198,7 +1198,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_wj", "[hamiltonian]")
       twf.wipeMatrices(dM[idim]);
     }
 
-    twf.getIonGradM(elec, ions, ionid, dM);
+    twf.getIonGradM(elec, ionid, dM);
     kinop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
@@ -1266,7 +1266,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_wj", "[hamiltonian]")
       twf.wipeMatrices(dM[idim]);
     }
 
-    twf.getIonGradM(elec, ions, ionid, dM);
+    twf.getIonGradM(elec, ionid, dM);
     nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
@@ -1508,7 +1508,7 @@ TEST_CASE("Eloc_Derivatives:slater_fastderiv_complex_pbc", "[hamiltonian]")
       twf.wipeMatrices(dM[idim]);
     }
 
-    twf.getIonGradM(elec, ions, ionid, dM);
+    twf.getIonGradM(elec, ionid, dM);
     kinop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
@@ -1578,7 +1578,7 @@ TEST_CASE("Eloc_Derivatives:slater_fastderiv_complex_pbc", "[hamiltonian]")
       twf.wipeMatrices(dM[idim]);
     }
 
-    twf.getIonGradM(elec, ions, ionid, dM);
+    twf.getIonGradM(elec, ionid, dM);
     nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)

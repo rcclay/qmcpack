@@ -486,7 +486,6 @@ void SpinorSet::evaluate_spin(const ParticleSet& P, int iat, ValueVector& psi, V
 void SpinorSet::evaluateGradSource(const ParticleSet& P,
                                    int first,
                                    int last,
-                                   const ParticleSet& source,
                                    int iat_src,
                                    GradMatrix& gradphi)
 {
@@ -494,8 +493,8 @@ void SpinorSet::evaluateGradSource(const ParticleSet& P,
 
   GradMatrix gradphi_up(nelec, OrbitalSetSize);
   GradMatrix gradphi_dn(nelec, OrbitalSetSize);
-  spo_up->evaluateGradSource(P, first, last, source, iat_src, gradphi_up);
-  spo_dn->evaluateGradSource(P, first, last, source, iat_src, gradphi_dn);
+  spo_up->evaluateGradSource(P, first, last, iat_src, gradphi_up);
+  spo_dn->evaluateGradSource(P, first, last, iat_src, gradphi_dn);
 
   for (int iat = 0; iat < nelec; iat++)
   {

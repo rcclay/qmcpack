@@ -1117,8 +1117,9 @@ public:
     }
   }
 
-  inline GradType evalGradSource(ParticleSet& P, ParticleSet& source, int isrc) override
+  inline GradType evalGradSource(ParticleSet& P, int isrc) override
   {
+    ParticleSet source(Ions); //This is probably not going to work.  Here to just compile for now.
     ParticleSet::ParticleGradient tempG;
     ParticleSet::ParticleLaplacian tempL;
     tempG.resize(P.getTotalNum());
@@ -1161,11 +1162,11 @@ public:
   }
 
   inline GradType evalGradSource(ParticleSet& P,
-                                 ParticleSet& source,
                                  int isrc,
                                  TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                                  TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) override
   {
+    ParticleSet source(Ions);
     ParticleSet::ParticleGradient Gp, Gm, dG;
     ParticleSet::ParticleLaplacian Lp, Lm, dL;
     Gp.resize(P.getTotalNum());

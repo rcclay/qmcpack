@@ -94,10 +94,9 @@ public:
 
   PsiValue ratioGrad(ParticleSet& P, int iat, GradType& grad_iat) override;
   GradType evalGrad(ParticleSet& P, int iat) override;
-  GradType evalGradSource(ParticleSet& P, ParticleSet& source, int iat) override;
+  GradType evalGradSource(ParticleSet& P, int iat) override;
 
   GradType evalGradSource(ParticleSet& P,
-                          ParticleSet& source,
                           int iat,
                           TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                           TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) override;

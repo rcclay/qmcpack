@@ -131,7 +131,6 @@ public:
    *  @return Void
    */
   void getIonGradM(const ParticleSet& P,
-                   const ParticleSet& source,
                    const int iat,
                    std::vector<std::vector<ValueMatrix>>& dmvec) const;
 
@@ -147,7 +146,6 @@ public:
    *  @return Void
    */
   void getIonGradIonGradELaplM(const ParticleSet& P,
-                               const ParticleSet& source,
                                int iat,
                                std::vector<std::vector<ValueMatrix>>& dmvec,
                                std::vector<std::vector<GradMatrix>>& dgmat,
@@ -190,7 +188,7 @@ public:
     * @param[in] iat Ion to take derivative w.r.t.
     * @return Gradient of J(r) w.r.t. ion iat.
     */
-  GradType evaluateJastrowGradSource(ParticleSet& P, ParticleSet& source, const int iat) const;
+  GradType evaluateJastrowGradSource(ParticleSet& P, const int iat) const;
 
   /** @brief Return ionic gradients of J(r), grad_iel(J(r)), and lapl_iel(J(r)).
     *
@@ -202,7 +200,6 @@ public:
     * @return Gradient of J(r) w.r.t. ion iat.
     */
   GradType evaluateJastrowGradSource(ParticleSet& P,
-                                     ParticleSet& source,
                                      const int iat,
                                      TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                                      TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) const;

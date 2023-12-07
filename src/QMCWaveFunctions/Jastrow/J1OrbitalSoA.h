@@ -623,7 +623,7 @@ public:
     }
   }
 
-  inline GradType evalGradSource(ParticleSet& P, ParticleSet& source, int isrc) override
+  inline GradType evalGradSource(ParticleSet& P, int isrc) override
   {
     GradType g_return(0.0);
     const auto& d_ie(P.getDistTableAB(myTableID));
@@ -631,7 +631,7 @@ public:
     {
       const auto& dist  = d_ie.getDistRow(iat);
       const auto& displ = d_ie.getDisplRow(iat);
-      int gid           = source.getGroupID(isrc);
+      int gid           = Ions.getGroupID(isrc);
       RealType r        = dist[isrc];
       RealType rinv     = 1.0 / r;
       PosType dr        = displ[isrc];
@@ -646,7 +646,6 @@ public:
   }
 
   inline GradType evalGradSource(ParticleSet& P,
-                                 ParticleSet& source,
                                  int isrc,
                                  TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                                  TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) override
@@ -657,7 +656,7 @@ public:
     {
       const auto& dist  = d_ie.getDistRow(iat);
       const auto& displ = d_ie.getDisplRow(iat);
-      int gid           = source.getGroupID(isrc);
+      int gid           = Ions.getGroupID(isrc);
       RealType r        = dist[isrc];
       RealType rinv     = 1.0 / r;
       PosType dr        = displ[isrc];

@@ -894,7 +894,6 @@ void LCAOrbitalSet::evaluate_notranspose(const ParticleSet& P,
 void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
                                        int first,
                                        int last,
-                                       const ParticleSet& source,
                                        int iat_src,
                                        GradMatrix& gradphi)
 {
@@ -920,7 +919,6 @@ void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
 void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
                                        int first,
                                        int last,
-                                       const ParticleSet& source,
                                        int iat_src,
                                        GradMatrix& grad_phi,
                                        HessMatrix& grad_grad_phi,
@@ -948,7 +946,6 @@ void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
 
 void LCAOrbitalSet::evaluateGradSourceRow(const ParticleSet& P,
                                           int iel,
-                                          const ParticleSet& source,
                                           int iat_src,
                                           GradVector& gradphi)
 {

@@ -565,7 +565,7 @@ struct J1Spin : public WaveFunctionComponent
 
   /**@} */
 
-  inline GradType evalGradSource(ParticleSet& P, ParticleSet& source, int isrc) override
+  inline GradType evalGradSource(ParticleSet& P, int isrc) override
   {
     GradType g_return(0.0);
     const auto& d_ie(P.getDistTableAB(myTableID));
@@ -576,7 +576,7 @@ struct J1Spin : public WaveFunctionComponent
       RealType r        = dist[isrc];
       RealType rinv     = 1.0 / r;
       PosType dr        = displ[isrc];
-      auto gid          = source.getGroupID(isrc) * NumTargetGroups + P.getGroupID(iat);
+      auto gid          = Ions.getGroupID(isrc) * NumTargetGroups + P.getGroupID(iat);
       if (J1UniqueFunctors[gid] != nullptr)
       {
         U[isrc] = J1UniqueFunctors[gid]->evaluate(dist[isrc], dU[isrc], d2U[isrc], d3U[isrc]);
@@ -587,7 +587,6 @@ struct J1Spin : public WaveFunctionComponent
   }
 
   inline GradType evalGradSource(ParticleSet& P,
-                                 ParticleSet& source,
                                  int isrc,
                                  TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                                  TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) override
@@ -601,7 +600,7 @@ struct J1Spin : public WaveFunctionComponent
       RealType r        = dist[isrc];
       RealType rinv     = 1.0 / r;
       PosType dr        = displ[isrc];
-      auto gid          = source.getGroupID(isrc) * NumTargetGroups + P.getGroupID(iat);
+      auto gid          = Ions.getGroupID(isrc) * NumTargetGroups + P.getGroupID(iat);
       if (J1UniqueFunctors[gid] != nullptr)
         U[isrc] = J1UniqueFunctors[gid]->evaluate(dist[isrc], dU[isrc], d2U[isrc], d3U[isrc]);
       else

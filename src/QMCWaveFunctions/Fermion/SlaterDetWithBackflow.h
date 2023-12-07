@@ -80,14 +80,13 @@ public:
     return g;
   }
 
-  GradType evalGradSource(ParticleSet& P, ParticleSet& src, int iat) override
+  GradType evalGradSource(ParticleSet& P, int iat) override
   {
     APP_ABORT("Need to implement SlaterDetWithBackflow::evalGradSource() \n");
     return ValueType();
   }
 
   GradType evalGradSource(ParticleSet& P,
-                          ParticleSet& src,
                           int iat,
                           TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                           TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) override

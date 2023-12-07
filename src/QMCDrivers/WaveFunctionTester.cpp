@@ -1484,7 +1484,7 @@ void WaveFunctionTester::runGradSourceTest()
   ParticleSet::ParticleGradient grad_ion(nions), grad_ion_FD(nions);
   for (int iat = 0; iat < nions; iat++)
   {
-    grad_ion[iat] = Psi.evalGradSource(W, source, iat);
+    grad_ion[iat] = Psi.evalGradSource(W, iat);
     PosType rI    = source.R[iat];
     for (int iondim = 0; iondim < 3; iondim++)
     {
@@ -1525,7 +1525,7 @@ void WaveFunctionTester::runGradSourceTest()
       lapl_grad_FD[dim].resize(nat);
     }
     Psi.evaluateLog(W);
-    GradType grad_log = Psi.evalGradSource(W, source, isrc, grad_grad, lapl_grad);
+    GradType grad_log = Psi.evalGradSource(W, isrc, grad_grad, lapl_grad);
     ValueType log     = Psi.evaluateLog(W);
     //grad_log = Psi.evalGradSource (W, source, isrc);
     for (int iat = 0; iat < nat; iat++)
@@ -1538,11 +1538,11 @@ void WaveFunctionTester::runGradSourceTest()
         W.R[iat][eldim] = r0[eldim] + delta;
         W.update();
         ValueType log_p       = Psi.evaluateLog(W);
-        GradType gradlogpsi_p = Psi.evalGradSource(W, source, isrc);
+        GradType gradlogpsi_p = Psi.evalGradSource(W, isrc);
         W.R[iat][eldim]       = r0[eldim] - delta;
         W.update();
         ValueType log_m       = Psi.evaluateLog(W);
-        GradType gradlogpsi_m = Psi.evalGradSource(W, source, isrc);
+        GradType gradlogpsi_m = Psi.evalGradSource(W, isrc);
         lapFD += gradlogpsi_m + gradlogpsi_p;
         gFD[eldim] = gradlogpsi_p - gradlogpsi_m;
         W.R[iat]   = r0;
@@ -1667,7 +1667,7 @@ void WaveFunctionTester::runZeroVarianceTest()
 #endif
     for (int isrc = 0; isrc < source.getTotalNum(); isrc++)
     {
-      GradType grad_log = Psi.evalGradSource(W, source, isrc, grad_grad, lapl_grad);
+      GradType grad_log = Psi.evalGradSource(W, isrc, grad_grad, lapl_grad);
       for (int dim = 0; dim < OHMMS_DIM; dim++)
       {
         double ZV = 0.5 * Sum(lapl_grad[dim]) + Dot(grad_grad[dim], W.G);

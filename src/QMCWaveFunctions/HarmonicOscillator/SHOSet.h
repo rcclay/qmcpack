@@ -128,13 +128,11 @@ struct SHOSet : public SPOSet
   void evaluateGradSource(const ParticleSet& P,
                           int first,
                           int last,
-                          const ParticleSet& source,
                           int iat_src,
                           GradMatrix& gradphi) override;
   void evaluateGradSource(const ParticleSet& P,
                           int first,
                           int last,
-                          const ParticleSet& source,
                           int iat_src,
                           GradMatrix& dphi,
                           HessMatrix& ddphi,
