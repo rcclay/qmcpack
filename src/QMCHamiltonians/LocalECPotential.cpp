@@ -106,7 +106,6 @@ LocalECPotential::Return_t LocalECPotential::evaluate(ParticleSet& P)
 }
 
 LocalECPotential::Return_t LocalECPotential::evaluateWithIonDerivs(ParticleSet& P,
-                                                                   ParticleSet& ions,
                                                                    TrialWaveFunction& psi,
                                                                    ParticleSet::ParticlePos& hf_terms,
                                                                    ParticleSet::ParticlePos& pulay_terms)

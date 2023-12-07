@@ -181,7 +181,6 @@ void BareKineticEnergy::mw_evaluateWithParameterDerivatives(const RefVectorWithL
  *          this operator are added into hf_terms and pulay_terms.
  */
 Return_t BareKineticEnergy::evaluateWithIonDerivs(ParticleSet& P,
-                                                  ParticleSet& ions,
                                                   TrialWaveFunction& psi,
                                                   ParticleSet::ParticlePos& hf_terms,
                                                   ParticleSet::ParticlePos& pulay_terms)
@@ -190,7 +189,7 @@ Return_t BareKineticEnergy::evaluateWithIonDerivs(ParticleSet& P,
   using ParticleGradient  = ParticleSet::ParticleGradient;
   using ParticleLaplacian = ParticleSet::ParticleLaplacian;
 
-  int Nions = ions.getTotalNum();
+  int Nions = hf_terms.size();
   int Nelec = P.getTotalNum();
 
   //These are intermediate arrays for potentially complex math.
@@ -342,7 +341,6 @@ void BareKineticEnergy::evaluateOneBodyOpMatrix(ParticleSet& P,
 }
 
 void BareKineticEnergy::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
-                                                          ParticleSet& source,
                                                           const TWFFastDerivWrapper& psi,
                                                           const int iat,
                                                           std::vector<std::vector<ValueMatrix>>& Bforce)

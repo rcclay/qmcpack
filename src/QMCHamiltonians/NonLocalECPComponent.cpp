@@ -280,6 +280,7 @@ void NonLocalECPComponent::mw_evaluateOne(const RefVectorWithLeader<NonLocalECPC
 }
 
 NonLocalECPComponent::RealType NonLocalECPComponent::evaluateOneWithForces(ParticleSet& W,
+                                                                           ParticleSet& ions,
                                                                            int iat,
                                                                            TrialWaveFunction& psi,
                                                                            int iel,

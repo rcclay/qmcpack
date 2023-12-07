@@ -212,6 +212,7 @@ public:
    * @return RealType Contribution to $\frac{V\Psi_T}{\Psi_T}$ from ion iat and electron iel.
    */
   RealType evaluateOneWithForces(ParticleSet& W,
+                                 ParticleSet& ions,
                                  int iat,
                                  TrialWaveFunction& Psi,
                                  int iel,

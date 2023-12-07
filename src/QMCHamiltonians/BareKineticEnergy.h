@@ -115,7 +115,6 @@ public:
  *          this operator are added into hf_terms and pulay_terms.
  */
   Return_t evaluateWithIonDerivs(ParticleSet& P,
-                                 ParticleSet& ions,
                                  TrialWaveFunction& psi,
                                  ParticleSet::ParticlePos& hf_terms,
                                  ParticleSet::ParticlePos& pulay_terms) override;
@@ -123,7 +122,6 @@ public:
   void evaluateOneBodyOpMatrix(ParticleSet& P, const TWFFastDerivWrapper& psi, std::vector<ValueMatrix>& B) override;
 
   void evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
-                                         ParticleSet& source,
                                          const TWFFastDerivWrapper& psi,
                                          const int iat,
                                          std::vector<std::vector<ValueMatrix>>& Bforce) override;

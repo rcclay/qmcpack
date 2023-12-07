@@ -234,9 +234,9 @@ TEST_CASE("Chiesa Force", "[hamiltonian]")
   // Probably fine for a test but if this type of behavior was needed in
   // production code in the future, a different solution would be needed.
   auto noElecForces = noElecForce.getForces();
-  noIonForce.evaluateWithIonDerivs(ions3, ions3, psi, noElecForces, noElecForces);
+  noIonForce.evaluateWithIonDerivs(ions3, psi, noElecForces, noElecForces);
   auto noIonForces = noIonForce.getForces();
-  noElecForce.evaluateWithIonDerivs(elec, ions3, psi, noIonForces, noIonForces);
+  noElecForce.evaluateWithIonDerivs(elec, psi, noIonForces, noIonForces);
 
   // It seems a bit silly to test the makeClone method
   // but this class does not use the compiler's copy constructor and

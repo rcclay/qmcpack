@@ -897,20 +897,20 @@ void QMCHamiltonian::evaluateElecGrad(ParticleSet& P,
   }
 }
 QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivs(ParticleSet& P,
-                                                                   ParticleSet& ions,
                                                                    TrialWaveFunction& psi,
                                                                    ParticleSet::ParticlePos& hf_term,
                                                                    ParticleSet::ParticlePos& pulay_terms,
                                                                    ParticleSet::ParticlePos& wf_grad)
 {
-  ParticleSet::ParticleGradient wfgradraw_(ions.getTotalNum());
+  const int Nion = hf_term.size();
+  ParticleSet::ParticleGradient wfgradraw_(Nion);
   wfgradraw_           = 0.0;
   RealType localEnergy = 0.0;
 
   for (int i = 0; i < H.size(); ++i)
-    localEnergy += H[i]->evaluateWithIonDerivs(P, ions, psi, hf_term, pulay_terms);
+    localEnergy += H[i]->evaluateWithIonDerivs(P, psi, hf_term, pulay_terms);
 
-  for (int iat = 0; iat < ions.getTotalNum(); iat++)
+  for (int iat = 0; iat < Nion; iat++)
   {
     wfgradraw_[iat] = psi.evalGradSource(P, iat);
     convertToReal(wfgradraw_[iat], wf_grad[iat]);
@@ -919,20 +919,20 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivs(ParticleSet& 
 }
 
 QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministic(ParticleSet& P,
-                                                                                ParticleSet& ions,
                                                                                 TrialWaveFunction& psi,
                                                                                 ParticleSet::ParticlePos& hf_term,
                                                                                 ParticleSet::ParticlePos& pulay_terms,
                                                                                 ParticleSet::ParticlePos& wf_grad)
 {
-  ParticleSet::ParticleGradient wfgradraw_(ions.getTotalNum());
+  const int Nion = hf_term.size();
+  ParticleSet::ParticleGradient wfgradraw_(Nion);
   wfgradraw_           = 0.0;
   RealType localEnergy = 0.0;
 
   for (int i = 0; i < H.size(); ++i)
-    localEnergy += H[i]->evaluateWithIonDerivsDeterministic(P, ions, psi, hf_term, pulay_terms);
+    localEnergy += H[i]->evaluateWithIonDerivsDeterministic(P, psi, hf_term, pulay_terms);
 
-  for (int iat = 0; iat < ions.getTotalNum(); iat++)
+  for (int iat = 0; iat < Nion; iat++)
   {
     wfgradraw_[iat] = psi.evalGradSource(P, iat);
     convertToReal(wfgradraw_[iat], wf_grad[iat]);
@@ -1094,12 +1094,12 @@ RefVectorWithLeader<OperatorBase> QMCHamiltonian::extract_HC_list(const RefVecto
 }
 
 QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministicFast(ParticleSet& P,
-                                                                                    ParticleSet& ions,
                                                                                     TrialWaveFunction& psi_in,
                                                                                     TWFFastDerivWrapper& psi_wrapper_in,
                                                                                     ParticleSet::ParticlePos& dEdR,
                                                                                     ParticleSet::ParticlePos& wf_grad)
 {
+  const int Nion = dEdR.size();
   ScopedTimer local_timer(eval_ion_derivs_fast_timer_);
   P.update();
   //resize everything;
@@ -1183,12 +1183,12 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministicF
       psi_wrapper_in.wipeMatrices(dB_gs_[idim]);
     }
   }
-  ParticleSet::ParticleGradient wfgradraw_(ions.getTotalNum());
-  ParticleSet::ParticleGradient pulay_(ions.getTotalNum());
-  ParticleSet::ParticleGradient hf_(ions.getTotalNum());
-  ParticleSet::ParticleGradient dedr_complex(ions.getTotalNum());
-  ParticleSet::ParticlePos pulayterms_(ions.getTotalNum());
-  ParticleSet::ParticlePos hfdiag_(ions.getTotalNum());
+  ParticleSet::ParticleGradient wfgradraw_(Nion);
+  ParticleSet::ParticleGradient pulay_(Nion);
+  ParticleSet::ParticleGradient hf_(Nion);
+  ParticleSet::ParticleGradient dedr_complex(Nion);
+  ParticleSet::ParticlePos pulayterms_(Nion);
+  ParticleSet::ParticlePos hfdiag_(Nion);
   wfgradraw_           = 0.0;
   RealType localEnergy = 0.0;
 
@@ -1208,7 +1208,7 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministicF
     }
     else
     {
-      localEnergy += H[i]->evaluateWithIonDerivsDeterministic(P, ions, psi_in, hfdiag_, pulayterms_);
+      localEnergy += H[i]->evaluateWithIonDerivsDeterministic(P, psi_in, hfdiag_, pulayterms_);
     }
   }
 
@@ -1224,7 +1224,7 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministicF
     psi_wrapper_in.buildX(Minv_, B_gs_, X_);
   }
   //And now we compute the 3N force derivatives.  3 at a time for each atom.
-  for (int iat = 0; iat < ions.getTotalNum(); iat++)
+  for (int iat = 0; iat < Nion; iat++)
   {
     //The total wavefunction derivative has two contributions.  One from determinantal piece,
     //One from the Jastrow.  Jastrow is easy, so we evaluate it here, then add on the
@@ -1247,7 +1247,7 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateIonDerivsDeterministicF
     {
       if (H[i]->dependsOnWaveFunction())
       {
-        H[i]->evaluateOneBodyOpMatrixForceDeriv(P, ions, psi_wrapper_in, iat, dB_);
+        H[i]->evaluateOneBodyOpMatrixForceDeriv(P, psi_wrapper_in, iat, dB_);
       }
     }
 

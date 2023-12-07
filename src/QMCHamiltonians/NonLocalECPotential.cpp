@@ -214,7 +214,7 @@ void NonLocalECPotential::evaluateImpl(ParticleSet& P, bool Tmove, bool keep_gri
         for (int iat = 0; iat < NumIons; iat++)
           if (PP[iat] != nullptr && dist[iat] < PP[iat]->getRmax())
           {
-            Real pairpot = PP[iat]->evaluateOneWithForces(P, iat, Psi, jel, dist[iat], -displ[iat], forces_[iat]);
+            Real pairpot = PP[iat]->evaluateOneWithForces(P, IonConfig, iat, Psi, jel, dist[iat], -displ[iat], forces_[iat]);
             if (Tmove)
               PP[iat]->contributeTxy(jel, tmove_xy_);
             value_ += pairpot;
@@ -458,7 +458,6 @@ void NonLocalECPotential::mw_evaluateImpl(const RefVectorWithLeader<OperatorBase
 
 
 void NonLocalECPotential::evalIonDerivsImpl(ParticleSet& P,
-                                            ParticleSet& ions,
                                             TrialWaveFunction& psi,
                                             ParticleSet::ParticlePos& hf_terms,
                                             ParticleSet::ParticlePos& pulay_terms,
@@ -499,7 +498,7 @@ void NonLocalECPotential::evalIonDerivsImpl(ParticleSet& P,
         if (PP[iat] != nullptr && dist[iat] < PP[iat]->getRmax())
         {
           value_ +=
-              PP[iat]->evaluateOneWithForces(P, ions, iat, Psi, jel, dist[iat], -displ[iat], forces_[iat], PulayTerm);
+              PP[iat]->evaluateOneWithForces(P, IonConfig, iat, Psi, jel, dist[iat], -displ[iat], forces_[iat], PulayTerm);
           if (Tmove)
             PP[iat]->contributeTxy(jel, tmove_xy_);
           NeighborIons.push_back(iat);
@@ -513,23 +512,21 @@ void NonLocalECPotential::evalIonDerivsImpl(ParticleSet& P,
 }
 
 NonLocalECPotential::Return_t NonLocalECPotential::evaluateWithIonDerivs(ParticleSet& P,
-                                                                         ParticleSet& ions,
                                                                          TrialWaveFunction& psi,
                                                                          ParticleSet::ParticlePos& hf_terms,
                                                                          ParticleSet::ParticlePos& pulay_terms)
 {
-  evalIonDerivsImpl(P, IonConfig, psi, hf_terms, pulay_terms);
+  evalIonDerivsImpl(P, psi, hf_terms, pulay_terms);
   return value_;
 }
 
 NonLocalECPotential::Return_t NonLocalECPotential::evaluateWithIonDerivsDeterministic(
     ParticleSet& P,
-    ParticleSet& ions,
     TrialWaveFunction& psi,
     ParticleSet::ParticlePos& hf_terms,
     ParticleSet::ParticlePos& pulay_terms)
 {
-  evalIonDerivsImpl(P, IonConfig, psi, hf_terms, pulay_terms, true);
+  evalIonDerivsImpl(P, psi, hf_terms, pulay_terms, true);
   return value_;
 }
 
@@ -586,7 +583,6 @@ void NonLocalECPotential::evaluateOneBodyOpMatrix(ParticleSet& P,
 }
 
 void NonLocalECPotential::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
-                                                            ParticleSet& source,
                                                             const TWFFastDerivWrapper& psi,
                                                             const int iat_source,
                                                             std::vector<std::vector<ValueMatrix>>& Bforce)
@@ -615,7 +611,7 @@ void NonLocalECPotential::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
       for (int iat = 0; iat < NumIons; iat++)
         if (PP[iat] != nullptr && dist[iat] < PP[iat]->getRmax())
         {
-          PP[iat]->evaluateOneBodyOpMatrixdRContribution(P, source, iat, iat_source, psi, jel, dist[iat], -displ[iat],
+          PP[iat]->evaluateOneBodyOpMatrixdRContribution(P, IonConfig, iat, iat_source, psi, jel, dist[iat], -displ[iat],
                                                          Bforce);
           NeighborIons.push_back(iat);
           IonNeighborElecs.getNeighborList(iat).push_back(jel);

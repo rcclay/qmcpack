@@ -368,7 +368,7 @@ TEST_CASE("Evaluate_ecp", "[hamiltonian]")
     for (int iat = 0; iat < ions.getTotalNum(); iat++)
       if (nlpp != nullptr && dist[iat] < nlpp->getRmax())
       {
-        Value2 += nlpp->evaluateOneWithForces(elec, iat, psi, jel, dist[iat], -displ[iat], HFTerm[iat]);
+        Value2 += nlpp->evaluateOneWithForces(elec, ions, iat, psi, jel, dist[iat], -displ[iat], HFTerm[iat]);
         Value3 +=
             nlpp->evaluateOneWithForces(elec, ions, iat, psi, jel, dist[iat], -displ[iat], HFTerm2[iat], PulayTerm);
       }

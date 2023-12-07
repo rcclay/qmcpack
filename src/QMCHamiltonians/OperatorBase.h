@@ -353,7 +353,6 @@ public:
    * @return Contribution of OperatorBase to Local Energy.
    */
   virtual Return_t evaluateWithIonDerivs(ParticleSet& P,
-                                         ParticleSet& ions,
                                          TrialWaveFunction& psi,
                                          ParticleSet::ParticlePos& hf_term,
                                          ParticleSet::ParticlePos& pulay_term);
@@ -371,7 +370,6 @@ public:
    * @return Contribution of OperatorBase to Local Energy.
    */
   virtual Return_t evaluateWithIonDerivsDeterministic(ParticleSet& P,
-                                                      ParticleSet& ions,
                                                       TrialWaveFunction& psi,
                                                       ParticleSet::ParticlePos& hf_term,
                                                       ParticleSet::ParticlePos& pulay_term);
@@ -400,7 +398,6 @@ public:
    * @return Void
    */
   inline virtual void evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
-                                                        ParticleSet& source,
                                                         const TWFFastDerivWrapper& psi,
                                                         const int iat,
                                                         std::vector<std::vector<ValueMatrix>>& Bforce)

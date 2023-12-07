@@ -258,7 +258,7 @@ TEST_CASE("Eloc_Derivatives:slater_noj", "[hamiltonian]")
   //Kinetic Force
   hf_term    = 0.0;
   pulay_term = 0.0;
-  (ham.getHamiltonian(KINETIC))->evaluateWithIonDerivsDeterministic(elec, ions, *psi, hf_term, pulay_term);
+  (ham.getHamiltonian(KINETIC))->evaluateWithIonDerivsDeterministic(elec, *psi, hf_term, pulay_term);
 #if defined(MIXED_PRECISION)
   CHECK(hf_term[0][0] + pulay_term[0][0] == Approx(1.0852823603357820).epsilon(1e-4));
   CHECK(hf_term[0][1] + pulay_term[0][1] == Approx(24.2154119471038562).epsilon(1e-4));
@@ -278,7 +278,7 @@ TEST_CASE("Eloc_Derivatives:slater_noj", "[hamiltonian]")
   hf_term    = 0.0;
   pulay_term = 0.0;
   double val =
-      (ham.getHamiltonian(NONLOCALECP))->evaluateWithIonDerivsDeterministic(elec, ions, *psi, hf_term, pulay_term);
+      (ham.getHamiltonian(NONLOCALECP))->evaluateWithIonDerivsDeterministic(elec, *psi, hf_term, pulay_term);
 
 //MP fails the first REQUIRE with 24.22544.  Just bypass the checks in those builds.
 #if defined(MIXED_PRECISION)
@@ -303,7 +303,7 @@ TEST_CASE("Eloc_Derivatives:slater_noj", "[hamiltonian]")
   hf_term    = 0.0;
   pulay_term = 0.0;
   wf_grad    = 0.0;
-  ham.evaluateIonDerivsDeterministic(elec, ions, *psi, hf_term, pulay_term, wf_grad);
+  ham.evaluateIonDerivsDeterministic(elec, *psi, hf_term, pulay_term, wf_grad);
 
   CHECK(dot(hf_term[0], hf_term[0]) != Approx(0));
   CHECK(dot(pulay_term[0], pulay_term[0]) != Approx(0));
@@ -318,7 +318,7 @@ TEST_CASE("Eloc_Derivatives:slater_noj", "[hamiltonian]")
   wf_grad    = 0.0;
   RandomGenerator myrng;
   ham.setRandomGenerator(&myrng);
-  ham.evaluateIonDerivs(elec, ions, *psi, hf_term, pulay_term, wf_grad);
+  ham.evaluateIonDerivs(elec, *psi, hf_term, pulay_term, wf_grad);
 
   CHECK(dot(hf_term[0], hf_term[0]) != Approx(0));
   CHECK(dot(pulay_term[0], pulay_term[0]) != Approx(0));
@@ -427,7 +427,7 @@ TEST_CASE("Eloc_Derivatives:slater_wj", "[hamiltonian]")
   //Kinetic Force
   hf_term    = 0.0;
   pulay_term = 0.0;
-  (ham.getHamiltonian(KINETIC))->evaluateWithIonDerivsDeterministic(elec, ions, *psi, hf_term, pulay_term);
+  (ham.getHamiltonian(KINETIC))->evaluateWithIonDerivsDeterministic(elec, *psi, hf_term, pulay_term);
 #if defined(MIXED_PRECISION)
   CHECK(hf_term[0][0] + pulay_term[0][0] == Approx(-3.3359153349010735).epsilon(1e-4));
   CHECK(hf_term[0][1] + pulay_term[0][1] == Approx(30.0487085581835309).epsilon(1e-4));
@@ -447,7 +447,7 @@ TEST_CASE("Eloc_Derivatives:slater_wj", "[hamiltonian]")
   hf_term    = 0.0;
   pulay_term = 0.0;
   double val =
-      (ham.getHamiltonian(NONLOCALECP))->evaluateWithIonDerivsDeterministic(elec, ions, *psi, hf_term, pulay_term);
+      (ham.getHamiltonian(NONLOCALECP))->evaluateWithIonDerivsDeterministic(elec, *psi, hf_term, pulay_term);
 //MP fails the first REQUIRE with 27.15313.  Just bypass the checks in those builds.
 #if defined(MIXED_PRECISION)
   CHECK(hf_term[0][0] + pulay_term[0][0] == Approx(27.1517161490208956).epsilon(2e-4));
@@ -471,7 +471,7 @@ TEST_CASE("Eloc_Derivatives:slater_wj", "[hamiltonian]")
   hf_term    = 0.0;
   pulay_term = 0.0;
   wf_grad    = 0.0;
-  ham.evaluateIonDerivsDeterministic(elec, ions, *psi, hf_term, pulay_term, wf_grad);
+  ham.evaluateIonDerivsDeterministic(elec, *psi, hf_term, pulay_term, wf_grad);
 
   CHECK(dot(hf_term[0], hf_term[0]) != Approx(0));
   CHECK(dot(pulay_term[0], pulay_term[0]) != Approx(0));
@@ -486,7 +486,7 @@ TEST_CASE("Eloc_Derivatives:slater_wj", "[hamiltonian]")
   wf_grad    = 0.0;
   RandomGenerator myrng;
   ham.setRandomGenerator(&myrng);
-  ham.evaluateIonDerivs(elec, ions, *psi, hf_term, pulay_term, wf_grad);
+  ham.evaluateIonDerivs(elec, *psi, hf_term, pulay_term, wf_grad);
 
   CHECK(dot(hf_term[0], hf_term[0]) != Approx(0));
   CHECK(dot(pulay_term[0], pulay_term[0]) != Approx(0));
@@ -939,7 +939,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_noj", "[hamiltonian]")
     }
 
     twf.getIonGradM(elec, ionid, dM);
-    kinop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
+    kinop->evaluateOneBodyOpMatrixForceDeriv(elec, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
@@ -1007,7 +1007,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_noj", "[hamiltonian]")
     }
 
     twf.getIonGradM(elec, ionid, dM);
-    nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
+    nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
@@ -1199,7 +1199,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_wj", "[hamiltonian]")
     }
 
     twf.getIonGradM(elec, ionid, dM);
-    kinop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
+    kinop->evaluateOneBodyOpMatrixForceDeriv(elec, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
@@ -1267,7 +1267,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_wj", "[hamiltonian]")
     }
 
     twf.getIonGradM(elec, ionid, dM);
-    nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
+    nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
@@ -1296,7 +1296,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_wj", "[hamiltonian]")
   //This is to test the fast force API in QMCHamiltonian.
   ParticleSet::ParticlePos dedr(ions.getTotalNum());
   ParticleSet::ParticlePos dpsidr(ions.getTotalNum());
-  ham.evaluateIonDerivsDeterministicFast(elec, ions, *psi, twf, dedr, dpsidr);
+  ham.evaluateIonDerivsDeterministicFast(elec, *psi, twf, dedr, dpsidr);
 }
 
 //This will be very similar to the previous tests, but we will check its behavior
@@ -1509,7 +1509,7 @@ TEST_CASE("Eloc_Derivatives:slater_fastderiv_complex_pbc", "[hamiltonian]")
     }
 
     twf.getIonGradM(elec, ionid, dM);
-    kinop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
+    kinop->evaluateOneBodyOpMatrixForceDeriv(elec, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
@@ -1579,7 +1579,7 @@ TEST_CASE("Eloc_Derivatives:slater_fastderiv_complex_pbc", "[hamiltonian]")
     }
 
     twf.getIonGradM(elec, ionid, dM);
-    nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, ions, twf, ionid, dB);
+    nlppop->evaluateOneBodyOpMatrixForceDeriv(elec, twf, ionid, dB);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {

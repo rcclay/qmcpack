@@ -297,7 +297,6 @@ public:
   * @return Local Energy.
   */
   FullPrecRealType evaluateIonDerivsDeterministicFast(ParticleSet& P,
-                                                      ParticleSet& ions,
                                                       TrialWaveFunction& psi_in,
                                                       TWFFastDerivWrapper& psi_wrapper,
                                                       ParticleSet::ParticlePos& dedr,
@@ -322,7 +321,6 @@ public:
   * @return Local Energy.
   */
   FullPrecRealType evaluateIonDerivs(ParticleSet& P,
-                                     ParticleSet& ions,
                                      TrialWaveFunction& psi,
                                      ParticleSet::ParticlePos& hf_terms,
                                      ParticleSet::ParticlePos& pulay_terms,
@@ -338,7 +336,6 @@ public:
   * @return Local Energy.
   */
   FullPrecRealType evaluateIonDerivsDeterministic(ParticleSet& P,
-                                                  ParticleSet& ions,
                                                   TrialWaveFunction& psi,
                                                   ParticleSet::ParticlePos& hf_terms,
                                                   ParticleSet::ParticlePos& pulay_terms,

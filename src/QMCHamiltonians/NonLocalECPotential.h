@@ -80,13 +80,11 @@ public:
                                            const std::vector<ListenerVector<Real>>& listeners_ions) const override;
 
   Return_t evaluateWithIonDerivs(ParticleSet& P,
-                                 ParticleSet& ions,
                                  TrialWaveFunction& psi,
                                  ParticleSet::ParticlePos& hf_terms,
                                  ParticleSet::ParticlePos& pulay_terms) override;
 
   Return_t evaluateWithIonDerivsDeterministic(ParticleSet& P,
-                                              ParticleSet& ions,
                                               TrialWaveFunction& psi,
                                               ParticleSet::ParticlePos& hf_terms,
                                               ParticleSet::ParticlePos& pulay_terms) override;
@@ -94,7 +92,6 @@ public:
   void evaluateOneBodyOpMatrix(ParticleSet& P, const TWFFastDerivWrapper& psi, std::vector<ValueMatrix>& B) override;
 
   void evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
-                                         ParticleSet& source,
                                          const TWFFastDerivWrapper& psi,
                                          const int iat,
                                          std::vector<std::vector<ValueMatrix>>& Bforce) override;
@@ -237,7 +234,6 @@ private:
   void evaluateImpl(ParticleSet& P, bool Tmove, bool keepGrid = false);
 
   void evalIonDerivsImpl(ParticleSet& P,
-                         ParticleSet& ions,
                          TrialWaveFunction& psi,
                          ParticleSet::ParticlePos& hf_terms,
                          ParticleSet::ParticlePos& pulay_terms,
