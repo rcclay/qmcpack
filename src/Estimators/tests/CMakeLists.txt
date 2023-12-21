@@ -44,6 +44,7 @@ set(SRCS
     test_MagnetizationDensity.cpp
     test_ACForceInput.cpp
     test_ACForce.cpp
+    test_ParseGridInput.cpp
     test_PerParticleHamiltonianLogger.cpp
     test_ReferencePointsInput.cpp
     test_ReferencePoints.cpp
