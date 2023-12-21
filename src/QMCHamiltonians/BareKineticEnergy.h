@@ -115,7 +115,6 @@ public:
  *          this operator are added into hf_terms and pulay_terms.
  */
   Return_t evaluateWithIonDerivs(ParticleSet& P,
-                                 ParticleSet& ions,
                                  TrialWaveFunction& psi,
                                  ParticleSet::ParticlePos& hf_terms,
                                  ParticleSet::ParticlePos& pulay_terms) override;

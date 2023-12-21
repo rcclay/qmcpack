@@ -414,7 +414,6 @@ NonLocalECPComponent::RealType NonLocalECPComponent::evaluateOneWithForces(Parti
 }
 
 NonLocalECPComponent::RealType NonLocalECPComponent::evaluateOneWithForces(ParticleSet& W,
-                                                                           ParticleSet& ions,
                                                                            int iat,
                                                                            TrialWaveFunction& psi,
                                                                            int iel,
@@ -456,10 +455,11 @@ NonLocalECPComponent::RealType NonLocalECPComponent::evaluateOneWithForces(Parti
   //A working array for pulay stuff.
   GradType iongradtmp_(0);
   //resize everything.
-  pulay_ref.resize(ions.getTotalNum());
-  pulaytmp_.resize(ions.getTotalNum());
+  int Nions = pulay_terms.size();
+  pulay_ref.resize(Nions);
+  pulaytmp_.resize(Nions);
   for (size_t j = 0; j < nknot; j++)
-    pulay_quad[j].resize(ions.getTotalNum());
+    pulay_quad[j].resize(Nions);
 
   if (VP)
   {
@@ -511,7 +511,7 @@ NonLocalECPComponent::RealType NonLocalECPComponent::evaluateOneWithForces(Parti
 
   //Now to construct the 3N dimensional ionic wfn derivatives for pulay terms.
   //This is going to be slow an painful for now.
-  for (size_t jat = 0; jat < ions.getTotalNum(); jat++)
+  for (size_t jat = 0; jat < Nions; jat++)
   {
     convertToReal(psi.evalGradSource(W, jat), pulay_ref[jat]);
     gradpotterm_ = 0;

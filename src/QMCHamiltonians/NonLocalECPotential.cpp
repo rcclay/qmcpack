@@ -458,7 +458,6 @@ void NonLocalECPotential::mw_evaluateImpl(const RefVectorWithLeader<OperatorBase
 
 
 void NonLocalECPotential::evalIonDerivsImpl(ParticleSet& P,
-                                            ParticleSet& ions,
                                             TrialWaveFunction& psi,
                                             ParticleSet::ParticlePos& hf_terms,
                                             ParticleSet::ParticlePos& pulay_terms,
@@ -499,7 +498,7 @@ void NonLocalECPotential::evalIonDerivsImpl(ParticleSet& P,
         if (PP[iat] != nullptr && dist[iat] < PP[iat]->getRmax())
         {
           value_ +=
-              PP[iat]->evaluateOneWithForces(P, ions, iat, Psi, jel, dist[iat], -displ[iat], forces_[iat], PulayTerm);
+              PP[iat]->evaluateOneWithForces(P, iat, Psi, jel, dist[iat], -displ[iat], forces_[iat], PulayTerm);
           if (Tmove)
             PP[iat]->contributeTxy(jel, tmove_xy_);
           NeighborIons.push_back(iat);
@@ -513,23 +512,21 @@ void NonLocalECPotential::evalIonDerivsImpl(ParticleSet& P,
 }
 
 NonLocalECPotential::Return_t NonLocalECPotential::evaluateWithIonDerivs(ParticleSet& P,
-                                                                         ParticleSet& ions,
                                                                          TrialWaveFunction& psi,
                                                                          ParticleSet::ParticlePos& hf_terms,
                                                                          ParticleSet::ParticlePos& pulay_terms)
 {
-  evalIonDerivsImpl(P, ions, psi, hf_terms, pulay_terms);
+  evalIonDerivsImpl(P, psi, hf_terms, pulay_terms);
   return value_;
 }
 
 NonLocalECPotential::Return_t NonLocalECPotential::evaluateWithIonDerivsDeterministic(
     ParticleSet& P,
-    ParticleSet& ions,
     TrialWaveFunction& psi,
     ParticleSet::ParticlePos& hf_terms,
     ParticleSet::ParticlePos& pulay_terms)
 {
-  evalIonDerivsImpl(P, ions, psi, hf_terms, pulay_terms, true);
+  evalIonDerivsImpl(P, psi, hf_terms, pulay_terms, true);
   return value_;
 }
 

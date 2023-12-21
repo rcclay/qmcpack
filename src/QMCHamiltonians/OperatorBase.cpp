@@ -179,7 +179,6 @@ OperatorBase::Return_t OperatorBase::evaluateValueAndDerivatives(ParticleSet& P,
 }
 
 OperatorBase::Return_t OperatorBase::evaluateWithIonDerivs(ParticleSet& P,
-                                                           ParticleSet& ions,
                                                            TrialWaveFunction& psi,
                                                            ParticleSet::ParticlePos& hf_term,
                                                            ParticleSet::ParticlePos& pulay_term)
@@ -188,12 +187,11 @@ OperatorBase::Return_t OperatorBase::evaluateWithIonDerivs(ParticleSet& P,
 }
 
 OperatorBase::Return_t OperatorBase::evaluateWithIonDerivsDeterministic(ParticleSet& P,
-                                                                        ParticleSet& ions,
                                                                         TrialWaveFunction& psi,
                                                                         ParticleSet::ParticlePos& hf_term,
                                                                         ParticleSet::ParticlePos& pulay_term)
 {
-  return evaluateWithIonDerivs(P, ions, psi, hf_term, pulay_term);
+  return evaluateWithIonDerivs(P, psi, hf_term, pulay_term);
 }
 
 void OperatorBase::updateSource(ParticleSet& s) {}

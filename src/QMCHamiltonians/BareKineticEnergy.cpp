@@ -171,7 +171,6 @@ void BareKineticEnergy::mw_evaluateWithParameterDerivatives(const RefVectorWithL
  *  referred to as Value, HF term, and pulay term respectively.
  *
  * @param P electron particle set.
- * @param ions ion particle set
  * @param psi Trial wave function object.
  * @param hf_terms 3Nion dimensional object. All direct force terms, or ionic gradient of operator itself.
  *                 Contribution of this operator is ADDED onto hf_terms.
@@ -181,7 +180,6 @@ void BareKineticEnergy::mw_evaluateWithParameterDerivatives(const RefVectorWithL
  *          this operator are added into hf_terms and pulay_terms.
  */
 Return_t BareKineticEnergy::evaluateWithIonDerivs(ParticleSet& P,
-                                                  ParticleSet& ions,
                                                   TrialWaveFunction& psi,
                                                   ParticleSet::ParticlePos& hf_terms,
                                                   ParticleSet::ParticlePos& pulay_terms)
@@ -190,7 +188,7 @@ Return_t BareKineticEnergy::evaluateWithIonDerivs(ParticleSet& P,
   using ParticleGradient  = ParticleSet::ParticleGradient;
   using ParticleLaplacian = ParticleSet::ParticleLaplacian;
 
-  int Nions = ions.getTotalNum();
+  int Nions = hf_terms.size();
   int Nelec = P.getTotalNum();
 
   //These are intermediate arrays for potentially complex math.

@@ -353,7 +353,6 @@ public:
    * @return Contribution of OperatorBase to Local Energy.
    */
   virtual Return_t evaluateWithIonDerivs(ParticleSet& P,
-                                         ParticleSet& ions,
                                          TrialWaveFunction& psi,
                                          ParticleSet::ParticlePos& hf_term,
                                          ParticleSet::ParticlePos& pulay_term);
@@ -371,7 +370,6 @@ public:
    * @return Contribution of OperatorBase to Local Energy.
    */
   virtual Return_t evaluateWithIonDerivsDeterministic(ParticleSet& P,
-                                                      ParticleSet& ions,
                                                       TrialWaveFunction& psi,
                                                       ParticleSet::ParticlePos& hf_term,
                                                       ParticleSet::ParticlePos& pulay_term);

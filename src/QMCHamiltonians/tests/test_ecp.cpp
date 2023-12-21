@@ -370,7 +370,7 @@ TEST_CASE("Evaluate_ecp", "[hamiltonian]")
       {
         Value2 += nlpp->evaluateOneWithForces(elec, iat, psi, jel, dist[iat], -displ[iat], HFTerm[iat]);
         Value3 +=
-            nlpp->evaluateOneWithForces(elec, ions, iat, psi, jel, dist[iat], -displ[iat], HFTerm2[iat], PulayTerm);
+            nlpp->evaluateOneWithForces(elec, iat, psi, jel, dist[iat], -displ[iat], HFTerm2[iat], PulayTerm);
       }
   }
   //These values are validated against print statements.
