@@ -100,18 +100,16 @@ TWFFastDerivWrapper::RealType TWFFastDerivWrapper::calcJastrowRatioGrad(Particle
 }
 
 TWFFastDerivWrapper::GradType TWFFastDerivWrapper::evaluateJastrowGradSource(ParticleSet& P,
-                                                                             ParticleSet& source,
                                                                              const int iat) const
 {
   GradType grad_iat = GradType();
   for (int i = 0; i < jastrow_list_.size(); ++i)
-    grad_iat += jastrow_list_[i]->evalGradSource(P, source, iat);
+    grad_iat += jastrow_list_[i]->evalGradSource(P, iat);
   return grad_iat;
 }
 
 TWFFastDerivWrapper::GradType TWFFastDerivWrapper::evaluateJastrowGradSource(
     ParticleSet& P,
-    ParticleSet& source,
     const int iat,
     TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
     TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) const
@@ -124,7 +122,7 @@ TWFFastDerivWrapper::GradType TWFFastDerivWrapper::evaluateJastrowGradSource(
       lapl_grad[dim][i] = 0.0;
     }
   for (int i = 0; i < jastrow_list_.size(); ++i)
-    grad_iat += jastrow_list_[i]->evalGradSource(P, source, iat, grad_grad, lapl_grad);
+    grad_iat += jastrow_list_[i]->evalGradSource(P, iat, grad_grad, lapl_grad);
   return grad_iat;
 }
 
@@ -146,7 +144,6 @@ void TWFFastDerivWrapper::getEGradELaplM(const ParticleSet& P,
 }
 
 void TWFFastDerivWrapper::getIonGradM(const ParticleSet& P,
-                                      const ParticleSet& source,
                                       const int iat,
                                       std::vector<std::vector<ValueMatrix>>& dmvec) const
 {
@@ -163,7 +160,7 @@ void TWFFastDerivWrapper::getIonGradM(const ParticleSet& P,
 
     grad_phi.resize(nptcls, norbs);
 
-    spos_[i]->evaluateGradSource(P, first, last, source, iat, grad_phi);
+    spos_[i]->evaluateGradSource(P, first, last, iat, grad_phi);
 
     for (IndexType idim = 0; idim < OHMMS_DIM; idim++)
       for (IndexType iptcl = 0; iptcl < nptcls; iptcl++)
@@ -175,7 +172,6 @@ void TWFFastDerivWrapper::getIonGradM(const ParticleSet& P,
 }
 
 void TWFFastDerivWrapper::getIonGradIonGradELaplM(const ParticleSet& P,
-                                                  const ParticleSet& source,
                                                   int iat,
                                                   std::vector<std::vector<ValueMatrix>>& dmvec,
                                                   std::vector<std::vector<GradMatrix>>& dgmat,
@@ -198,7 +194,7 @@ void TWFFastDerivWrapper::getIonGradIonGradELaplM(const ParticleSet& P,
     grad_grad_phi.resize(nptcls, norbs);
     grad_lapl_phi.resize(nptcls, norbs);
 
-    spos_[i]->evaluateGradSource(P, first, last, source, iat, grad_phi, grad_grad_phi, grad_lapl_phi);
+    spos_[i]->evaluateGradSource(P, first, last, iat, grad_phi, grad_grad_phi, grad_lapl_phi);
 
     for (IndexType idim = 0; idim < OHMMS_DIM; idim++)
       for (IndexType iptcl = 0; iptcl < nptcls; iptcl++)

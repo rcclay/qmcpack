@@ -316,12 +316,11 @@ public:
 
   /** Returns the logarithmic gradient of the trial wave function
    *  with respect to the iat^th atom of the source ParticleSet. */
-  GradType evalGradSource(ParticleSet& P, ParticleSet& source, int iat);
+  GradType evalGradSource(ParticleSet& P, int iat);
   /** Returns the logarithmic gradient of the w.r.t. the iat^th atom
    * of the source ParticleSet of the sum of laplacians w.r.t. the
    * electrons (target ParticleSet) of the trial wave function. */
   GradType evalGradSource(ParticleSet& P,
-                          ParticleSet& source,
                           int iat,
                           TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                           TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad);

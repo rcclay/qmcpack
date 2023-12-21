@@ -150,10 +150,9 @@ public:
    *  Note: Can result in substantial CPU memory allocation on first call.
    *  31 * n^2 * sizeof(Value) bytes per DDB
    */
-  Grad evalGradSource(ParticleSet& P, ParticleSet& source, int iat) override;
+  Grad evalGradSource(ParticleSet& P, int iat) override;
 
   Grad evalGradSource(ParticleSet& P,
-                      ParticleSet& source,
                       int iat,
                       TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                       TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) override;

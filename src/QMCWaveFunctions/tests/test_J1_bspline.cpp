@@ -150,7 +150,7 @@ void test_J1_spline(const DynamicCoordinateKind kind_selected)
 
   //First we test evalGradSource(P,ions,ionid);
 
-  gsource = j1->evalGradSource(elec_, ions_, 0);
+  gsource = j1->evalGradSource(elec_, 0);
 
   //Gradient comparison
   CHECK(std::real(gsource[0]) == Approx(-0.04695203659));
@@ -158,7 +158,7 @@ void test_J1_spline(const DynamicCoordinateKind kind_selected)
   CHECK(std::real(gsource[2]) == Approx(0.00000000000));
 
   //Now we test evalGradSource that returns higher order derivatives.
-  gsource = j1->evalGradSource(elec_, ions_, 0, grad_grad_source, lapl_grad_source);
+  gsource = j1->evalGradSource(elec_, 0, grad_grad_source, lapl_grad_source);
 
   //Gradient comparison
   CHECK(std::real(gsource[0]) == Approx(-0.04695203659));

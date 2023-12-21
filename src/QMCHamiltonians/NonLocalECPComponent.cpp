@@ -513,7 +513,7 @@ NonLocalECPComponent::RealType NonLocalECPComponent::evaluateOneWithForces(Parti
   //This is going to be slow an painful for now.
   for (size_t jat = 0; jat < ions.getTotalNum(); jat++)
   {
-    convertToReal(psi.evalGradSource(W, ions, jat), pulay_ref[jat]);
+    convertToReal(psi.evalGradSource(W, jat), pulay_ref[jat]);
     gradpotterm_ = 0;
     for (size_t j = 0; j < nknot; j++)
     {
@@ -527,7 +527,7 @@ NonLocalECPComponent::RealType NonLocalECPComponent::evaluateOneWithForces(Parti
       W.acceptMove(iel); // it only updates the jel-th row of e-e table
       //Done with the move.  Ready for force computation.
 
-      iongradtmp_ = psi.evalGradSource(W, ions, jat);
+      iongradtmp_ = psi.evalGradSource(W, jat);
       iongradtmp_ *= psiratio[j];
       convertToReal(iongradtmp_, pulay_quad[j][jat]);
       //And move the particle back.
@@ -663,7 +663,6 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixContribution(ParticleSet& W,
 }
 
 void NonLocalECPComponent::evaluateOneBodyOpMatrixdRContribution(ParticleSet& W,
-                                                                 ParticleSet& ions,
                                                                  const int iat,
                                                                  const int iat_src,
                                                                  const TWFFastDerivWrapper& psi,
@@ -755,7 +754,7 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixdRContribution(ParticleSet& W,
   //This is the ion gradient of J at the original (non quadrature) coordinate.
   GradType jigradref(0.0);
 
-  jigradref = psi.evaluateJastrowGradSource(W, ions, iat_src);
+  jigradref = psi.evaluateJastrowGradSource(W, iat_src);
 
   //Until we have a more efficient routine, we move to a quadrature point,
   //update distance tables, compute the ion gradient of J, then move the particle back.
@@ -764,7 +763,7 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixdRContribution(ParticleSet& W,
   {
     W.makeMove(iel, deltaV[j], false);
     W.acceptMove(iel);
-    jgrad_quad[j] = psi.evaluateJastrowGradSource(W, ions, iat_src);
+    jgrad_quad[j] = psi.evaluateJastrowGradSource(W, iat_src);
     W.makeMove(iel, -deltaV[j], false);
     W.acceptMove(iel);
   }
@@ -773,12 +772,12 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixdRContribution(ParticleSet& W,
   {
     W.makeMove(iel, deltaV[j], false);
     iongrad_phi = 0.0;
-    spo.evaluateGradSourceRow(W, iel, ions, iat_src, iongrad_phi);
+    spo.evaluateGradSourceRow(W, iel, iat_src, iongrad_phi);
     GradType jegrad(0.0);
     GradType jigrad(0.0);
 
     RealType jratio = psi.calcJastrowRatioGrad(W, iel, jegrad);
-    jigrad          = psi.evaluateJastrowGradSource(W, ions, iat_src);
+    jigrad          = psi.evaluateJastrowGradSource(W, iat_src);
 
     spo.evaluateVGL(W, iel, phi, gradphi, laplphi);
 

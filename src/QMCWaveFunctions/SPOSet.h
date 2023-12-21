@@ -469,7 +469,6 @@ public:
   virtual void evaluateGradSource(const ParticleSet& P,
                                   int first,
                                   int last,
-                                  const ParticleSet& source,
                                   int iat_src,
                                   GradMatrix& gradphi);
 
@@ -487,7 +486,6 @@ public:
   virtual void evaluateGradSource(const ParticleSet& P,
                                   int first,
                                   int last,
-                                  const ParticleSet& source,
                                   int iat_src,
                                   GradMatrix& grad_phi,
                                   HessMatrix& grad_grad_phi,
@@ -504,7 +502,6 @@ public:
    */
   virtual void evaluateGradSourceRow(const ParticleSet& P,
                                      int iel,
-                                     const ParticleSet& source,
                                      int iat_src,
                                      GradVector& gradphi);
 

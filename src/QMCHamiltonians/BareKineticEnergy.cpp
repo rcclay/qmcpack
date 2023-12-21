@@ -226,7 +226,7 @@ Return_t BareKineticEnergy::evaluateWithIonDerivs(ParticleSet& P,
       iongrad_grad_[iondim] = 0;
       iongrad_lapl_[iondim] = 0;
     }
-    iongradpsi_[iat] = psi.evalGradSource(P, ions, iat, iongrad_grad_, iongrad_lapl_);
+    iongradpsi_[iat] = psi.evalGradSource(P, iat, iongrad_grad_, iongrad_lapl_);
     //conversion from potentially complex to definitely real.
     convertToReal(iongradpsi_[iat], iongradpsireal_[iat]);
     if (same_mass_)
@@ -342,7 +342,6 @@ void BareKineticEnergy::evaluateOneBodyOpMatrix(ParticleSet& P,
 }
 
 void BareKineticEnergy::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
-                                                          ParticleSet& source,
                                                           const TWFFastDerivWrapper& psi,
                                                           const int iat,
                                                           std::vector<std::vector<ValueMatrix>>& Bforce)
@@ -409,9 +408,9 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
   dgmat.push_back(grad_M);
 
   psi.getEGradELaplM(P, M, grad_M, lapl_M);
-  psi.getIonGradIonGradELaplM(P, source, iat, dm, dgmat, dlapl);
+  psi.getIonGradIonGradELaplM(P, iat, dm, dgmat, dlapl);
   psi.evaluateJastrowVGL(P, G, L);
-  psi.evaluateJastrowGradSource(P, source, iat, dG, dL);
+  psi.evaluateJastrowGradSource(P, iat, dG, dL);
   for (int idim = 0; idim < OHMMS_DIM; idim++)
     for (int ig = 0; ig < ngroups; ig++)
     {

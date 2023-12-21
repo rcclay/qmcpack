@@ -222,7 +222,6 @@ public:
   void evaluateGradSource(const ParticleSet& P,
                           int first,
                           int last,
-                          const ParticleSet& source,
                           int iat_src,
                           GradMatrix& gradphi) override
   {
@@ -232,7 +231,6 @@ public:
   void evaluateGradSource(const ParticleSet& P,
                           int first,
                           int last,
-                          const ParticleSet& source,
                           int iat_src,
                           GradMatrix& grad_phi,
                           HessMatrix& grad_grad_phi,

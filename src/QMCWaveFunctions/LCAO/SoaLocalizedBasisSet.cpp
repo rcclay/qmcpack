@@ -417,7 +417,6 @@ void SoaLocalizedBasisSet<COT, ORBT>::mw_evaluateValue(const RefVectorWithLeader
 template<class COT, typename ORBT>
 void SoaLocalizedBasisSet<COT, ORBT>::evaluateGradSourceV(const ParticleSet& P,
                                                           int iat,
-                                                          const ParticleSet& ions,
                                                           int jion,
                                                           vgl_type& vgl)
 {
@@ -455,7 +454,6 @@ void SoaLocalizedBasisSet<COT, ORBT>::evaluateGradSourceV(const ParticleSet& P,
 template<class COT, typename ORBT>
 void SoaLocalizedBasisSet<COT, ORBT>::evaluateGradSourceVGL(const ParticleSet& P,
                                                             int iat,
-                                                            const ParticleSet& ions,
                                                             int jion,
                                                             vghgh_type& vghgh)
 {
@@ -510,7 +508,7 @@ void SoaLocalizedBasisSet<COT, ORBT>::evaluateGradSourceVGL(const ParticleSet& P
 
   // Since jion is indexed on the source ions not the ions_ the distinction between
   // ions_ and ions is extremely important.
-  const auto& IonID(ions.GroupID);
+  const auto& IonID(ions_.GroupID);
   const auto& d_table = P.getDistTableAB(myTableIndex);
   const auto& dist    = (P.getActivePtcl() == iat) ? d_table.getTempDists() : d_table.getDistRow(iat);
   const auto& displ   = (P.getActivePtcl() == iat) ? d_table.getTempDispls() : d_table.getDisplRow(iat);

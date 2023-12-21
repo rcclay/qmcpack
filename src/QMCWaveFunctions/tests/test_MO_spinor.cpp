@@ -120,7 +120,7 @@ void test_lcao_spinor()
    * the electron gradient. 
    */
   SPOSet::GradMatrix gradIon(elec_.R.size(), spo->getOrbitalSetSize());
-  spo->evaluateGradSource(elec_, 0, elec_.R.size(), ions_, 0, gradIon);
+  spo->evaluateGradSource(elec_, 0, elec_.R.size(), 0, gradIon);
   for (int iat = 0; iat < 1; iat++)
   {
     CHECK(gradIon[iat][0][0] == ComplexApprox(-vdx).epsilon(eps));
@@ -451,7 +451,7 @@ void test_lcao_spinor_excited()
    * the electron gradient. 
    */
   SPOSet::GradMatrix gradIon(elec_.R.size(), spo->getOrbitalSetSize());
-  spo->evaluateGradSource(elec_, 0, elec_.R.size(), ions_, 0, gradIon);
+  spo->evaluateGradSource(elec_, 0, elec_.R.size(), 0, gradIon);
   for (int iat = 0; iat < 1; iat++)
   {
     CHECK(gradIon[iat][0][0] == ComplexApprox(-vdx).epsilon(eps));
@@ -748,11 +748,11 @@ void test_lcao_spinor_ion_derivs()
 
   const RealType eps = 1e-4;
   SPOSet::GradMatrix gradIon(elec_.R.size(), spo->getOrbitalSetSize());
-  spo->evaluateGradSource(elec_, 0, elec_.R.size(), ions_, 0, gradIon);
+  spo->evaluateGradSource(elec_, 0, elec_.R.size(), 0, gradIon);
   CHECK(gradIon[0][0][0] == ComplexApprox(dx0).epsilon(eps));
   CHECK(gradIon[0][0][1] == ComplexApprox(dy0).epsilon(eps));
   CHECK(gradIon[0][0][2] == ComplexApprox(dz0).epsilon(eps));
-  spo->evaluateGradSource(elec_, 0, elec_.R.size(), ions_, 1, gradIon);
+  spo->evaluateGradSource(elec_, 0, elec_.R.size(), 1, gradIon);
   CHECK(gradIon[0][0][0] == ComplexApprox(dx1).epsilon(eps));
   CHECK(gradIon[0][0][1] == ComplexApprox(dy1).epsilon(eps));
   CHECK(gradIon[0][0][2] == ComplexApprox(dz1).epsilon(eps));

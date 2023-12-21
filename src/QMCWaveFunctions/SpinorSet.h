@@ -168,7 +168,6 @@ public:
   virtual void evaluateGradSource(const ParticleSet& P,
                                   int first,
                                   int last,
-                                  const ParticleSet& source,
                                   int iat_src,
                                   GradMatrix& gradphi) override;
 

@@ -361,23 +361,21 @@ public:
   void evaluateGradSource(const ParticleSet& P,
                           int first,
                           int last,
-                          const ParticleSet& source,
                           int iat_src,
                           GradMatrix& grad_phi) override
   {
-    Phi_->evaluateGradSource(P, first, last, source, iat_src, grad_phi);
+    Phi_->evaluateGradSource(P, first, last, iat_src, grad_phi);
   }
 
   void evaluateGradSource(const ParticleSet& P,
                           int first,
                           int last,
-                          const ParticleSet& source,
                           int iat_src,
                           GradMatrix& grad_phi,
                           HessMatrix& grad_grad_phi,
                           GradMatrix& grad_lapl_phi) override
   {
-    Phi_->evaluateGradSource(P, first, last, source, iat_src, grad_phi, grad_grad_phi, grad_lapl_phi);
+    Phi_->evaluateGradSource(P, first, last, iat_src, grad_phi, grad_grad_phi, grad_lapl_phi);
   }
 
   //  void evaluateThirdDeriv(const ParticleSet& P, int first, int last, GGGMatrix& grad_grad_grad_logdet)

@@ -169,12 +169,11 @@ struct SoaBasisSetBase
   //Evaluates value, gradient, and Hessian, and Gradient Hessian for electron "iat".  Parks them into a temporary data structure "vghgh".
   virtual void evaluateVGHGH(const ParticleSet& P, int iat, vghgh_type& vghgh) = 0;
   //Evaluates the x,y, and z components of ionic gradient associated with "jion" of value.  Parks the raw data into "vgl" container.
-  virtual void evaluateGradSourceV(const ParticleSet& P, int iat, const ParticleSet& ions, int jion, vgl_type& vgl) = 0;
+  virtual void evaluateGradSourceV(const ParticleSet& P, int iat, int jion, vgl_type& vgl) = 0;
   //Evaluates the x,y, and z components of ionic gradient associated with "jion" value, gradient, and laplacian.
   //    Parks the raw data into "vghgh" container.
   virtual void evaluateGradSourceVGL(const ParticleSet& P,
                                      int iat,
-                                     const ParticleSet& ions,
                                      int jion,
                                      vghgh_type& vghgh)                            = 0;
   virtual void evaluateV(const ParticleSet& P, int iat, value_type* restrict vals) = 0;

@@ -586,7 +586,6 @@ void NonLocalECPotential::evaluateOneBodyOpMatrix(ParticleSet& P,
 }
 
 void NonLocalECPotential::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
-                                                            ParticleSet& source,
                                                             const TWFFastDerivWrapper& psi,
                                                             const int iat_source,
                                                             std::vector<std::vector<ValueMatrix>>& Bforce)
@@ -615,7 +614,7 @@ void NonLocalECPotential::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
       for (int iat = 0; iat < NumIons; iat++)
         if (PP[iat] != nullptr && dist[iat] < PP[iat]->getRmax())
         {
-          PP[iat]->evaluateOneBodyOpMatrixdRContribution(P, source, iat, iat_source, psi, jel, dist[iat], -displ[iat],
+          PP[iat]->evaluateOneBodyOpMatrixdRContribution(P, iat, iat_source, psi, jel, dist[iat], -displ[iat],
                                                          Bforce);
           NeighborIons.push_back(iat);
           IonNeighborElecs.getNeighborList(iat).push_back(jel);

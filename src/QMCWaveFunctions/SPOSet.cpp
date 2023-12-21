@@ -360,7 +360,6 @@ void SPOSet::evaluateDerivativesWF(ParticleSet& P,
 void SPOSet::evaluateGradSource(const ParticleSet& P,
                                 int first,
                                 int last,
-                                const ParticleSet& source,
                                 int iat_src,
                                 GradMatrix& gradphi)
 {
@@ -373,7 +372,6 @@ void SPOSet::evaluateGradSource(const ParticleSet& P,
 void SPOSet::evaluateGradSource(const ParticleSet& P,
                                 int first,
                                 int last,
-                                const ParticleSet& source,
                                 int iat_src,
                                 GradMatrix& grad_phi,
                                 HessMatrix& grad_grad_phi,
@@ -387,7 +385,6 @@ void SPOSet::evaluateGradSource(const ParticleSet& P,
 
 void SPOSet::evaluateGradSourceRow(const ParticleSet& P,
                                    int iel,
-                                   const ParticleSet& source,
                                    int iat_src,
                                    GradVector& gradphi)
 {

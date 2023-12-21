@@ -393,14 +393,12 @@ public:
    * @brief Evaluate "dB/dR" matrices for observable.  Filippi scheme for computing fast derivatives.
 
    * @param[in] P, target particle set (electrons)
-   * @param[in] source, ion particle set 
    * @param[in] psi, Trial Wavefunction wrapper for fast derivatives.
    * @param[in] iat, 
    * @param[in,out] dB/dR. Specifically, [ dB/dx_iat, dB/dy_iat, dB/dz_iat ], B is defined above.
    * @return Void
    */
   inline virtual void evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
-                                                        ParticleSet& source,
                                                         const TWFFastDerivWrapper& psi,
                                                         const int iat,
                                                         std::vector<std::vector<ValueMatrix>>& Bforce)

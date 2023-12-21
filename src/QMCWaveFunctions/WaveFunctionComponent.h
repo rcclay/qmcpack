@@ -240,7 +240,7 @@ public:
    * @param iat particle index
    * @return the gradient of the iat-th particle
    */
-  virtual GradType evalGradSource(ParticleSet& P, ParticleSet& source, int iat)
+  virtual GradType evalGradSource(ParticleSet& P, int iat)
   {
     // unit_test_hamiltonian calls this function incorrectly; do not abort for now
     //    APP_ABORT("WaveFunctionComponent::evalGradSource is not implemented");
@@ -258,7 +258,6 @@ public:
    * @return the log gradient of psi w.r.t. the source particle iat
    */
   virtual GradType evalGradSource(ParticleSet& P,
-                                  ParticleSet& source,
                                   int iat,
                                   TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                                   TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad)

@@ -543,14 +543,13 @@ void DiracDeterminant<DU_TYPE>::resizeScratchObjectsForIonDerivs()
 
 template<typename DU_TYPE>
 typename DiracDeterminant<DU_TYPE>::GradType DiracDeterminant<DU_TYPE>::evalGradSource(ParticleSet& P,
-                                                                                       ParticleSet& source,
                                                                                        int iat)
 {
   GradType g(0.0);
   if (Phi->hasIonDerivs())
   {
     resizeScratchObjectsForIonDerivs();
-    Phi->evaluateGradSource(P, FirstIndex, LastIndex, source, iat, grad_source_psiM);
+    Phi->evaluateGradSource(P, FirstIndex, LastIndex, iat, grad_source_psiM);
     g = simd::dot(psiM.data(), grad_source_psiM.data(), psiM.size());
   }
 
@@ -586,7 +585,6 @@ void DiracDeterminant<DU_TYPE>::evaluateHessian(ParticleSet& P, HessVector& grad
 template<typename DU_TYPE>
 typename DiracDeterminant<DU_TYPE>::GradType DiracDeterminant<DU_TYPE>::evalGradSource(
     ParticleSet& P,
-    ParticleSet& source,
     int iat,
     TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
     TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad)
@@ -595,7 +593,7 @@ typename DiracDeterminant<DU_TYPE>::GradType DiracDeterminant<DU_TYPE>::evalGrad
   if (Phi->hasIonDerivs())
   {
     resizeScratchObjectsForIonDerivs();
-    Phi->evaluateGradSource(P, FirstIndex, LastIndex, source, iat, grad_source_psiM, grad_grad_source_psiM,
+    Phi->evaluateGradSource(P, FirstIndex, LastIndex, iat, grad_source_psiM, grad_grad_source_psiM,
                             grad_lapl_source_psiM);
     // HACK HACK HACK
     // Phi->evaluateVGL(P, FirstIndex, LastIndex, psiM, dpsiM, d2psiM);

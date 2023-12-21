@@ -894,7 +894,6 @@ void LCAOrbitalSet::evaluate_notranspose(const ParticleSet& P,
 void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
                                        int first,
                                        int last,
-                                       const ParticleSet& source,
                                        int iat_src,
                                        GradMatrix& gradphi)
 {
@@ -902,7 +901,7 @@ void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
   {
     for (size_t i = 0, iat = first; iat < last; i++, iat++)
     {
-      myBasisSet->evaluateGradSourceV(P, iat, source, iat_src, Temp);
+      myBasisSet->evaluateGradSourceV(P, iat, iat_src, Temp);
       evaluate_ionderiv_v_impl(Temp, i, gradphi);
     }
   }
@@ -910,7 +909,7 @@ void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
   {
     for (size_t i = 0, iat = first; iat < last; i++, iat++)
     {
-      myBasisSet->evaluateGradSourceV(P, iat, source, iat_src, Temp);
+      myBasisSet->evaluateGradSourceV(P, iat, iat_src, Temp);
       Product_ABt(Temp, *C, Tempv);
       evaluate_ionderiv_v_impl(Tempv, i, gradphi);
     }
@@ -920,7 +919,6 @@ void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
 void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
                                        int first,
                                        int last,
-                                       const ParticleSet& source,
                                        int iat_src,
                                        GradMatrix& grad_phi,
                                        HessMatrix& grad_grad_phi,
@@ -930,7 +928,7 @@ void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
   {
     for (size_t i = 0, iat = first; iat < last; i++, iat++)
     {
-      myBasisSet->evaluateGradSourceVGL(P, iat, source, iat_src, Tempgh);
+      myBasisSet->evaluateGradSourceVGL(P, iat, iat_src, Tempgh);
       evaluate_ionderiv_vgl_impl(Tempgh, i, grad_phi, grad_grad_phi, grad_lapl_phi);
     }
   }
@@ -938,7 +936,7 @@ void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
   {
     for (size_t i = 0, iat = first; iat < last; i++, iat++)
     {
-      myBasisSet->evaluateGradSourceVGL(P, iat, source, iat_src, Tempgh);
+      myBasisSet->evaluateGradSourceVGL(P, iat, iat_src, Tempgh);
       Product_ABt(Tempgh, *C, Tempghv);
       evaluate_ionderiv_vgl_impl(Tempghv, i, grad_phi, grad_grad_phi, grad_lapl_phi);
       //  evaluate_vghgh_impl(Tempghv, i, logdet, dlogdet, grad_grad_logdet, grad_grad_grad_logdet);
@@ -948,18 +946,17 @@ void LCAOrbitalSet::evaluateGradSource(const ParticleSet& P,
 
 void LCAOrbitalSet::evaluateGradSourceRow(const ParticleSet& P,
                                           int iel,
-                                          const ParticleSet& source,
                                           int iat_src,
                                           GradVector& gradphi)
 {
   if (Identity)
   {
-    myBasisSet->evaluateGradSourceV(P, iel, source, iat_src, Temp);
+    myBasisSet->evaluateGradSourceV(P, iel, iat_src, Temp);
     evaluate_ionderiv_v_row_impl(Temp, gradphi);
   }
   else
   {
-    myBasisSet->evaluateGradSourceV(P, iel, source, iat_src, Temp);
+    myBasisSet->evaluateGradSourceV(P, iel, iat_src, Temp);
     Product_ABt(Temp, *C, Tempv);
     evaluate_ionderiv_v_row_impl(Tempv, gradphi);
   }

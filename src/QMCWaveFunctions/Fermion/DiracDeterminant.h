@@ -129,10 +129,9 @@ public:
 
   GradType evalGradWithSpin(ParticleSet& P, int iat, ComplexType& spingrad) final;
 
-  GradType evalGradSource(ParticleSet& P, ParticleSet& source, int iat) override;
+  GradType evalGradSource(ParticleSet& P, int iat) override;
 
   GradType evalGradSource(ParticleSet& P,
-                          ParticleSet& source,
                           int iat,
                           TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
                           TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad) override;

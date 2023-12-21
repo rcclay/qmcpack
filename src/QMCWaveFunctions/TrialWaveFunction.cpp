@@ -579,17 +579,16 @@ void TrialWaveFunction::mw_evalGrad(const RefVectorWithLeader<TrialWaveFunction>
 
 // Evaluates the gradient w.r.t. to the source of the Laplacian
 // w.r.t. to the electrons of the wave function.
-TrialWaveFunction::GradType TrialWaveFunction::evalGradSource(ParticleSet& P, ParticleSet& source, int iat)
+TrialWaveFunction::GradType TrialWaveFunction::evalGradSource(ParticleSet& P, int iat)
 {
   GradType grad_iat = GradType();
   for (int i = 0; i < Z.size(); ++i)
-    grad_iat += Z[i]->evalGradSource(P, source, iat);
+    grad_iat += Z[i]->evalGradSource(P, iat);
   return grad_iat;
 }
 
 TrialWaveFunction::GradType TrialWaveFunction::evalGradSource(
     ParticleSet& P,
-    ParticleSet& source,
     int iat,
     TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM>& grad_grad,
     TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM>& lapl_grad)
@@ -602,7 +601,7 @@ TrialWaveFunction::GradType TrialWaveFunction::evalGradSource(
       lapl_grad[dim][i] = 0.0;
     }
   for (int i = 0; i < Z.size(); ++i)
-    grad_iat += Z[i]->evalGradSource(P, source, iat, grad_grad, lapl_grad);
+    grad_iat += Z[i]->evalGradSource(P, iat, grad_grad, lapl_grad);
   return grad_iat;
 }
 

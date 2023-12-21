@@ -292,7 +292,6 @@ public:
    * @return Void
    */
   void evaluateOneBodyOpMatrixdRContribution(ParticleSet& P,
-                                             ParticleSet& source,
                                              const int iat,
                                              const int iat_src,
                                              const TWFFastDerivWrapper& psi,

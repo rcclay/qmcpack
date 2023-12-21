@@ -183,7 +183,6 @@ public:
   void evaluateGradSource(const ParticleSet& P,
                           int first,
                           int last,
-                          const ParticleSet& source,
                           int iat_src,
                           GradMatrix& grad_phi) final;
 
@@ -202,7 +201,6 @@ public:
   void evaluateGradSource(const ParticleSet& P,
                           int first,
                           int last,
-                          const ParticleSet& source,
                           int iat_src,
                           GradMatrix& grad_phi,
                           HessMatrix& grad_grad_phi,
@@ -210,7 +208,6 @@ public:
 
   void evaluateGradSourceRow(const ParticleSet& P,
                              int iel,
-                             const ParticleSet& source,
                              int iat_src,
                              GradVector& grad_phi) final;
 

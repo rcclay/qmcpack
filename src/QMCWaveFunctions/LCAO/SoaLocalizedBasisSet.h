@@ -171,11 +171,10 @@ public:
    */
   void evaluateV(const ParticleSet& P, int iat, ORBT* restrict vals) override;
 
-  void evaluateGradSourceV(const ParticleSet& P, int iat, const ParticleSet& ions, int jion, vgl_type& vgl) override;
+  void evaluateGradSourceV(const ParticleSet& P, int iat, int jion, vgl_type& vgl) override;
 
   void evaluateGradSourceVGL(const ParticleSet& P,
                              int iat,
-                             const ParticleSet& ions,
                              int jion,
                              vghgh_type& vghgh) override;
 
