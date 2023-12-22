@@ -13,8 +13,8 @@
 
 namespace qmcplusplus
 {
-ACForce::ACForce(ACForceInput&& acfinput)
-    : OperatorEstBase(DataLocality::crowd), input_(acfinput)
+ACForce::ACForce(ACForceInput&& acfinput, int Nions)
+    : OperatorEstBase(DataLocality::crowd), input_(acfinput), Nions_(Nions)
 {
   my_name_ = "ACForce";
   data_.resize(getFullDataSize(), 0);

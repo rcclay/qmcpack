@@ -72,6 +72,14 @@ if(USE_OBJECT_TARGET)
     utilities_for_test)
 endif()
 
+foreach(fname cn.wfj.xml)
+  maybe_symlink(${qmcpack_SOURCE_DIR}/src/QMCWaveFunctions/tests/${fname} ${UTEST_DIR}/${fname})
+endforeach()
+
+foreach(fname C.ccECP.xml N.ccECP.xml)
+  maybe_symlink(${qmcpack_SOURCE_DIR}/tests/pseudopotentials_for_tests/${fname} ${UTEST_DIR}/${fname})
+endforeach()
+
 add_unit_test(${UTEST_NAME} 1 1 $<TARGET_FILE:${UTEST_EXE}>)
 
 if(HAVE_MPI)

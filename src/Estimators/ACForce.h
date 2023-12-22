@@ -31,8 +31,8 @@ public:
   using Position           = QMCTraits::PosType;
   static constexpr int DIM = QMCTraits::DIM;
 
-  ACForce(ACForceInput&& acin);
-  ACForce(const ACForce& magdens, DataLocality dl);
+  ACForce(ACForceInput&& acin, int Nions);
+  ACForce(const ACForce& acf, DataLocality dl);
 
   void startBlock(int steps) override;
 
@@ -55,9 +55,10 @@ public:
 
 
 private:
-  ACForce(const ACForce& magdens) = default;
+  ACForce(const ACForce& acf) = default;
 
   ACForceInput input_;
+  int Nions_;
 };
 } // namespace qmcplusplus
 #endif
