@@ -303,7 +303,7 @@ TEST_CASE("Eloc_Derivatives:slater_noj", "[hamiltonian]")
   hf_term    = 0.0;
   pulay_term = 0.0;
   wf_grad    = 0.0;
-  ham.evaluateIonDerivsDeterministic(elec, ions, *psi, hf_term, pulay_term, wf_grad);
+  ham.evaluateIonDerivsDeterministic(elec, *psi, hf_term, pulay_term, wf_grad);
 
   CHECK(dot(hf_term[0], hf_term[0]) != Approx(0));
   CHECK(dot(pulay_term[0], pulay_term[0]) != Approx(0));
@@ -318,7 +318,7 @@ TEST_CASE("Eloc_Derivatives:slater_noj", "[hamiltonian]")
   wf_grad    = 0.0;
   RandomGenerator myrng;
   ham.setRandomGenerator(&myrng);
-  ham.evaluateIonDerivs(elec, ions, *psi, hf_term, pulay_term, wf_grad);
+  ham.evaluateIonDerivs(elec, *psi, hf_term, pulay_term, wf_grad);
 
   CHECK(dot(hf_term[0], hf_term[0]) != Approx(0));
   CHECK(dot(pulay_term[0], pulay_term[0]) != Approx(0));
@@ -471,7 +471,7 @@ TEST_CASE("Eloc_Derivatives:slater_wj", "[hamiltonian]")
   hf_term    = 0.0;
   pulay_term = 0.0;
   wf_grad    = 0.0;
-  ham.evaluateIonDerivsDeterministic(elec, ions, *psi, hf_term, pulay_term, wf_grad);
+  ham.evaluateIonDerivsDeterministic(elec, *psi, hf_term, pulay_term, wf_grad);
 
   CHECK(dot(hf_term[0], hf_term[0]) != Approx(0));
   CHECK(dot(pulay_term[0], pulay_term[0]) != Approx(0));
@@ -486,7 +486,7 @@ TEST_CASE("Eloc_Derivatives:slater_wj", "[hamiltonian]")
   wf_grad    = 0.0;
   RandomGenerator myrng;
   ham.setRandomGenerator(&myrng);
-  ham.evaluateIonDerivs(elec, ions, *psi, hf_term, pulay_term, wf_grad);
+  ham.evaluateIonDerivs(elec, *psi, hf_term, pulay_term, wf_grad);
 
   CHECK(dot(hf_term[0], hf_term[0]) != Approx(0));
   CHECK(dot(pulay_term[0], pulay_term[0]) != Approx(0));
@@ -1296,7 +1296,7 @@ TEST_CASE("Eloc_Derivatives:proto_sd_wj", "[hamiltonian]")
   //This is to test the fast force API in QMCHamiltonian.
   ParticleSet::ParticlePos dedr(ions.getTotalNum());
   ParticleSet::ParticlePos dpsidr(ions.getTotalNum());
-  ham.evaluateIonDerivsDeterministicFast(elec, ions, *psi, twf, dedr, dpsidr);
+  ham.evaluateIonDerivsDeterministicFast(elec, *psi, twf, dedr, dpsidr);
 }
 
 //This will be very similar to the previous tests, but we will check its behavior
