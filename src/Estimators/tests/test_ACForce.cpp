@@ -259,8 +259,10 @@ TEST_CASE("ACForce::IntegrationTest", "[estimators]")
   FakeRandom rng;
 
   std::string_view input_xml = R"XML(<estimator name="doop" type="ACForce" epsilon="0.01" spacewarp="yes"/>)XML";
-
+  
   Libxml2Document doc;
+  bool okay2      = doc.parseFromString(input_xml);
+  REQUIRE(okay2);
   xmlNodePtr node = doc.getRoot();
   ACForceInput acfin(node);
   ACForce acf(std::move(acfin),2);
