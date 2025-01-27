@@ -57,6 +57,7 @@ public:
   // Full set of rotation values for global rotation
   RotationIndices m_full_rot_inds_;
 
+  void setExcitationsFromList(const std::vector<IndexType>& exlist);
   // Construct a list of the matrix indices for non-zero rotation parameters.
   // (The structure for a sparse representation of the matrix)
   // Only core->active rotations are created.

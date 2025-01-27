@@ -270,7 +270,39 @@ void RotatedSPOs::readVariationalParameters(hdf_archive& hin)
 
   hin.pop();
 }
+void RotatedSPOs::setExcitationsFromList(const std::vector<IndexType>& excit_list)
+{
+  //First, we check to see if the list size is even.  Excitations have to be specified in pairs. 
+  if (excit_list.size()%2 != 0)
+      throw std::runtime_error(
+          "The supplied excitation list is odd.  Excitations must be given in pairs. Is this list corrupted?\n");
 
+  if (  m_act_rot_inds_.size() != 0)
+      throw std::runtime_error(
+          "Excitations already specified elsewhere.  Contact a developer\n");
+
+  const size_t nexcitations = excit_list.size()/2;
+
+  RotationIndices created_m_act_rot_inds;
+  const size_t nmo = Phi_->getOrbitalSetSize();
+
+  for ( int exind = 0; exind < nexcitations; exind++)
+  {
+    int i=excit_list[2*exind+0];
+    int j=excit_list[2*exind+1];
+
+    if ( i >= nmo )
+      throw std::runtime_error("Staring excitation index exceeds number of available orbitals.\n");
+    
+    if ( j >= nmo )
+      throw std::runtime_error("Final excitation index exceeds number of available orbitals.\n");
+
+    created_m_act_rot_inds.emplace_back(i,j);
+
+  } 
+
+  m_act_rot_inds_ = created_m_act_rot_inds;
+}
 void RotatedSPOs::buildOptVariables(const size_t nel)
 {
   /* Only rebuild optimized variables if more after-rotation orbitals are needed
@@ -287,15 +319,21 @@ void RotatedSPOs::buildOptVariables(const size_t nel)
     const size_t nmo = Phi_->getOrbitalSetSize();
 
     // create active rotation parameter indices
-    RotationIndices created_m_act_rot_inds;
-
     RotationIndices created_full_rot_inds;
+
     if (use_global_rot_)
       createRotationIndicesFull(nel, nmo, created_full_rot_inds);
 
-    createRotationIndices(nel, nmo, created_m_act_rot_inds);
-
-    buildOptVariables(created_m_act_rot_inds, created_full_rot_inds);
+    if ( m_act_rot_inds_.size() == 0 )
+    {
+      RotationIndices created_m_act_rot_inds;
+      createRotationIndices(nel, nmo, created_m_act_rot_inds);
+      buildOptVariables(created_m_act_rot_inds, created_full_rot_inds);
+    }
+    else
+    {
+      buildOptVariables(m_act_rot_inds_, created_full_rot_inds);
+    }
   }
 }
 

@@ -161,6 +161,12 @@ std::unique_ptr<SPOSet> SPOSetBuilder::createRotatedSPOSet(xmlNodePtr cur)
       putContent(params, element);
       rot_spo->setRotationParameters(params);
     }
+   if (cname == "excitations")
+   {
+     std::vector<IndexType> excitation_list;
+     putContent(excitation_list,element);
+     rot_spo->setExcitationsFromList(excitation_list);
+   }
   });
   return rot_spo;
 }
