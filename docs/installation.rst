@@ -350,6 +350,17 @@ the path to the source directory.
     USE_OBJECT_TARGET      ON/OFF(default). Use CMake object library targets to workaround linker not being able to handle hybrid
                            binary archives which contain both host and device codes.
 
+- Expert performance fine tuning options
+
+  ::
+
+    QMC_OFFLOAD_MEM_ASSOCIATED     ON/OFF. ON by default only when using both OpenMP offload and HIP
+                                   programming models and the host compiler is Clang based.
+                                   Use omp_target_associate_ptr instead of direct OpenMP offload maps in dual-space allocators.
+                                   Allocate device memory using vendor runtimes instead of the OpenMP runtime.
+    QMC_DISABLE_HIP_HOST_REGISTER  ON/OFF(default). If ON, make all the use of hipHostRegister/Unregister
+                                   as no-op, namely disabling all the use of pinned memory.
+
 - BLAS/LAPACK related
 
   ::
@@ -1178,7 +1189,7 @@ options and different versions of the application. A full list can be displayed 
     ppconvert [off]         on, off                 Install with pseudopotential
                                                     converter.
     qe [on]                 on, off                 Install with patched Quantum
-                                                    Espresso 6.4.0
+                                                    ESPRESSO 6.4.0
     timers [off]            on, off                 Build with support for timers
 
   Installation Phases:
