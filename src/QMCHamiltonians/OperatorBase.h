@@ -390,6 +390,11 @@ public:
                                                         std::vector<std::vector<ValueMatrix>>& Bforce)
   {}
 
+  inline virtual void evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
+                                                        const TWFFastDerivWrapper& psi,
+                                                        const int mu, const int nu,
+                                                        std::vector<ValueMatrix>& Bstrain)
+  {}
   /** make non local moves with particle-by-particle moves
    * @param P particle set
    * @return the number of accepted moves
