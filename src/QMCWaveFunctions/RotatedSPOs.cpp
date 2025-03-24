@@ -28,6 +28,15 @@ RotatedSPOs::RotatedSPOs(const std::string& my_name, std::unique_ptr<SPOSet>&& s
       apply_rotation_timer_(createGlobalTimer("RotatedSPOs::apply_rotation", timer_level_fine))
 {
   OrbitalSetSize = Phi_->getOrbitalSetSize();
+  // Inititalize C_ to be identity matrix.  
+  C_.resize(OrbitalSetSize, OrbitalSetSize);
+  Ccopy_.resize(OrbitalSetSize, OrbitalSetSize);
+  C_=0;
+  Ccopy_=0;
+  for(int iorb=0; iorb<OrbitalSetSize; iorb++)
+    C_(iorb,iorb)=1.0;
+  for(int iorb=0; iorb<OrbitalSetSize; iorb++)
+    Ccopy_(iorb,iorb)=1.0;
 }
 
 RotatedSPOs::~RotatedSPOs() {}
@@ -134,6 +143,7 @@ void RotatedSPOs::resetParametersExclusive(const opt_variables_type& active)
   }
   else
   {
+    APP_ABORT("We shouldn't be here\n");
     apply_rotation(delta_param, false);
 
     // Save the parameters in the history list
@@ -214,7 +224,6 @@ void RotatedSPOs::readVariationalParameters(hdf_archive& hin)
     hin.read(myVarsFull_, rot_global_name);
 
     hin.pop();
-
     applyFullRotation(myVarsFull_, true);
   }
   else if (grp_hist_exists)
@@ -392,10 +401,33 @@ void RotatedSPOs::apply_rotation(const std::vector<ValueType>& param, bool use_s
     Finally, apply unitary matrix to orbs.
   */
   exponentiate_antisym_matrix(rot_mat);
-  {
+  /*{
     ScopedTimer local(apply_rotation_timer_);
     Phi_->applyRotation(rot_mat, use_stored_copy);
-  }
+  }*/
+  //We apply rot_mat to the current C_matrix. 
+  ValueMatrix C_new(nmo,nmo);
+
+  if(use_stored_copy)
+  for(int i=0; i<nmo; i++)
+    for(int j=0; j<nmo; j++)
+      for(int k=0; k<nmo; k++)
+        C_new(i,j)+=rot_mat(k,i)*Ccopy_(k,j);
+  else
+  for(int i=0; i<nmo; i++)
+    for(int j=0; j<nmo; j++)
+      for(int k=0; k<nmo; k++)
+        C_new(i,j)+=rot_mat(k,i)*C_(k,j);
+  if(!use_stored_copy)
+    Ccopy_.copy(C_new);  
+  C_.copy(C_new);
+ /* app_log()<<"RotatedSPOs::apply_rotation(use_stored_copy="<<use_stored_copy<<")\n";
+  app_log()<<" rotmat\n";
+  app_log()<<rot_mat<<std::endl;
+  app_log()<<" C\n";
+  app_log()<<C_<<std::endl;
+  app_log()<<" Ccopy\n";
+  app_log()<<Ccopy_<<std::endl;*/
 }
 
 void RotatedSPOs::applyDeltaRotation(const std::vector<ValueType>& delta_param,
@@ -406,10 +438,27 @@ void RotatedSPOs::applyDeltaRotation(const std::vector<ValueType>& delta_param,
   ValueMatrix new_rot_mat(nmo, nmo);
   constructDeltaRotation(delta_param, old_param, m_act_rot_inds_, m_full_rot_inds_, new_param, new_rot_mat);
 
-  {
+  /*{
     ScopedTimer local(apply_rotation_timer_);
     Phi_->applyRotation(new_rot_mat, true);
-  }
+  }*/
+  //We apply rot_mat to the current C_matrix. 
+  ValueMatrix C_new(nmo,nmo);
+
+  for(int i=0; i<nmo; i++)
+    for(int j=0; j<nmo; j++)
+      for(int k=0; k<nmo; k++)
+        C_new(i,j)+=new_rot_mat(k,i)*Ccopy_(k,j);
+
+  C_.copy(C_new);
+  /*app_log()<<"RotatedSPOs::applyDeltaRotation()\n";
+  app_log()<<" newrotmat\n";
+  app_log()<<new_rot_mat<<std::endl;
+  app_log()<<" C\n";
+  app_log()<<C_<<std::endl;
+  app_log()<<" Ccopy\n";
+  app_log()<<Ccopy_<<std::endl;*/
+
 }
 
 void RotatedSPOs::constructDeltaRotation(const std::vector<ValueType>& delta_param,
@@ -447,6 +496,7 @@ void RotatedSPOs::constructDeltaRotation(const std::vector<ValueType>& delta_par
 
 void RotatedSPOs::applyFullRotation(const std::vector<ValueType>& full_param, bool use_stored_copy)
 {
+  
   assert(full_param.size() == m_full_rot_inds_.size());
 
   const size_t nmo = Phi_->getOrbitalSetSize();
@@ -461,11 +511,35 @@ void RotatedSPOs::applyFullRotation(const std::vector<ValueType>& full_param, bo
     Finally, apply unitary matrix to orbs.
   */
   exponentiate_antisym_matrix(rot_mat);
-  Phi_->applyRotation(rot_mat, use_stored_copy);
+//  Phi_->applyRotation(rot_mat, use_stored_copy);
+
+  ValueMatrix C_new(nmo,nmo);
+
+  if(use_stored_copy)
+  for(int i=0; i<nmo; i++)
+    for(int j=0; j<nmo; j++)
+      for(int k=0; k<nmo; k++)
+        C_new(i,j)+=rot_mat(k,i)*Ccopy_(k,j);
+  else
+  for(int i=0; i<nmo; i++)
+    for(int j=0; j<nmo; j++)
+      for(int k=0; k<nmo; k++)
+        C_new(i,j)+=rot_mat(k,i)*C_(k,j);
+  if(!use_stored_copy)
+    Ccopy_.copy(C_new);
+  C_.copy(C_new);
+  /*app_log()<<"RotatedSPOs::applyFullRotation(use_stored_copy="<<use_stored_copy<<")\n";
+  app_log()<<" rotmat\n";
+  app_log()<<rot_mat<<std::endl;
+  app_log()<<" C\n";
+  app_log()<<C_<<std::endl;
+  app_log()<<" Ccopy\n";
+  app_log()<<Ccopy_<<std::endl;*/
 }
 
 void RotatedSPOs::applyRotationHistory()
 {
+  APP_ABORT("Shouldn't be here\n");
   for (auto delta_param : history_params_)
   {
     apply_rotation(delta_param, false);
@@ -634,6 +708,89 @@ void RotatedSPOs::log_antisym_matrix(const ValueMatrix& mat, ValueMatrix& output
     }
 }
 
+void RotatedSPOs::evaluate_notranspose(const ParticleSet& P,
+                                       int first,
+                                       int last,
+                                       ValueMatrix& logdet,
+                                       GradMatrix& dlogdet,
+                                       ValueMatrix& d2logdet)
+{ 
+  // Determine the number of electrons (rows) and number of orbitals (columns)
+  const int n_e   = logdet.rows();
+  const int norb  = logdet.cols();
+
+  // Allocate temporary matrices to hold the unrotated evaluations.
+  // (Assume ValueMatrix and GradMatrix have constructors that take (rows, cols).)
+  ValueMatrix temp_logdet(n_e, OrbitalSetSize);
+  GradMatrix temp_dlogdet(n_e, OrbitalSetSize); // Each element is a 3-component gradient.
+  ValueMatrix temp_d2logdet(n_e, OrbitalSetSize);
+  
+  Phi_->evaluate_notranspose(P, first, last, temp_logdet, temp_dlogdet, temp_d2logdet);
+//  Phi_->evaluate_notranspose(P, first, last, logdet, dlogdet, d2logdet);
+  logdet=0.0;
+  dlogdet=0.0;
+  d2logdet=0.0;
+  //BLAS::gemm('N', 'N', OrbitalSetSize, OrbitalSetSize, n_e, RealType(1.0), C_.data(), OrbitalSetSize,
+  //           temp_logdet.data(), OrbitalSetSize, RealType(0.0), logdet.data(), OrbitalSetSize);
+  //BLAS::gemm('N', 'N', OrbitalSetSize, OrbitalSetSize, n_e, RealType(1.0), C_.data(), OrbitalSetSize,
+  //           temp_d2logdet.data(), OrbitalSetSize, RealType(0.0), d2logdet.data(), n_e);
+ /* app_log()<<"evaluate_notranspose\n";
+  app_log()<<" C\n";
+  app_log()<<C_<<std::endl;
+  app_log()<<" Before\n";
+  app_log()<<temp_logdet<<std::endl;*/
+  for(int iel=0; iel<n_e; iel++)
+    for(int iorb=0; iorb<norb; iorb++)
+      for(int korb=0; korb<OrbitalSetSize; korb++)
+      {
+	logdet(iel,iorb)+=C_(iorb,korb)*temp_logdet(iel,korb);
+	d2logdet(iel,iorb)+=C_(iorb,korb)*temp_d2logdet(iel,korb);
+	for(int idim=0; idim<OHMMS_DIM; idim++)
+	  dlogdet(iel,iorb)[idim]+=C_(iorb,korb)*temp_dlogdet(iel,korb)[idim];
+      }
+/*  app_log()<<" After\n";
+  app_log()<<logdet<<std::endl;*/
+}
+
+
+void RotatedSPOs::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
+{
+  assert(psi.size() <= OrbitalSetSize);
+  int norb=psi.size();
+  psi=0.0;
+  ValueVector tempv;
+  tempv.resize(OrbitalSetSize);
+  Phi_->evaluateValue(P, iat, tempv);
+//  Phi_->evaluateValue(P, iat, psi);
+  for(int iorb=0; iorb<norb; iorb++)
+    for(int jorb=0; jorb<OrbitalSetSize; jorb++)
+      psi[iorb]+=C_(iorb,jorb)*tempv[jorb];
+}
+
+
+void RotatedSPOs::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi)
+{
+  assert(psi.size() <= OrbitalSetSize);
+  int norb=psi.size();
+  psi=0.0;
+  dpsi=0.0;
+  d2psi=0.0;
+  ValueVector tempv(OrbitalSetSize);
+  GradVector tempg(OrbitalSetSize);
+  ValueVector templ(OrbitalSetSize);
+  Phi_->evaluateVGL(P, iat, tempv, tempg, templ);
+  //Phi_->evaluateVGL(P, iat, psi, dpsi, d2psi);
+  for(int iorb=0; iorb<norb; iorb++)
+    for(int jorb=0; jorb<OrbitalSetSize; jorb++) 
+    {
+      psi[iorb]+=C_(iorb,jorb)*tempv[jorb];
+      d2psi[iorb]+=C_(iorb,jorb)*templ[jorb];
+      for(int idim=0; idim<OHMMS_DIM; idim++)
+        dpsi[iorb][idim]+=C_(iorb,jorb)*tempg[jorb][idim];
+    }
+
+}
+
 void RotatedSPOs::evaluateDerivRatios(const VirtualParticleSet& VP,
                                       const opt_variables_type& optvars,
                                       ValueVector& psi,
@@ -643,6 +800,7 @@ void RotatedSPOs::evaluateDerivRatios(const VirtualParticleSet& VP,
                                       int FirstIndex,
                                       int LastIndex)
 {
+  APP_ABORT("RotatedSPOs::evaluateDerivRatios()\n");
   Phi_->evaluateDetRatios(VP, psi, psiinv, ratios);
 
   const size_t nel = LastIndex - FirstIndex;
@@ -661,7 +819,7 @@ void RotatedSPOs::evaluateDerivRatios(const VirtualParticleSet& VP,
   const ParticleSet& P = VP.getRefPS();
   int iel              = VP.refPtcl;
 
-  Phi_->evaluate_notranspose(P, FirstIndex, LastIndex, psiM_all, dpsiM_all, d2psiM_all);
+  this->evaluate_notranspose(P, FirstIndex, LastIndex, psiM_all, dpsiM_all, d2psiM_all);
 
   for (int i = 0; i < nel; i++)
     for (int j = 0; j < nel; j++)
@@ -742,7 +900,7 @@ void RotatedSPOs::evaluateDerivativesWF(ParticleSet& P,
   dpsiM_all  = 0;
   d2psiM_all = 0;
 
-  Phi_->evaluate_notranspose(P, FirstIndex, LastIndex, psiM_all, dpsiM_all, d2psiM_all);
+  this->evaluate_notranspose(P, FirstIndex, LastIndex, psiM_all, dpsiM_all, d2psiM_all);
 
   for (int i = 0; i < nel; i++)
     for (int j = 0; j < nel; j++)
@@ -809,7 +967,7 @@ void RotatedSPOs::evaluateDerivatives(ParticleSet& P,
   d2psiM_all = 0;
 
 
-  Phi_->evaluate_notranspose(P, FirstIndex, LastIndex, psiM_all, dpsiM_all, d2psiM_all);
+  this->evaluate_notranspose(P, FirstIndex, LastIndex, psiM_all, dpsiM_all, d2psiM_all);
 
   for (int i = 0; i < nel; i++)
     for (int j = 0; j < nel; j++)
@@ -1642,6 +1800,8 @@ std::unique_ptr<SPOSet> RotatedSPOs::makeClone() const
   myclone->myVarsFull_      = this->myVarsFull_;
   myclone->history_params_  = this->history_params_;
   myclone->use_global_rot_  = this->use_global_rot_;
+  myclone->C_               = this->C_;
+  myclone->Ccopy_           = this->Ccopy_;
   return myclone;
 }
 

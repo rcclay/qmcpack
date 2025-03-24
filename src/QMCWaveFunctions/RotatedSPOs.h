@@ -34,6 +34,8 @@ public:
   //destructor
   ~RotatedSPOs() override;
 
+  // copy constructor and assign operator disabled
+  //
   std::string getClassName() const override { return "RotatedSPOs"; }
   bool isOptimizable() const override { return true; }
   bool isOMPoffload() const override { return Phi_->isOMPoffload(); }
@@ -276,18 +278,9 @@ public:
 
   void checkObject() const override { Phi_->checkObject(); }
 
-  void evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override
-  {
-    assert(psi.size() <= OrbitalSetSize);
-    Phi_->evaluateValue(P, iat, psi);
-  }
+  void evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override;
 
-
-  void evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi) override
-  {
-    assert(psi.size() <= OrbitalSetSize);
-    Phi_->evaluateVGL(P, iat, psi, dpsi, d2psi);
-  }
+  void evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi) override;
 
   void evaluateVGL_spin(const ParticleSet& P,
                         int iat,
@@ -305,6 +298,7 @@ public:
                          const ValueVector& psiinv,
                          std::vector<ValueType>& ratios) override
   {
+    APP_ABORT("RotatedSPOs::evaluateDetRatios\n");
     Phi_->evaluateDetRatios(VP, psi, psiinv, ratios);
   }
 
@@ -323,6 +317,7 @@ public:
                    GradVector& dpsi,
                    HessVector& grad_grad_psi) override
   {
+    APP_ABORT("RotatedSPOs::evaluateVGH\n");
     assert(psi.size() <= OrbitalSetSize);
     Phi_->evaluateVGH(P, iat, psi, dpsi, grad_grad_psi);
   }
@@ -344,10 +339,7 @@ public:
                             int last,
                             ValueMatrix& logdet,
                             GradMatrix& dlogdet,
-                            ValueMatrix& d2logdet) override
-  {
-    Phi_->evaluate_notranspose(P, first, last, logdet, dlogdet, d2logdet);
-  }
+                            ValueMatrix& d2logdet) override;
 
   void evaluate_spin(const ParticleSet& P, int iat, ValueVector& psi, ValueVector& dspin_psi) override
   {
@@ -361,6 +353,7 @@ public:
                             GradMatrix& dlogdet,
                             HessMatrix& grad_grad_logdet) override
   {
+    APP_ABORT("RotatedSPOs::evaluate_notranspose(grad_grad_log)\n");
     Phi_->evaluate_notranspose(P, first, last, logdet, dlogdet, grad_grad_logdet);
   }
 
@@ -372,6 +365,7 @@ public:
                             HessMatrix& grad_grad_logdet,
                             GGGMatrix& grad_grad_grad_logdet) override
   {
+    APP_ABORT("RotatedSPOs::evaluate_notranspose(grad_grad_grad_log)\n");
     Phi_->evaluate_notranspose(P, first, last, logdet, dlogdet, grad_grad_logdet, grad_grad_grad_logdet);
   }
 
@@ -479,6 +473,10 @@ private:
 
   /// Use global rotation or history list
   bool use_global_rot_ = true;
+
+  /// Rotation matrix C, inititalized to identity.  Used if rotation not applied directly to underlying SPOSet.
+  ValueMatrix C_;
+  ValueMatrix Ccopy_;
 
   friend const opt_variables_type& testing::getMyVars(RotatedSPOs& rot);
   friend const std::vector<ValueType>& testing::getMyVarsFull(RotatedSPOs& rot);
