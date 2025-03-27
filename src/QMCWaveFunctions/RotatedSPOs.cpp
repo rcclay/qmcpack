@@ -1804,16 +1804,18 @@ std::unique_ptr<SPOSet> RotatedSPOs::makeClone() const
   myclone->Ccopy_           = this->Ccopy_;
   return myclone;
 }
-
 void RotatedSPOs::mw_evaluateDetRatios(const RefVectorWithLeader<SPOSet>& spo_list,
                                        const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
                                        const RefVector<ValueVector>& psi_list,
                                        const std::vector<const ValueType*>& invRow_ptr_list,
                                        std::vector<std::vector<ValueType>>& ratios_list) const
 {
-  auto phi_list = extractPhiRefList(spo_list);
-  auto& leader  = phi_list.getLeader();
-  leader.mw_evaluateDetRatios(phi_list, vp_list, psi_list, invRow_ptr_list, ratios_list);
+  //auto phi_list = extractPhiRefList(spo_list);
+  //auto& leader  = phi_list.getLeader();
+  //leader.mw_evaluateDetRatios(phi_list, vp_list, psi_list, invRow_ptr_list, ratios_list);
+  APP_ABORT("RotatedSPOs::mw_evaluateDetRatios\n");
+  auto& leader = spo_list.getLeader();
+  leader.mw_evaluateDetRatios(spo_list, vp_list, psi_list, invRow_ptr_list, ratios_list);
 }
 
 void RotatedSPOs::mw_evaluateValue(const RefVectorWithLeader<SPOSet>& spo_list,
@@ -1821,6 +1823,7 @@ void RotatedSPOs::mw_evaluateValue(const RefVectorWithLeader<SPOSet>& spo_list,
                                    int iat,
                                    const RefVector<ValueVector>& psi_v_list) const
 {
+  APP_ABORT("RotatedSPOs::mw_evaluateValue()\n");
   auto phi_list = extractPhiRefList(spo_list);
   auto& leader  = phi_list.getLeader();
   leader.mw_evaluateValue(phi_list, P_list, iat, psi_v_list);
@@ -1833,6 +1836,7 @@ void RotatedSPOs::mw_evaluateVGL(const RefVectorWithLeader<SPOSet>& spo_list,
                                  const RefVector<GradVector>& dpsi_v_list,
                                  const RefVector<ValueVector>& d2psi_v_list) const
 {
+  APP_ABORT("RotatedSPOs::mw_evaluateVGL()\n");
   auto phi_list = extractPhiRefList(spo_list);
   auto& leader  = phi_list.getLeader();
   leader.mw_evaluateVGL(phi_list, P_list, iat, psi_v_list, dpsi_v_list, d2psi_v_list);
@@ -1859,6 +1863,8 @@ void RotatedSPOs::mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSe
                                                  std::vector<ValueType>& ratios,
                                                  std::vector<GradType>& grads) const
 {
+
+  APP_ABORT("RotatedSPOs::mw_evaluateVGLandDetRatioGrads()\n");
   auto phi_list = extractPhiRefList(spo_list);
   auto& leader  = phi_list.getLeader();
   leader.mw_evaluateVGLandDetRatioGrads(phi_list, P_list, iat, invRow_ptr_list, phi_vgl_v, ratios, grads);
@@ -1887,6 +1893,7 @@ void RotatedSPOs::mw_evaluate_notranspose(const RefVectorWithLeader<SPOSet>& spo
                                           const RefVector<GradMatrix>& dlogdet_list,
                                           const RefVector<ValueMatrix>& d2logdet_list) const
 {
+  APP_ABORT("RotatedSPOs::mw_evaluate_notranspose\n");
   auto phi_list = extractPhiRefList(spo_list);
   auto& leader  = phi_list.getLeader();
   leader.mw_evaluate_notranspose(phi_list, P_list, first, last, logdet_list, dlogdet_list, d2logdet_list);
@@ -1896,9 +1903,12 @@ void RotatedSPOs::createResource(ResourceCollection& collection) const { Phi_->c
 
 void RotatedSPOs::acquireResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSet>& spo_list) const
 {
+  
   auto phi_list = extractPhiRefList(spo_list);
   auto& leader  = phi_list.getLeader();
   leader.acquireResource(collection, phi_list);
+  //auto& leader = spo_list.getLeader();
+  //leader.acquireResource(collection,spo_list);
 }
 
 void RotatedSPOs::releaseResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSet>& spo_list) const
@@ -1906,6 +1916,8 @@ void RotatedSPOs::releaseResource(ResourceCollection& collection, const RefVecto
   auto phi_list = extractPhiRefList(spo_list);
   auto& leader  = phi_list.getLeader();
   leader.releaseResource(collection, phi_list);
+  //auto& leader = spo_list.getLeader();
+  //leader.releaseResource(collection,spo_list);
 }
 
 RefVectorWithLeader<SPOSet> RotatedSPOs::extractPhiRefList(const RefVectorWithLeader<SPOSet>& spo_list)
