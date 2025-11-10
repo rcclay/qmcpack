@@ -439,6 +439,8 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
                                                           const int mu, const int nu,
                                                           std::vector<ValueMatrix>& Bstrain)
 {
+  using HessMatrix = SPOSet::HessMatrix;
+  using GGGMatrix  = SPOSet::GGGMatrix;
   const IndexType ngroups = P.groups();
   const IndexType nelec   = P.getTotalNum();
 
@@ -452,6 +454,8 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
   std::vector<ValueMatrix> M;
   std::vector<GradMatrix> grad_M;
   std::vector<ValueMatrix> lapl_M;
+  std::vector<HessMatrix> hess_M;
+  std::vector<GGGMatrix>  ghess_M;
 
   TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM> dG;
   TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM> dL;
@@ -474,14 +478,19 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
 
     ValueMatrix zeromat;
     GradMatrix zerogradmat;
+    HessMatrix zerohess;
+    GGGMatrix zeroghess;
 
     zeromat.resize(nptcls, norbs);
     zerogradmat.resize(nptcls, norbs);
-
+    zerohess.resize(nptcls,norbs);
+    zeroghess.resize(nptcls,norbs);
     mtmp.push_back(zeromat);
     M.push_back(zeromat);
     grad_M.push_back(zerogradmat);
     lapl_M.push_back(zeromat);
+    hess_M.push_back(zerohess);
+    ghess_M.push_back(zeroghess);
   }
 
 
@@ -500,22 +509,26 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
   dgmat.push_back(grad_M);
 
   psi.getEGradELaplM(P, M, grad_M, lapl_M);
+  psi.getEGradHessGHessM(P, M, grad_M, hess_M, ghess_M);
 // psi.getIonGradIonGradELaplM(P, source, iat, dm, dgmat, dlapl);
-  psi.evaluateJastrowVGL(P, G, L);
+//  psi.evaluateJastrowVGL(P, G, L);
 //  psi.evaluateJastrowGradSource(P, source, iat, dG, dL);
-  for (int idim = 0; idim < OHMMS_DIM; idim++)
-    for (int ig = 0; ig < ngroups; ig++)
-    {
-      const IndexType sid    = psi.getTWFGroupIndex(ig);
-      const IndexType norbs  = psi.numOrbitals(sid);
-      const IndexType first  = P.first(ig);
-      const IndexType last   = P.last(ig);
-      const IndexType nptcls = last - first;
+  for (int ig = 0; ig < ngroups; ig++)
+  {
+    const IndexType sid    = psi.getTWFGroupIndex(ig);
+    const IndexType norbs  = psi.numOrbitals(sid);
+    const IndexType first  = P.first(ig);
+    const IndexType last   = P.last(ig);
+    const IndexType nptcls = last - first;
 
-      for (int iel = first; iel < last; iel++)
+    for (int iel = first; iel < last; iel++)
+    {
+      for (int iorb = 0; iorb < norbs; iorb++)
       {
-        for (int iorb = 0; iorb < norbs; iorb++)
-        {
+	                             //x /xx
+        Bstrain[sid][iel-first][iorb]=RealType(minus_over_2m_[ig]) *
+	  (-0.5*hess_M[sid][iel-first][iorb][0]+hess_M[sid][iel-first][iorb][0]+hess_M[sid][iel-first][iorb][4]+
+	    hess_M[sid][iel-first][iorb][8] + P.R[iel][0]*(ghess_M[sid][iel-first][iorb][0][0]+ghess_M[sid][iel-first][iorb][0][4]+ ghess_M[sid][iel-first][iorb][0][8]));
 //              Bforce[idim][sid][iel - first][iorb] = RealType(minus_over_2m_[ig]) *
 //              (dlapl[idim][sid][iel - first][iorb] +
 //               RealType(2.0) *
@@ -523,9 +536,9 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
 //                    dot(GradType(dG[idim][iel]), grad_M[sid][iel - first][iorb])) +
 //               M[sid][iel - first][iorb] * ValueType(dL[idim][iel] + 2.0 * dot(dG[idim][iel], G[iel])) +
 //               ValueType(L[iel] + dot(G[iel], G[iel])) * dm[idim][sid][iel - first][iorb]);
-        }
       }
     }
+  }  
 }
 void BareKineticEnergy::createResource(ResourceCollection& collection) const
 {

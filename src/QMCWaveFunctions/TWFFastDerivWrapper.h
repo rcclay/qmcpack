@@ -33,6 +33,7 @@ public:
   using ValueMatrix = SPOSet::ValueMatrix;
   using GradMatrix  = SPOSet::GradMatrix;
   using HessMatrix  = SPOSet::HessMatrix;
+  using GGGMatrix   = SPOSet::GGGMatrix;
   using IndexType   = QMCTraits::IndexType;
   using RealType    = QMCTraits::RealType;
   using ValueType   = QMCTraits::ValueType;
@@ -121,6 +122,19 @@ public:
                       std::vector<GradMatrix>& gmat,
                       std::vector<ValueMatrix>& lmat) const;
 
+  /** @brief Returns value, gradient, and hessian matrices for all orbitals and all particles, species by species. 
+   *
+   *  @param[in] P particle set.
+   *  @param[in,out] mvec Slater matrix M_ij=phi_j(r_i) for each species group.
+   *  @param[in,out] gmat electron gradient of slater matrix [G_ij]_a = d/dr_a,i phi_j(r_i).  a=x,y,z  
+   *  @param[in,out] hmat electron hessian of slater matrix [L_ij] = \nabla^2_i phi_j(r_i).
+   *  @return Void
+   */
+  void getEGradHessGHessM(const ParticleSet& P,
+                     std::vector<ValueMatrix>& mvec,
+                     std::vector<GradMatrix>& gmat,
+		     std::vector<HessMatrix>& hmat,
+		     std::vector<GGGMatrix>& ghmat) const;
   /** @brief Returns x,y,z components of ion gradient of slater matrices.
    *
    *  @param[in] P particle set.
@@ -133,6 +147,18 @@ public:
                    const ParticleSet& source,
                    const int iat,
                    std::vector<std::vector<ValueMatrix>>& dmvec) const;
+
+  /** @brief Returns mu,nu components of the strain gradient of slater matrices.
+   *
+   *  @param[in] P particle set.
+   *  @param[in] mu,nu  the strain_mu,nu indices the derivatives are taken w.r.t.
+   *  @param[in,out] dmvec Slater matrix d/de_{mu,nu} M_ij=d/de_{mu,nu} phi_j(r_i) for each species group. 
+   *
+   *  @return Void
+   */
+  void getStrainGradM(const ParticleSet& P,
+                   const int mu, const int nu,
+                   std::vector<ValueMatrix>& dmvec) const;
 
   /** @brief Returns x,y,z components of ion gradient of slater matrices and their laplacians..
    *

@@ -129,7 +129,7 @@ public:
   void evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
                                          const TWFFastDerivWrapper& psi,
                                          const int mu, const int nu,
-                                         std::vector<ValueMatrix>& Bstrain);
+                                         std::vector<ValueMatrix>& Bstrain) override;
 #if !defined(REMOVE_TRACEMANAGER)
   Return_t evaluate_sp(ParticleSet& P);
 #endif

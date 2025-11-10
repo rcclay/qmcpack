@@ -35,11 +35,14 @@ class MinimalParticlePool
     <parameter name='bconds'>
         p p p
     </parameter>
-    <parameter name='LR_dim_cutoff'>15 </parameter>
+    <parameter name='LR_dim_cutoff'>25 </parameter>
+    <parameter name='LR_handler'>ewald</parameter>
   </simulationcell>
   <particleset name="ion" size="2">
     <group name="C">
       <parameter name="charge">4</parameter>
+      <parameter name="valence">4</parameter>
+      <parameter name="atomicnumber">6</parameter>
     </group>
     <attrib name="position" datatype="posArray">
       0.00000000  0.00000000  0.00000000

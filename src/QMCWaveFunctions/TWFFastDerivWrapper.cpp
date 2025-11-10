@@ -145,6 +145,25 @@ void TWFFastDerivWrapper::getEGradELaplM(const ParticleSet& P,
   }
 }
 
+void TWFFastDerivWrapper::getEGradHessGHessM(const ParticleSet& P,
+		                        std::vector<ValueMatrix>& mvec,
+					std::vector<GradMatrix>& gmat,
+					std::vector<HessMatrix>& hmat,
+					std::vector<GGGMatrix>& ghmat) const
+{
+  IndexType ngroups = mvec.size();
+  for (IndexType i = 0; i < ngroups; i++)
+  {
+    const IndexType gid    = groups_[i];
+    const IndexType first  = P.first(i);
+    const IndexType last   = P.last(i);
+    const IndexType nptcls = last - first;
+    const IndexType norbs  = spos_[i]->getOrbitalSetSize();
+    spos_[i]->evaluate_notranspose(P, first, last, mvec[i], gmat[i], hmat[i], ghmat[i]);
+  }
+
+}
+
 void TWFFastDerivWrapper::getIonGradM(const ParticleSet& P,
                                       const ParticleSet& source,
                                       const int iat,
@@ -171,6 +190,44 @@ void TWFFastDerivWrapper::getIonGradM(const ParticleSet& P,
         {
           dmvec[idim][i][iptcl][iorb] += grad_phi[iptcl][iorb][idim];
         }
+  }
+}
+
+void TWFFastDerivWrapper::getStrainGradM(const ParticleSet& P,
+                                      const int mu, const int nu,
+                                      std::vector<ValueMatrix>& dmvec) const
+{
+  IndexType ngroups = dmvec.size();
+  for (IndexType i = 0; i < ngroups; i++)
+  {
+    const IndexType gid    = groups_[i];
+    const IndexType first  = P.first(i);
+    const IndexType last   = P.last(i);
+    const IndexType nptcls = last - first;
+    const IndexType norbs  = spos_[i]->getOrbitalSetSize();
+
+    GradMatrix grad_phi;
+    ValueMatrix lapl_phi;
+    ValueMatrix M;
+    M.resize(nptcls,norbs);
+    grad_phi.resize(nptcls, norbs);
+    lapl_phi.resize(nptcls, norbs);
+
+    spos_[i]->evaluate_notranspose(P, first, last, M, grad_phi, lapl_phi);
+    for (IndexType iptcl = 0; iptcl < nptcls; iptcl++)
+      for (IndexType iorb = 0; iorb < norbs; iorb++)
+      {
+	app_log()<<" i="<<i<<" iptcl="<<iptcl<<" iorb="<<iorb<<" M="<<M[iptcl][iorb]<<" grad="<<grad_phi[iptcl][iorb]<<std::endl;
+
+        dmvec[i][iptcl][iorb] += -(P.R[first+iptcl][mu]*grad_phi[iptcl][iorb][nu]);
+	if (mu==nu)
+          dmvec[i][iptcl][iorb] += -0.5*M[iptcl][iorb];
+      }
+
+    //for (IndexType iat = 0; iat<nions; iat++)
+   // {
+
+   // }
   }
 }
 
