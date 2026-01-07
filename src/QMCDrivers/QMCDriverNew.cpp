@@ -19,6 +19,7 @@
 #include "Concurrency/ParallelExecutor.hpp"
 #include "ParticleBase/ParticleUtility.h"
 #include "ParticleBase/RandomSeqGenerator.h"
+#include "TrialWaveFunction.h"
 #include "Utilities/FairDivide.h"
 #include "OhmmsData/AttributeSet.h"
 #include "Message/Communicate.h"
@@ -300,11 +301,10 @@ void QMCDriverNew::initialLogEvaluation(int crowd_id,
   for (int iw = 0; iw < crowd.size(); ++iw)
     resetSigNLocalEnergy(walkers[iw], walker_twfs[iw], local_energies[iw]);
 
-  auto evaluateNonPhysicalHamiltonianElements = [](QMCHamiltonian& ham, ParticleSet& pset, MCPWalker& walker) {
-    ham.auxHevaluate(pset, walker);
-  };
+  auto evaluateNonPhysicalHamiltonianElements = [](QMCHamiltonian& ham, TrialWaveFunction& psi, ParticleSet& pset,
+                                                   MCPWalker& walker) { ham.auxHevaluate(psi, pset, walker); };
   for (int iw = 0; iw < crowd.size(); ++iw)
-    evaluateNonPhysicalHamiltonianElements(walker_hamiltonians[iw], walker_elecs[iw], walkers[iw]);
+    evaluateNonPhysicalHamiltonianElements(walker_hamiltonians[iw], walker_twfs[iw], walker_elecs[iw], walkers[iw]);
 
   auto savePropertiesIntoWalker = [](QMCHamiltonian& ham, MCPWalker& walker) {
     ham.saveProperty(walker.getPropertyBase());
@@ -394,7 +394,7 @@ QMCDriverNew::AdjustedWalkerCounts QMCDriverNew::adjustGlobalWalkerCount(Communi
   }
 
   if (awc.global_walkers % num_ranks)
-    app_warning() << "TotalWalkers (" << awc.global_walkers << ") not divisible by number of ranks (" << num_ranks
+    app_warning() << "Total walkers (" << awc.global_walkers << ") is not divisible by number of ranks (" << num_ranks
                   << "). This will result in a loss of efficiency.\n";
 
   // Step 2. decide awc.walkers_per_crowd
@@ -403,6 +403,11 @@ QMCDriverNew::AdjustedWalkerCounts QMCDriverNew::adjustGlobalWalkerCount(Communi
   if (awc.walkers_per_rank[rank_id] % num_crowds)
     app_warning() << "Walkers per rank (" << awc.walkers_per_rank[rank_id] << ") not divisible by number of crowds ("
                   << num_crowds << "). This will result in a loss of efficiency.\n";
+
+  if (awc.global_walkers % num_ranks || awc.walkers_per_rank[rank_id] % num_crowds)
+    app_warning() << "Using "
+                  << int(std::max(awc.global_walkers / (num_ranks * num_crowds), 1)) * (num_ranks * num_crowds)
+                  << " total walkers will divide evenly over both ranks and crowds.\n";
 
   // \todo some warning if unreasonable number of threads are being used.
 

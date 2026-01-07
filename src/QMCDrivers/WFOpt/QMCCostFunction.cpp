@@ -46,24 +46,30 @@ void QMCCostFunction::GradCost(std::vector<Return_rt>& PGradient,
                                const std::vector<Return_rt>& PM,
                                Return_rt FiniteDiff)
 {
+  for (int j = 0; j < NumOptimizables; j++)
+    opt_vars[j] = PM[j];
   if (FiniteDiff > 0)
   {
     QMCTraits::RealType dh = 1.0 / (2.0 * FiniteDiff);
     for (int i = 0; i < NumOptimizables; i++)
     {
-      for (int j = 0; j < NumOptimizables; j++)
-        OptVariables[j] = PM[j];
-      OptVariables[i]               = PM[i] + FiniteDiff;
-      QMCTraits::RealType CostPlus  = this->Cost();
-      OptVariables[i]               = PM[i] - FiniteDiff;
-      QMCTraits::RealType CostMinus = this->Cost();
-      PGradient[i]                  = (CostPlus - CostMinus) * dh;
+      // + FiniteDiff
+      opt_vars[i] = PM[i] + FiniteDiff;
+      resetPsi();
+      correlatedSampling(false);
+      auto CostPlus = computedCost();
+      // - FiniteDiff
+      opt_vars[i] = PM[i] - FiniteDiff;
+      resetPsi();
+      correlatedSampling(false);
+      auto CostMinus = computedCost();
+      // calculate gradient
+      PGradient[i] = (CostPlus - CostMinus) * dh;
+      opt_vars[i]  = PM[i]; // revert parameter change
     }
   }
   else
   {
-    for (int j = 0; j < NumOptimizables; j++)
-      OptVariables[j] = PM[j];
     resetPsi();
     //evaluate new local energies and derivatives
     EffectiveWeight effective_weight = correlatedSampling(true);
@@ -254,7 +260,7 @@ void QMCCostFunction::checkConfigurations(EngineHandle& handle)
     }
     // Populate local to global index mapping into psiClone internal component 'myVars',
     // because psiClones persist between different sections and need update.
-    psiClones[ip]->checkOutVariables(OptVariablesForPsi);
+    psiClones[ip]->checkOutVariables(opt_vars);
     //    synchronize the random number generator with the node
     (*MoverRng[ip]) = (*RngSaved[ip]);
     hClones[ip]->setRandomGenerator(MoverRng[ip]);
@@ -267,8 +273,8 @@ void QMCCostFunction::checkConfigurations(EngineHandle& handle)
       wRef.loadSample(wRef, iw);
       wRef.update();
       Return_rt* restrict saved = (*RecordsOnNode[ip])[iw];
-      psiClones[ip]->evaluateDeltaLogSetup(wRef, saved[LOGPSI_FIXED], saved[LOGPSI_FREE], *dLogPsi[iwg],
-                                           *d2LogPsi[iwg]);
+      auto& psi_ref             = *psiClones[ip];
+      psi_ref.evaluateDeltaLogSetup(wRef, saved[LOGPSI_FIXED], saved[LOGPSI_FREE], *dLogPsi[iwg], *d2LogPsi[iwg]);
       saved[REWEIGHT] = 1.0;
       Return_rt etmp;
       if (needGrads)
@@ -280,7 +286,7 @@ void QMCCostFunction::checkConfigurations(EngineHandle& handle)
         Vector<Return_t> Dsaved(NumOptimizables, 0.0);
         Vector<Return_t> HDsaved(NumOptimizables, 0.0);
 
-        etmp = hClones[ip]->evaluateValueAndDerivatives(wRef, OptVariablesForPsi, Dsaved, HDsaved);
+        etmp = hClones[ip]->evaluateValueAndDerivatives(psi_ref, wRef, opt_vars, Dsaved, HDsaved);
 
 
         //FIXME the ifdef should be removed after the optimizer is made compatible with complex coefficients
@@ -292,7 +298,7 @@ void QMCCostFunction::checkConfigurations(EngineHandle& handle)
         std::copy(rHDsaved.begin(), rHDsaved.end(), (*HDerivRecords[ip])[iw]);
       }
       else
-        etmp = hClones[ip]->evaluate(wRef);
+        etmp = hClones[ip]->evaluate(psi_ref, wRef);
 
       e0 += saved[ENERGY_TOT] = saved[ENERGY_NEW] = etmp;
       e2 += etmp * etmp;
@@ -307,7 +313,6 @@ void QMCCostFunction::checkConfigurations(EngineHandle& handle)
     // #pragma omp atomic
     //       eft_tot+=ef;
   }
-  OptVariablesForPsi.setComputed();
   //     app_log() << "  VMC Efavg = " << eft_tot/static_cast<Return_t>(wPerRank[NumThreads]) << std::endl;
   //Need to sum over the processors
   std::vector<Return_rt> etemp(3);
@@ -344,8 +349,6 @@ void QMCCostFunction::engine_checkConfigurations(cqmc::engine::LMYEngine<Return_
 {
   if (MinMethod == "descent")
   {
-    //Seem to need this line to get non-zero derivatives for traditional Jastrow parameters when using descent.
-    OptVariablesForPsi.setRecompute();
     //Reset vectors and scalars from any previous iteration
     descentEngineObj.prepareStorage(omp_get_max_threads(), NumOptimizables);
   }
@@ -378,7 +381,7 @@ void QMCCostFunction::engine_checkConfigurations(cqmc::engine::LMYEngine<Return_
     }
     // Populate local to global index mapping into psiClone internal component 'myVars',
     // because psiClones persist between different sections and need update.
-    psiClones[ip]->checkOutVariables(OptVariablesForPsi);
+    psiClones[ip]->checkOutVariables(opt_vars);
     //    synchronize the random number generator with the node
     (*MoverRng[ip]) = (*RngSaved[ip]);
     hClones[ip]->setRandomGenerator(MoverRng[ip]);
@@ -393,8 +396,8 @@ void QMCCostFunction::engine_checkConfigurations(cqmc::engine::LMYEngine<Return_
       wRef.loadSample(wRef, iw);
       wRef.update();
       Return_rt* restrict saved = (*RecordsOnNode[ip])[iw];
-      psiClones[ip]->evaluateDeltaLogSetup(wRef, saved[LOGPSI_FIXED], saved[LOGPSI_FREE], *dLogPsi[iwg],
-                                           *d2LogPsi[iwg]);
+      auto& psi_ref             = *psiClones[ip];
+      psi_ref.evaluateDeltaLogSetup(wRef, saved[LOGPSI_FIXED], saved[LOGPSI_FREE], *dLogPsi[iwg], *d2LogPsi[iwg]);
       saved[REWEIGHT] = 1.0;
       Return_rt etmp;
       if (needGrads)
@@ -403,7 +406,7 @@ void QMCCostFunction::engine_checkConfigurations(cqmc::engine::LMYEngine<Return_
         Vector<Return_t> Dsaved(NumOptimizables, 0.0);
         Vector<Return_t> HDsaved(NumOptimizables, 0.0);
 
-        etmp = hClones[ip]->evaluateValueAndDerivatives(wRef, OptVariablesForPsi, Dsaved, HDsaved);
+        etmp = hClones[ip]->evaluateValueAndDerivatives(psi_ref, wRef, opt_vars, Dsaved, HDsaved);
 
         // add non-differentiated derivative vector
         std::vector<Return_t> der_rat_samp(NumOptimizables + 1, 0.0);
@@ -437,7 +440,7 @@ void QMCCostFunction::engine_checkConfigurations(cqmc::engine::LMYEngine<Return_
 #endif
       }
       else
-        etmp = hClones[ip]->evaluate(wRef);
+        etmp = hClones[ip]->evaluate(psi_ref, wRef);
 
       e0 += saved[ENERGY_TOT] = etmp;
       e2 += etmp * etmp;
@@ -472,19 +475,9 @@ void QMCCostFunction::engine_checkConfigurations(cqmc::engine::LMYEngine<Return_
 #ifdef HAVE_LMY_ENGINE
   // engine finish taking samples
   if (MinMethod == "adaptive")
-  {
     EngineObj->sample_finish();
-
-    if (EngineObj->block_first())
-    {
-      OptVariablesForPsi.setComputed();
-      app_log() << "calling setComputed function" << std::endl;
-    }
-  }
   else if (MinMethod == "descent")
-  {
     descentEngineObj.sample_finish();
-  }
 #endif
 
   app_log().flush();
@@ -497,19 +490,9 @@ void QMCCostFunction::engine_checkConfigurations(cqmc::engine::LMYEngine<Return_
 
 void QMCCostFunction::resetPsi(bool final_reset)
 {
-  if (OptVariables.size() < OptVariablesForPsi.size())
-    for (int i = 0; i < equalVarMap.size(); ++i)
-      OptVariablesForPsi[equalVarMap[i][0]] = OptVariables[equalVarMap[i][1]];
-  else
-    for (int i = 0; i < OptVariables.size(); ++i)
-      OptVariablesForPsi[i] = OptVariables[i];
-  //cout << "######### QMCCostFunction::resetPsi " << std::endl;
-  //OptVariablesForPsi.print(std::cout);
-  //cout << "-------------------------------------- " << std::endl;
-
-  resetOptimizableObjects(Psi, OptVariablesForPsi);
+  resetOptimizableObjects(Psi, opt_vars);
   for (int i = 0; i < psiClones.size(); ++i)
-    resetOptimizableObjects(*psiClones[i], OptVariablesForPsi);
+    resetOptimizableObjects(*psiClones[i], opt_vars);
 }
 
 QMCCostFunction::EffectiveWeight QMCCostFunction::correlatedSampling(bool needGrad)
@@ -538,7 +521,8 @@ QMCCostFunction::EffectiveWeight QMCCostFunction::correlatedSampling(bool needGr
       wRef.update(true);
       Return_rt* restrict saved = (*RecordsOnNode[ip])[iw];
       Return_rt logpsi;
-      logpsi = psiClones[ip]->evaluateDeltaLog(wRef, compute_all_from_scratch);
+      auto& psi_ref = *psiClones[ip];
+      logpsi        = psi_ref.evaluateDeltaLog(wRef, compute_all_from_scratch);
       wRef.G += *dLogPsi[iwg];
       wRef.L += *d2LogPsi[iwg];
       Return_rt weight = saved[REWEIGHT] = vmc_or_dmc * (logpsi - saved[LOGPSI_FREE]);
@@ -551,24 +535,18 @@ QMCCostFunction::EffectiveWeight QMCCostFunction::correlatedSampling(bool needGr
         Vector<Return_rt> rHDsaved(NumOptimizables, 0);
 
         saved[ENERGY_NEW] =
-            H_KE_Node[ip]->evaluateValueAndDerivatives(wRef, OptVariablesForPsi, Dsaved, HDsaved) + saved[ENERGY_FIXED];
-        ;
+            H_KE_Node[ip]->evaluateValueAndDerivatives(psi_ref, wRef, opt_vars, Dsaved, HDsaved) + saved[ENERGY_FIXED];
 
         for (int i = 0; i < NumOptimizables; i++)
         {
-          rDsaved[i]  = std::real(Dsaved[i]);
-          rHDsaved[i] = std::real(HDsaved[i]);
+          rDsaved[i]                  = std::real(Dsaved[i]);
+          rHDsaved[i]                 = std::real(HDsaved[i]);
+          (*DerivRecords[ip])(iw, i)  = rDsaved[i];
+          (*HDerivRecords[ip])(iw, i) = rHDsaved[i];
         }
-
-        for (int i = 0; i < NumOptimizables; i++)
-          if (OptVariablesForPsi.recompute(i))
-          {
-            (*DerivRecords[ip])(iw, i)  = rDsaved[i];
-            (*HDerivRecords[ip])(iw, i) = rHDsaved[i];
-          }
       }
       else
-        saved[ENERGY_NEW] = H_KE_Node[ip]->evaluate(wRef) + saved[ENERGY_FIXED];
+        saved[ENERGY_NEW] = H_KE_Node[ip]->evaluate(psi_ref, wRef) + saved[ENERGY_FIXED];
       wgt_node += inv_n_samples * weight;
       wgt_node2 += inv_n_samples * weight * weight;
     }

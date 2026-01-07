@@ -368,19 +368,21 @@ TEST_CASE("MagnetizationDensity::IntegrationTest", "[estimators]")
     mup(1, iorb) = uprow1[iorb];
     mdn(1, iorb) = dnrow1[iorb];
   }
-  auto spo_up = std::make_unique<ConstantSPOSet>("ConstantUpSet", nelec, norb);
-  auto spo_dn = std::make_unique<ConstantSPOSet>("ConstantDnSet", nelec, norb);
+  auto spo_up = std::make_unique<ConstantSPOSet<Value>>("ConstantUpSet", nelec, norb);
+  auto spo_dn = std::make_unique<ConstantSPOSet<Value>>("ConstantDnSet", nelec, norb);
 
   spo_up->setRefVals(mup);
   spo_dn->setRefVals(mdn);
   auto spinor_set = std::make_unique<SpinorSet>("ConstSpinorSet");
   spinor_set->set_spos(std::move(spo_up), std::move(spo_dn));
 
-  auto dd = std::make_unique<DiracDeterminant<>>(std::move(spinor_set), 0, nelec);
+  auto dd = std::make_unique<DiracDeterminant<>>(*spinor_set, 0, nelec);
 
+  std::vector<std::unique_ptr<SPOSet>> sposets;
+  sposets.push_back(std::move(spinor_set));
   std::vector<std::unique_ptr<DiracDeterminantBase>> dirac_dets;
   dirac_dets.push_back(std::move(dd));
-  auto sd = std::make_unique<SlaterDet>(elec_, std::move(dirac_dets));
+  auto sd = std::make_unique<SlaterDet>(elec_, std::move(sposets), std::move(dirac_dets));
 
   RuntimeOptions runtime_options;
   TrialWaveFunction psi(runtime_options);
