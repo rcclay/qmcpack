@@ -31,11 +31,11 @@ except (ImportError,RuntimeError):
 def find_nexus_modules():
     import os
     import sys
-    nexus_lib = os.path.abspath(os.path.join(__file__,'..','..','..','nexus'))
+    nexus_lib = os.path.realpath(os.path.join(__file__,'..','..','..','nexus'))
     assert(os.path.exists(nexus_lib))
     sys.path.insert(0,nexus_lib)
     import nexus
-    nexus_lib2 = os.path.abspath(os.path.join(nexus.__file__,'..','..'))
+    nexus_lib2 = os.path.realpath(os.path.join(nexus.__file__,'..','..'))
     assert nexus_lib2==nexus_lib
 #end def find_nexus_modules
 
@@ -313,11 +313,11 @@ def process_scalar_files(scalar_files,equils=None,reblock_factors=None,series_st
         nbe = len(E)%bt
         E = E[nbe:]
         reblock = len(E)//bt
-        E.shape = (bt,reblock)
+        E = E.reshape(bt,reblock)
         if reblock>1:
             E = E.sum(1)/reblock
         #end if
-        E.shape = (bt,)
+        E = E.reshape(bt,)
         Edata[n] = E
     #end for
     Edata = np.array(Edata,dtype=float)

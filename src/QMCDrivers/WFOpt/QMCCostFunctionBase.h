@@ -144,7 +144,7 @@ public:
   virtual Return_rt fillOverlapHamiltonianMatrices(Matrix<Return_rt>& Left, Matrix<Return_rt>& Right) = 0;
 
   virtual Return_rt fillHamVec(std::vector<Return_rt>& ham);
-  virtual void calcOvlParmVec(const std::vector<Return_rt>& parm, std::vector<Return_rt>& ovlParmVec);
+  virtual void calcOvlParmVec(const std::vector<Return_rt>& param, std::vector<Return_rt>& ovlParmVec);
 
 #ifdef HAVE_LMY_ENGINE
   Return_rt LMYEngineCost(const bool needDeriv, cqmc::engine::LMYEngine<Return_t>* EngineObj);
@@ -171,7 +171,7 @@ public:
   inline void setneedGrads(bool tf) { needGrads = tf; }
   inline void setDMC() { vmc_or_dmc = 1.0; }
 
-  inline const opt_variables_type& getOptVariables() const { return opt_vars; }
+  inline const OptVariables& getOptVariables() const { return opt_vars; }
 
   /// return variance after checkConfigurations
   inline Return_rt getVariance() const
@@ -201,8 +201,6 @@ protected:
   int NumCostCalls;
   /// global number of samples to use in correlated sampling
   int NumSamples;
-  ///total number of optimizable variables
-  int NumOptimizables;
   ///counter for output
   int ReportCounter;
   ///weights for energy and variance in the cost function
@@ -239,9 +237,9 @@ protected:
   double omega_shift;
 
   ///list of optimizables
-  opt_variables_type opt_vars;
+  OptVariables opt_vars;
   // unchanged initial checked-in variables
-  opt_variables_type InitVariables;
+  OptVariables InitVariables;
   /** index mapping for <negate> constraints
    *
    * - negateVarMap[i][0] : index in opt_vars
@@ -313,7 +311,7 @@ protected:
   /// survey all the optimizable objects
   UniqueOptObjRefs extractOptimizableObjects(TrialWaveFunction& psi) const;
 
-  void resetOptimizableObjects(TrialWaveFunction& psi, const opt_variables_type& opt_variables) const;
+  void resetOptimizableObjects(TrialWaveFunction& psi, const OptVariables& opt_variables) const;
 
 #ifdef HAVE_LMY_ENGINE
   virtual Return_rt LMYEngineCost_detail(cqmc::engine::LMYEngine<Return_t>* EngineObj)
