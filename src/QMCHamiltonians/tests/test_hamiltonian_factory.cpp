@@ -71,19 +71,19 @@ TEST_CASE("HamiltonianFactory", "[hamiltonian]")
 </hamiltonian>)";
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(hamiltonian_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(hamiltonian_xml));
 
   xmlNodePtr root = doc.getRoot();
   hf.put(root);
 
+  auto ham = hf.releaseHamiltonian();
 
-  REQUIRE(hf.getH());
-  REQUIRE(hf.getH()->size() == 3);
-  REQUIRE(hf.getH()->total_size() == 3);
+  REQUIRE(ham);
+  REQUIRE(ham->size() == 3);
+  REQUIRE(ham->total_size() == 3);
 
-  REQUIRE(hf.getH()->getOperatorType("ElecElec") == "coulomb");
-  REQUIRE(hf.getH()->getOperatorType("ElecIon") == "coulomb");
+  REQUIRE(ham->getOperatorType("ElecElec") == "coulomb");
+  REQUIRE(ham->getOperatorType("ElecIon") == "coulomb");
 }
 
 TEST_CASE("HamiltonianFactory pseudopotential", "[hamiltonian]")
@@ -124,8 +124,7 @@ TEST_CASE("HamiltonianFactory pseudopotential", "[hamiltonian]")
 </hamiltonian>)";
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(hamilonian_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(hamilonian_xml));
 
   xmlNodePtr root = doc.getRoot();
   hf.put(root);

@@ -46,7 +46,7 @@ public:
    *@param spos the single-particle orbital set
    *@param first index of the first particle
    */
-  DiracDeterminantWithBackflow(std::unique_ptr<SPOSet>&& spos, BackflowTransformation& BF, int first, int last);
+  DiracDeterminantWithBackflow(SPOSet& phi, BackflowTransformation& BF, int first, int last);
 
   ///default destructor
   ~DiracDeterminantWithBackflow() override;
@@ -59,12 +59,12 @@ public:
 
   // in general, assume that P is the quasiparticle set
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& active,
+                           const OptVariables& active,
                            Vector<ValueType>& dlogpsi,
                            Vector<ValueType>& dhpsioverpsi) override;
 
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& active,
+                           const OptVariables& active,
                            std::vector<RealType>& dlogpsi,
                            std::vector<RealType>& dhpsioverpsi,
                            ParticleSet::ParticleGradient* G0,
@@ -72,7 +72,7 @@ public:
                            int k);
 
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& active,
+                           const OptVariables& active,
                            int offset,
                            Matrix<RealType>& dlogpsi,
                            Array<GradType, OHMMS_DIM>& dG,
@@ -121,9 +121,9 @@ public:
    * This interface is exposed only to SlaterDet and its derived classes
    * can overwrite to clone itself correctly.
    */
-  std::unique_ptr<DiracDeterminantWithBackflow> makeCopyWithBF(std::unique_ptr<SPOSet>&& spo,
-                                                               BackflowTransformation& BF) const;
-  [[noreturn]] std::unique_ptr<DiracDeterminantBase> makeCopy(std::unique_ptr<SPOSet>&& spo) const override
+  std::unique_ptr<DiracDeterminantWithBackflow> makeCopyWithBF(SPOSet& phi, BackflowTransformation& BF) const;
+
+  [[noreturn]] std::unique_ptr<DiracDeterminantBase> makeCopy(SPOSet& phi) const override
   {
     throw std::runtime_error("makeCopy spo should not be called.");
   }

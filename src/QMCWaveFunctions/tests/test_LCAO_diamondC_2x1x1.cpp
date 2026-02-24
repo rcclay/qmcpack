@@ -55,7 +55,7 @@ void test_LCAO_DiamondC_2x1x1_real(const bool useOffload)
   REQUIRE(doc_lattice.parseFromString(particles));
 
   // read lattice
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   LatticeParser lp(lattice);
   lp.put(doc_lattice.getRoot());
   lattice.print(app_log(), 0);
@@ -116,8 +116,7 @@ void test_LCAO_DiamondC_2x1x1_real(const bool useOffload)
     </sposet_collection>
   )";
   Libxml2Document doc;
-  bool okay = doc.parseFromString(useOffload ? wf_omp_xml_str : wf_xml_str);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(useOffload ? wf_omp_xml_str : wf_xml_str));
 
   xmlNodePtr root       = doc.getRoot();
   xmlNodePtr bset_xml   = xmlFirstElementChild(root);
@@ -334,8 +333,8 @@ void test_LCAO_DiamondC_2x1x1_real(const bool useOffload)
     const size_t nvp_                  = 4;
     const size_t nvp_2                 = 3;
     const std::vector<size_t> nvp_list = {nvp_, nvp_2};
-    VirtualParticleSet VP_(elec_, nvp_);
-    VirtualParticleSet VP_2(elec_2, nvp_2);
+    VirtualParticleSet VP_(elec_);
+    VirtualParticleSet VP_2(elec_2);
 
     // move VPs
     std::vector<ParticleSet::SingleParticlePos> newpos_vp_(nvp_);
@@ -472,7 +471,7 @@ void test_LCAO_DiamondC_2x1x1_cplx(const bool useOffload)
   REQUIRE(doc_lattice.parseFromString(particles));
 
   // read lattice
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   LatticeParser lp(lattice);
   lp.put(doc_lattice.getRoot());
   lattice.print(app_log(), 0);
@@ -533,8 +532,7 @@ void test_LCAO_DiamondC_2x1x1_cplx(const bool useOffload)
     </sposet_collection>
   )";
   Libxml2Document doc;
-  bool okay = doc.parseFromString(useOffload ? wf_omp_xml_str : wf_xml_str);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(useOffload ? wf_omp_xml_str : wf_xml_str));
 
   xmlNodePtr root       = doc.getRoot();
   xmlNodePtr bset_xml   = xmlFirstElementChild(root);
@@ -783,8 +781,8 @@ void test_LCAO_DiamondC_2x1x1_cplx(const bool useOffload)
     const size_t nvp_                  = 4;
     const size_t nvp_2                 = 3;
     const std::vector<size_t> nvp_list = {nvp_, nvp_2};
-    VirtualParticleSet VP_(elec_, nvp_);
-    VirtualParticleSet VP_2(elec_2, nvp_2);
+    VirtualParticleSet VP_(elec_);
+    VirtualParticleSet VP_2(elec_2);
 
     // move VPs
     std::vector<ParticleSet::SingleParticlePos> newpos_vp_(nvp_);

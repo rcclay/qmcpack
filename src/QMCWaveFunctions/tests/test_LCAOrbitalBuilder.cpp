@@ -23,6 +23,7 @@
 #include "LCAO/SoaLocalizedBasisSet.h"
 #include "LCAO/AOBasisBuilder.h"
 #include "LCAO/MultiFunctorAdapter.h"
+#include "OhmmsData/Libxml2Doc.h"
 
 
 namespace qmcplusplus
@@ -62,8 +63,7 @@ TEST_CASE("LCAOrbitalBuilder", "[wavefunction][LCAO]")
   )";
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(wf_xml_num_cart);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(wf_xml_num_cart));
 
   using BasisSet_t = LCAOrbitalBuilder::BasisSet_t;
   LCAOrbitalBuilder lcaob_num_cart(elec, ions, c, doc.getRoot());
@@ -86,8 +86,7 @@ TEST_CASE("LCAOrbitalBuilder", "[wavefunction][LCAO]")
     </tmp>
   )";
 
-  okay = doc.parseFromString(wf_xml_num_sph);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(wf_xml_num_sph));
 
   LCAOrbitalBuilder lcaob_num_sph(elec, ions, c, doc.getRoot());
   const auto& bs2 = lcaob_num_sph.getBasissetMap().at("LCAOBSet");
@@ -111,8 +110,7 @@ TEST_CASE("LCAOrbitalBuilder", "[wavefunction][LCAO]")
     </tmp>
   )";
 
-  okay = doc.parseFromString(wf_xml_gto_cart);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(wf_xml_gto_cart));
 
   LCAOrbitalBuilder lcaob_gto_cart(elec, ions, c, doc.getRoot());
   const auto& bs3 = lcaob_gto_cart.getBasissetMap().at("LCAOBSet");
@@ -136,8 +134,7 @@ TEST_CASE("LCAOrbitalBuilder", "[wavefunction][LCAO]")
     </tmp>
   )";
 
-  okay = doc.parseFromString(wf_xml_gto_sph);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(wf_xml_gto_sph));
 
   LCAOrbitalBuilder lcaob_gto_sph(elec, ions, c, doc.getRoot());
   const auto& bs4 = lcaob_gto_sph.getBasissetMap().at("LCAOBSet");
@@ -159,8 +156,7 @@ TEST_CASE("LCAOrbitalBuilder", "[wavefunction][LCAO]")
     </tmp>
   )";
 
-  okay = doc.parseFromString(wf_xml_sto_cart);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(wf_xml_sto_cart));
 
   LCAOrbitalBuilder lcaob_sto_cart(elec, ions, c, doc.getRoot());
   const auto& bs5 = lcaob_sto_cart.getBasissetMap().at("LCAOBSet");
@@ -182,8 +178,7 @@ TEST_CASE("LCAOrbitalBuilder", "[wavefunction][LCAO]")
     </tmp>
   )";
 
-  okay = doc.parseFromString(wf_xml_sto_sph);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(wf_xml_sto_sph));
 
   LCAOrbitalBuilder lcaob_sto_sph(elec, ions, c, doc.getRoot());
   const auto& bs6 = lcaob_sto_sph.getBasissetMap().at("LCAOBSet");

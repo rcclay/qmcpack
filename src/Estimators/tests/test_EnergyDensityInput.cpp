@@ -2,7 +2,7 @@
 // This file is distributed under the University of Illinois/NCSA Open Source License.
 // See LICENSE file in top directory for details.
 //
-// Copyright (c) 2023 QMCPACK developers.
+// Copyright (c) 2025 QMCPACK developers.
 //
 // File developed by: Peter Doak, doakpw@ornl.gov, Oak Ridge National Lab
 //
@@ -16,6 +16,7 @@
 #include "EstimatorTesting.h"
 #include "ValidEnergyDensityInput.h"
 #include <iostream>
+#include "OhmmsData/Libxml2Doc.h"
 
 namespace qmcplusplus
 {
@@ -27,9 +28,9 @@ TEST_CASE("EnergyDensityInput::parseXML::valid", "[estimators]")
   int test_num = 0;
   for (auto input_xml : input)
   {
-    std::cout << "input number: " << test_num++ << '\n'; 
+    std::cout << "input number: " << test_num++ << '\n';
     Libxml2Document doc;
-    bool okay       = doc.parseFromString(input_xml);
+    REQUIRE(doc.parseFromString(input_xml));
     xmlNodePtr node = doc.getRoot();
     EnergyDensityInput edi(node);
   }
@@ -42,7 +43,7 @@ TEST_CASE("EnergyDensityInput::parseXML::invalid", "[estimators]")
   for (auto input_xml : input)
   {
     Libxml2Document doc;
-    bool okay                           = doc.parseFromString(input_xml);
+    REQUIRE(doc.parseFromString(input_xml));
     xmlNodePtr node                     = doc.getRoot();
     auto constructBadEnergyDensityInput = [](xmlNodePtr cur) { EnergyDensityInput edi(cur); };
     CHECK_THROWS_AS(constructBadEnergyDensityInput(node), UniformCommunicateError);
@@ -52,7 +53,7 @@ TEST_CASE("EnergyDensityInput::parseXML::invalid", "[estimators]")
 TEST_CASE("EnergyDensityInput::parseXML::axes", "[estimators]")
 {
   Libxml2Document doc;
-  bool okay       = doc.parseFromString(Input::getXml(Input::valid::ION));
+  REQUIRE(doc.parseFromString(Input::getXml(Input::valid::ION)));
   xmlNodePtr node = doc.getRoot();
   EnergyDensityInput edi(node);
   auto sgis = edi.get_space_grid_inputs();
@@ -63,7 +64,7 @@ TEST_CASE("EnergyDensityInput::parseXML::axes", "[estimators]")
 TEST_CASE("EnergyDensityInput::default_reference_points", "[estimators]")
 {
   Libxml2Document doc;
-  bool okay       = doc.parseFromString(Input::getXml(Input::valid::CELL));
+  REQUIRE(doc.parseFromString(Input::getXml(Input::valid::CELL)));
   xmlNodePtr node = doc.getRoot();
   EnergyDensityInput edi(node);
   auto sgis = edi.get_space_grid_inputs();
@@ -75,12 +76,12 @@ TEST_CASE("EnergyDensityInput::default_reference_points", "[estimators]")
 TEST_CASE("EnergyDensityInput::copy_construction", "[estimators]")
 {
   Libxml2Document doc;
-  bool okay       = doc.parseFromString(Input::getXml(Input::valid::CELL));
+  REQUIRE(doc.parseFromString(Input::getXml(Input::valid::CELL)));
   xmlNodePtr node = doc.getRoot();
   EnergyDensityInput edi(node);
 
   static_assert(std::is_copy_constructible_v<EnergyDensityInput>);
-  
+
   EnergyDensityInput edi2(edi);
 }
 

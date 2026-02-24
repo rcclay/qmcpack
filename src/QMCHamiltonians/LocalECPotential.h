@@ -2,13 +2,14 @@
 // This file is distributed under the University of Illinois/NCSA Open Source License.
 // See LICENSE file in top directory for details.
 //
-// Copyright (c) 2016 Jeongnim Kim and QMCPACK developers.
+// Copyright (c) 2024 QMCPACK developers.
 //
 // File developed by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //                    Ken Esler, kpesler@gmail.com, University of Illinois at Urbana-Champaign
 //                    Jeremy McMinnis, jmcminis@gmail.com, University of Illinois at Urbana-Champaign
 //                    Jaron T. Krogel, krogeljt@ornl.gov, Oak Ridge National Laboratory
 //                    Mark A. Berrill, berrillma@ornl.gov, Oak Ridge National Laboratory
+//                    Peter W. Doak, doakpw@ornl.gov, Oak Ridge National Laboratory
 //
 // File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
@@ -16,13 +17,13 @@
 
 #ifndef QMCPLUSPLUS_LOCALECPPOTENTIAL_H
 #define QMCPLUSPLUS_LOCALECPPOTENTIAL_H
-#include "Particle/ParticleSet.h"
-#include "QMCHamiltonians/OperatorBase.h"
+#include <ParticleSet.h>
+#include "OperatorBase.h"
 #include "Numerics/OneDimGridBase.h"
 #include "Numerics/OneDimGridFunctor.h"
 #include "Numerics/OneDimLinearSpline.h"
 #include "Numerics/OneDimCubicSpline.h"
-#include "Particle/DistanceTable.h"
+#include <DistanceTable.h>
 
 namespace qmcplusplus
 {
@@ -30,10 +31,12 @@ namespace qmcplusplus
  * \brief Evaluate the local potentials (either pseudo or full core) around each ion.
  */
 
-struct LocalECPotential : public OperatorBase
+struct LocalECPotential : public OperatorDependsOnlyOnParticleSet
 {
   using GridType            = OneDimGridBase<RealType>;
   using RadialPotentialType = OneDimCubicSpline<RealType>;
+
+  struct LocalECPotentialMultiWalkerResource;
 
   ///reference to the ionic configuration
   const ParticleSet& IonConfig;
@@ -63,8 +66,19 @@ struct LocalECPotential : public OperatorBase
 
   LocalECPotential(const ParticleSet& ions, ParticleSet& els);
 
+  /** initialize a shared resource and hand it to a collection
+   */
+  void createResource(ResourceCollection& collection) const override;
+
+  /** acquire a shared resource from a collection
+   */
+  void acquireResource(ResourceCollection& collection, const RefVectorWithLeader<OperatorBase>& o_list) const override;
+
+  /** return a shared resource to a collection
+   */
+  void releaseResource(ResourceCollection& collection, const RefVectorWithLeader<OperatorBase>& o_list) const override;
+
   std::string getClassName() const override { return "LocalECPotential"; }
-  void resetTargetParticleSet(ParticleSet& P) override;
 
 #if !defined(REMOVE_TRACEMANAGER)
   void contributeParticleQuantities() override;
@@ -74,6 +88,10 @@ struct LocalECPotential : public OperatorBase
 #endif
 
   Return_t evaluate(ParticleSet& P) override;
+  void mw_evaluatePerParticle(const RefVectorWithLeader<OperatorBase>& o_list,
+                              const RefVectorWithLeader<ParticleSet>& p_list,
+                              const std::vector<ListenerVector<RealType>>& listeners,
+                              const std::vector<ListenerVector<RealType>>& ion_listeners) const override;
 
   void evaluateIonDerivs(ParticleSet& P,
                          ParticleSet& ions,
@@ -92,7 +110,7 @@ struct LocalECPotential : public OperatorBase
     return true;
   }
 
-  std::unique_ptr<OperatorBase> makeClone(ParticleSet& qp, TrialWaveFunction& psi) override;
+  std::unique_ptr<OperatorBase> makeClone(ParticleSet& P) const override;
 
   /** Add a RadialPotentialType of a species
    * @param groupID index of the ion species
@@ -100,6 +118,8 @@ struct LocalECPotential : public OperatorBase
    * @param z effective charge of groupID particle
    */
   void add(int groupID, std::unique_ptr<RadialPotentialType>&& ppot, RealType z);
+private:
+  ResourceHandle<LocalECPotentialMultiWalkerResource> mw_res_handle_;
 };
 } // namespace qmcplusplus
 #endif

@@ -21,9 +21,8 @@ namespace qmcplusplus
 class RotatedSPOs;
 namespace testing
 {
-const opt_variables_type& getMyVars(RotatedSPOs& rot);
+const OptVariables& getMyVars(RotatedSPOs& rot);
 const std::vector<QMCTraits::ValueType>& getMyVarsFull(RotatedSPOs& rot);
-const std::vector<std::vector<QMCTraits::ValueType>>& getHistoryParams(RotatedSPOs& rot);
 } // namespace testing
 
 class RotatedSPOs : public SPOSet, public OptimizableObject
@@ -100,10 +99,6 @@ public:
                                      std::vector<ValueType>& new_param,
                                      ValueMatrix& new_rot_mat);
 
-  // When initializing the rotation from VP files
-  // This function applies the rotation history
-  void applyRotationHistory();
-
   // This function applies the global rotation (similar to apply_rotation, but for the full
   // set of rotation parameters)
   void applyFullRotation(const std::vector<ValueType>& full_param, bool use_stored_copy);
@@ -153,20 +148,20 @@ public:
 
 
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& optvars,
+                           const OptVariables& optvars,
                            Vector<ValueType>& dlogpsi,
                            Vector<ValueType>& dhpsioverpsi,
                            const int& FirstIndex,
                            const int& LastIndex) override;
 
   void evaluateDerivativesWF(ParticleSet& P,
-                             const opt_variables_type& optvars,
+                             const OptVariables& optvars,
                              Vector<ValueType>& dlogpsi,
                              int FirstIndex,
                              int LastIndex) override;
 
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& optvars,
+                           const OptVariables& optvars,
                            Vector<ValueType>& dlogpsi,
                            Vector<ValueType>& dhpsioverpsi,
                            const ValueType& psiCurrent,
@@ -193,9 +188,9 @@ public:
                            const std::vector<std::vector<int>>& lookup_tbl) override;
 
   void evaluateDerivativesWF(ParticleSet& P,
-                             const opt_variables_type& optvars,
+                             const OptVariables& optvars,
                              Vector<ValueType>& dlogpsi,
-                             const QTFull::ValueType& psiCurrent,
+                             const FullPrecValue& psiCurrent,
                              const std::vector<ValueType>& Coeff,
                              const std::vector<size_t>& C2node_up,
                              const std::vector<size_t>& C2node_dn,
@@ -256,16 +251,16 @@ public:
 
   void extractOptimizableObjectRefs(UniqueOptObjRefs& opt_obj_refs) override { opt_obj_refs.push_back(*this); }
 
-  void checkInVariablesExclusive(opt_variables_type& active) override
+  void checkInVariablesExclusive(OptVariables& active) override
   {
     if (myVars.size())
       active.insertFrom(myVars);
   }
 
-  void checkOutVariables(const opt_variables_type& active) override { myVars.getIndex(active); }
+  void checkOutVariables(const OptVariables& active) override { myVars.getIndex(active); }
 
   ///reset
-  void resetParametersExclusive(const opt_variables_type& active) override;
+  void resetParametersExclusive(const OptVariables& active) override;
 
   void writeVariationalParameters(hdf_archive& hout) override;
 
@@ -310,7 +305,7 @@ public:
   }
 
   void evaluateDerivRatios(const VirtualParticleSet& VP,
-                           const opt_variables_type& optvars,
+                           const OptVariables& optvars,
                            ValueVector& psi,
                            const ValueVector& psiinv,
                            std::vector<ValueType>& ratios,
@@ -401,9 +396,6 @@ public:
   //  void evaluateThirdDeriv(const ParticleSet& P, int first, int last, GGGMatrix& grad_grad_grad_logdet)
   //  {Phi->evaluateThridDeriv(P, first, last, grad_grad_grad_logdet); }
 
-  /// Use history list (false) or global rotation (true)
-  void set_use_global_rotation(bool use_global_rotation) { use_global_rot_ = use_global_rotation; }
-
   void mw_evaluateDetRatios(const RefVectorWithLeader<SPOSet>& spo_list,
                             const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
                             const RefVector<ValueVector>& psi_list,
@@ -473,17 +465,10 @@ private:
   /// timer for apply_rotation
   NewTimer& apply_rotation_timer_;
 
-  /// List of previously applied parameters
-  std::vector<std::vector<ValueType>> history_params_;
-
   static RefVectorWithLeader<SPOSet> extractPhiRefList(const RefVectorWithLeader<SPOSet>& spo_list);
 
-  /// Use global rotation or history list
-  bool use_global_rot_ = true;
-
-  friend const opt_variables_type& testing::getMyVars(RotatedSPOs& rot);
+  friend const OptVariables& testing::getMyVars(RotatedSPOs& rot);
   friend const std::vector<ValueType>& testing::getMyVarsFull(RotatedSPOs& rot);
-  friend const std::vector<std::vector<ValueType>>& testing::getHistoryParams(RotatedSPOs& rot);
 };
 
 

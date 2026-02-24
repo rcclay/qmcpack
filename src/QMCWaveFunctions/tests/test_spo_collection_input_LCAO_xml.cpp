@@ -61,8 +61,7 @@ void test_He_sto3g_xml_input(const std::string& spo_xml_string)
   elec.update();
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(spo_xml_string);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(spo_xml_string));
 
   xmlNodePtr ein_xml = doc.getRoot();
 
@@ -230,13 +229,13 @@ TEST_CASE("SPO input spline from xml He_sto3g", "[wavefunction]")
         </atomicBasisSet>
       </basisset>
       <slaterdeterminant>
-        <determinant name="spo" size="1">
+        <determinant id="spo" size="1">
           <occupation mode="ground"/>
           <coefficient size="1" id="updetC">
             1.00000000000000e+00
           </coefficient>
         </determinant>
-        <determinant name="spo-down" size="1">
+        <determinant id="downdet" size="1">
           <occupation mode="ground"/>
           <coefficient size="1" id="downdetC">
             1.00000000000000e+00

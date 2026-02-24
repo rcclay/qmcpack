@@ -5,7 +5,6 @@ It presents a challenge due to two reasons.
 One is that it is a metal (conductor) and thus has a varying number of electron occupations at different twists due to band crossings at the Fermi level.
 The second reason is that it is a ferromagnet, and we would like to closely reproduce the reference SCF cell magnetization in QMC twist averaging.
 
-The pseudopotentials for this example are not included here but can be obtained from `pseudopotentiallibrary <https://pseudopotentiallibrary.org/>`_.
 In the Nexus script ``iron_ldaU_dmc_gcta.py``, we carry out the standard sequence of SCF, NSCF, conversion, and Jastrow optimizations.
 As usual, the Jastrow optimizations are carried out at the Gamma twist and with a spin close to the SCF value (5.66 Bohr mag/cell).
 
@@ -63,3 +62,4 @@ Specifically, without this keyword, the twist averaged DMC energy is ``-123.9042
 An alternative way to run GCTA is to use ``gcta = 'afl'``, which uses an "adapted Fermi level" that guarantees charge neutrality but does not target the SCF magnetization.
 This can be useful in noncollinear calculations where a single total magnetization is not defined.
 Detailed description and performance of ``'safl'`` and ``'afl'`` can be found in `this article <https://pubs.acs.org/doi/10.1021/acs.jctc.4c00058>`_.
+Also see the Nexus documentation for the details of the ``gcta`` implementation.

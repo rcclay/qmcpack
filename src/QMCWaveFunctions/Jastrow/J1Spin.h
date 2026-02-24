@@ -16,7 +16,7 @@
 #define QMCPLUSPLUS_ONEBODYSPINJASTROW_OPTIMIZED_SOA_H
 #include "Configuration.h"
 #include "Particle/DistanceTable.h"
-#include "ParticleBase/ParticleAttribOps.h"
+#include "CPU/VectorOps.h"
 #include "QMCWaveFunctions/WaveFunctionComponent.h"
 #include "Utilities/qmc_common.h"
 #include "Utilities/IteratorUtility.h"
@@ -43,8 +43,8 @@ struct J1Spin : public WaveFunctionComponent
   using DistRow  = DistanceTable::DistRow;
   using DisplRow = DistanceTable::DisplRow;
 
-  using GradDerivVec  = ParticleAttrib<QTFull::GradType>;
-  using ValueDerivVec = ParticleAttrib<QTFull::ValueType>;
+  using GradDerivVec  = Vector<QTFull::GradType>;
+  using ValueDerivVec = Vector<QTFull::ValueType>;
 
   ///table index
   const int myTableID;
@@ -62,7 +62,7 @@ struct J1Spin : public WaveFunctionComponent
   const ParticleSet& Ions;
 
   ///variables handled by this orbital
-  opt_variables_type myVars;
+  OptVariables myVars;
 
   valT curAt;
   valT curLap;
@@ -220,7 +220,7 @@ struct J1Spin : public WaveFunctionComponent
   }
 
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& active,
+                           const OptVariables& active,
                            Vector<ValueType>& dlogpsi,
                            Vector<ValueType>& dhpsioverpsi) override
   {
@@ -232,8 +232,7 @@ struct J1Spin : public WaveFunctionComponent
       int kk = myVars.where(k);
       if (kk < 0)
         continue;
-      if (active.recompute(kk))
-        recalculate = true;
+      recalculate  = true;
       rcsingles[k] = true;
     }
     if (recalculate)
@@ -251,7 +250,7 @@ struct J1Spin : public WaveFunctionComponent
     }
   }
 
-  void evaluateDerivativesWF(ParticleSet& P, const opt_variables_type& active, Vector<ValueType>& dlogpsi) override
+  void evaluateDerivativesWF(ParticleSet& P, const OptVariables& active, Vector<ValueType>& dlogpsi) override
   {
     resizeWFOptVectors();
 
@@ -262,8 +261,7 @@ struct J1Spin : public WaveFunctionComponent
       int kk = myVars.where(k);
       if (kk < 0)
         continue;
-      if (active.recompute(kk))
-        recalculate = true;
+      recalculate  = true;
       rcsingles[k] = true;
     }
     if (recalculate)
@@ -519,7 +517,7 @@ struct J1Spin : public WaveFunctionComponent
       opt_obj_refs.push_back(*functor);
   }
 
-  void checkOutVariables(const opt_variables_type& active) override
+  void checkOutVariables(const OptVariables& active) override
   {
     myVars.clear();
     for (auto& J1UniqueFunctor : J1UniqueFunctors)

@@ -20,7 +20,7 @@
 #include "Configuration.h"
 #include <ResourceHandle.h>
 #include "Particle/DistanceTable.h"
-#include "ParticleBase/ParticleAttribOps.h"
+#include "CPU/VectorOps.h"
 #include "QMCWaveFunctions/WaveFunctionComponent.h"
 #include "Utilities/qmc_common.h"
 #include "Utilities/IteratorUtility.h"
@@ -55,8 +55,8 @@ class J1OrbitalSoA : public WaveFunctionComponent
   using DistRow  = DistanceTable::DistRow;
   using DisplRow = DistanceTable::DisplRow;
 
-  using GradDerivVec  = ParticleAttrib<QTFull::GradType>;
-  using ValueDerivVec = ParticleAttrib<QTFull::ValueType>;
+  using GradDerivVec  = Vector<QTFull::GradType>;
+  using ValueDerivVec = Vector<QTFull::ValueType>;
 
   /// if true use offload
   const bool use_offload_;
@@ -75,7 +75,7 @@ class J1OrbitalSoA : public WaveFunctionComponent
   Vector<int, OffloadPinnedAllocator<int>> grp_ids;
 
   ///variables handled by this orbital
-  opt_variables_type myVars;
+  OptVariables myVars;
 
   valT curAt;
   valT curLap;
@@ -303,7 +303,7 @@ public:
                          std::vector<std::vector<ValueType>>& ratios) const override;
 
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& active,
+                           const OptVariables& active,
                            Vector<ValueType>& dlogpsi,
                            Vector<ValueType>& dhpsioverpsi) override
   {
@@ -315,8 +315,7 @@ public:
       int kk = myVars.where(k);
       if (kk < 0)
         continue;
-      if (active.recompute(kk))
-        recalculate = true;
+      recalculate  = true;
       rcsingles[k] = true;
     }
     if (recalculate)
@@ -334,7 +333,7 @@ public:
     }
   }
 
-  void evaluateDerivativesWF(ParticleSet& P, const opt_variables_type& active, Vector<ValueType>& dlogpsi) override
+  void evaluateDerivativesWF(ParticleSet& P, const OptVariables& active, Vector<ValueType>& dlogpsi) override
   {
     resizeWFOptVectors();
     bool recalculate(false);
@@ -344,8 +343,7 @@ public:
       int kk = myVars.where(k);
       if (kk < 0)
         continue;
-      if (active.recompute(kk))
-        recalculate = true;
+      recalculate  = true;
       rcsingles[k] = true;
     }
     if (recalculate)
@@ -530,7 +528,7 @@ public:
         opt_obj_refs.push_back(*functor);
   }
 
-  void checkOutVariables(const opt_variables_type& active) override
+  void checkOutVariables(const OptVariables& active) override
   {
     myVars.clear();
     for (int i = 0; i < J1UniqueFunctors.size(); ++i)
@@ -564,7 +562,7 @@ public:
   /**@} */
 
   void evaluateDerivRatios(const VirtualParticleSet& VP,
-                           const opt_variables_type& optvars,
+                           const OptVariables& optvars,
                            std::vector<ValueType>& ratios,
                            Matrix<ValueType>& dratios) override
   {
@@ -576,8 +574,7 @@ public:
       const int kk = myVars.where(k);
       if (kk < 0)
         continue;
-      if (optvars.recompute(kk))
-        recalculate = true;
+      recalculate  = true;
       rcsingles[k] = true;
     }
 

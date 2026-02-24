@@ -10,6 +10,8 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 #include "catch.hpp"
+
+#include "OhmmsData/Libxml2Doc.h"
 #include "QMCDrivers/WFOpt/QMCCostFunctionBase.h"
 #include "Utilities/RuntimeOptions.h"
 
@@ -22,6 +24,9 @@ class QMCCostFunctionTest : public QMCCostFunctionBase
 public:
   QMCCostFunctionTest(MCWalkerConfiguration& w, TrialWaveFunction& psi, QMCHamiltonian& h, Communicate* c)
       : QMCCostFunctionBase(w, psi, h, c)
+  {}
+
+  void GradCost(std::vector<Return_rt>& PGradient, const std::vector<Return_rt>& PM, Return_rt FiniteDiff = 0) override
   {}
 
   void resetPsi(bool final_reset = false) override {}
@@ -70,8 +75,7 @@ TEST_CASE("updateXmlNodes", "[drivers]")
     )";
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(wf_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(wf_xml));
   cost.setWaveFunctionNode(doc.getRoot());
 
   cost.callUpdateXmlNodes();
@@ -107,8 +111,7 @@ TEST_CASE("updateXmlNodes with existing element", "[drivers]")
     )";
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(wf_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(wf_xml));
   cost.setWaveFunctionNode(doc.getRoot());
 
   cost.callUpdateXmlNodes();

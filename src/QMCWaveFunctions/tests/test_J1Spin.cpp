@@ -17,6 +17,7 @@
 #include "QMCWaveFunctions/Jastrow/RadialJastrowBuilder.h"
 #include "QMCWaveFunctions/WaveFunctionFactory.h"
 #include "Utilities/RuntimeOptions.h"
+#include "OhmmsData/Libxml2Doc.h"
 
 namespace qmcplusplus
 {
@@ -78,8 +79,7 @@ TEST_CASE("J1 spin evaluate derivatives Jastrow", "[wavefunction]")
 </wavefunction>
 )";
   Libxml2Document doc;
-  bool okay = doc.parseFromString(jasxml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(jasxml));
   xmlNodePtr jas1 = doc.getRoot();
   WaveFunctionFactory wf_factory(elec_, ptcl.getPool(), c);
   RuntimeOptions runtime_options;
@@ -89,9 +89,9 @@ TEST_CASE("J1 spin evaluate derivatives Jastrow", "[wavefunction]")
   auto& twf_component_list = twf.getOrbitals();
   auto cloned_j1spin       = twf_component_list[0]->makeClone(elec_);
 
-  opt_variables_type active;
+  OptVariables active;
   twf.checkInVariables(active);
-  active.removeInactive();
+  active.resetIndex();
   int nparam = active.size_of_active();
   REQUIRE(nparam == 4);
 
@@ -197,8 +197,7 @@ TEST_CASE("J1 spin evaluate derivatives multiparticle Jastrow", "[wavefunction]"
 </wavefunction>
 )";
   Libxml2Document doc;
-  bool okay = doc.parseFromString(jasxml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(jasxml));
   xmlNodePtr jas1 = doc.getRoot();
   WaveFunctionFactory wf_factory(elec_, ptcl.getPool(), c);
   RuntimeOptions runtime_options;
@@ -208,9 +207,9 @@ TEST_CASE("J1 spin evaluate derivatives multiparticle Jastrow", "[wavefunction]"
   auto& twf_component_list = twf.getOrbitals();
   auto cloned_j1spin       = twf_component_list[0]->makeClone(elec_);
 
-  opt_variables_type active;
+  OptVariables active;
   twf.checkInVariables(active);
-  active.removeInactive();
+  active.resetIndex();
   int nparam = active.size_of_active();
   REQUIRE(nparam == 6);
 

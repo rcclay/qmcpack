@@ -31,8 +31,9 @@ public:
    * @param rn release node
    */
   SlaterDetWithBackflow(ParticleSet& targetPtcl,
-                        std::vector<std::unique_ptr<Determinant_t>> dets,
-                        std::unique_ptr<BackflowTransformation> BF);
+                        std::vector<std::unique_ptr<SPOSet>>&& sposets,
+                        std::unique_ptr<BackflowTransformation> BF,
+                        std::vector<std::unique_ptr<Determinant_t>>&& dets);
 
   ///destructor
   ~SlaterDetWithBackflow() override;
@@ -43,7 +44,7 @@ public:
 
   void extractOptimizableObjectRefs(UniqueOptObjRefs& opt_obj_refs) override;
 
-  void checkOutVariables(const opt_variables_type& active) override
+  void checkOutVariables(const OptVariables& active) override
   {
     //if(Optimizable) {
     if (BFTrans->isOptimizable())
@@ -123,22 +124,26 @@ public:
 
   std::unique_ptr<WaveFunctionComponent> makeClone(ParticleSet& tqp) const override;
 
-  SPOSetPtr getPhi(int i = 0) const { return Dets[i]->getPhi(); }
+  SPOSet& getPhi(int i = 0) { return Dets[i]->getPhi(); }
 
   void evaluateRatiosAlltoOne(ParticleSet& P, std::vector<ValueType>& ratios) override;
 
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& optvars,
+                           const OptVariables& optvars,
                            Vector<ValueType>& dlogpsi,
                            Vector<ValueType>& dhpsioverpsi) override;
 
   void testDerivGL(ParticleSet& P);
 
 private:
-  ///container for the DiracDeterminants
-  const std::vector<std::unique_ptr<Determinant_t>> Dets;
+  ///container for the unique SPOSets
+  const std::vector<std::unique_ptr<SPOSet>> sposets_;
+
   /// backflow transformation
   const std::unique_ptr<BackflowTransformation> BFTrans;
+
+  ///container for the DiracDeterminants
+  const std::vector<std::unique_ptr<Determinant_t>> Dets;
 };
 } // namespace qmcplusplus
 #endif

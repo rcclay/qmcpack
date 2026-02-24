@@ -92,8 +92,7 @@ public:
   /** This type provides all the functionality needed by drivers to instantiate estimators so we use it to reduce coupling
    *  with ParticleSetPool
    */
-  using PSPool   = ParticleSetPool::PoolType;
-  using WFBuffer = MCPopulation::WFBuffer;
+  using PSPool = ParticleSetPool::PoolType;
 
   using SetNonLocalMoveHandler = std::function<void(QMCHamiltonian&)>;
   /** bits to classify QMCDriver
@@ -186,8 +185,6 @@ public:
 
   DriftModifierBase& get_drift_modifier() const { return *drift_modifier_; }
 
-  const RefVector<RandomBase<FullPrecRealType>>& getRngRefs() const { return rngs_; }
-
   /** record the state of the block
    * @param block current block
    *
@@ -218,8 +215,6 @@ public:
    * is the suffix for the output file.
    */
   void setStatus(const std::string& aname, const std::string& h5name, bool append) override;
-
-  void add_H_and_Psi(QMCHamiltonian* h, TrialWaveFunction* psi) override{};
 
   void putWalkers(std::vector<xmlNodePtr>& wset) override;
 
@@ -413,9 +408,6 @@ protected:
 
   ///drift modifer
   std::unique_ptr<DriftModifierBase> drift_modifier_;
-
-  ///the number to delay updates by
-  int k_delay;
 
   /** period of recording walker configurations
    *

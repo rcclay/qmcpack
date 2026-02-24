@@ -20,8 +20,8 @@
 #include "TrialWaveFunction.h"
 #include "OhmmsData/Libxml2Doc.h"
 #include "Message/UniformCommunicateError.h"
-#include "Particle/tests/MinimalParticlePool.h"
-#include "QMCWaveFunctions/tests/MinimalWaveFunctionPool.h"
+#include <MinimalParticlePool.h>
+#include <MinimalWaveFunctionPool.h>
 #include "Utilities/StdRandom.h"
 #include "Utilities/StlPrettyPrint.hpp"
 #include "Utilities/ProjectData.h"
@@ -68,9 +68,7 @@ TEST_CASE("MomentumDistribution::MomentumDistribution", "[estimators]")
 
   // Read xml into input object
   Libxml2Document doc;
-  bool okay = doc.parseFromString(xml);
-  if (!okay)
-    throw std::runtime_error("cannot parse MomentumDistributionInput section");
+  REQUIRE(doc.parseFromString(xml));
   xmlNodePtr node = doc.getRoot();
   MomentumDistributionInput mdi(node);
 
@@ -116,9 +114,7 @@ TEST_CASE("MomentumDistribution::accumulate", "[estimators]")
 
   // Read xml into input object
   Libxml2Document doc;
-  bool okay = doc.parseFromString(xml);
-  if (!okay)
-    throw std::runtime_error("cannot parse MomentumDistributionInput section");
+  REQUIRE(doc.parseFromString(xml));
   xmlNodePtr node = doc.getRoot();
   MomentumDistributionInput mdi(node);
 
@@ -156,10 +152,10 @@ TEST_CASE("MomentumDistribution::accumulate", "[estimators]")
   for (int iw = 0; iw < nwalkers; ++iw)
     psets.emplace_back(pset);
 
-  auto& trial_wavefunction = *(wavefunction_pool.getPrimary());
+  TrialWaveFunction& psi(wavefunction_pool.getWaveFunction().value());
   std::vector<UPtr<TrialWaveFunction>> wfns(nwalkers);
   for (int iw = 0; iw < nwalkers; ++iw)
-    wfns[iw] = trial_wavefunction.makeClone(psets[iw]);
+    wfns[iw] = psi.makeClone(psets[iw]);
 
   //     Initialize walker, pset, wfn
   for (int iw = 0; iw < nwalkers; ++iw)
@@ -226,9 +222,7 @@ TEST_CASE("MomentumDistribution::spawnCrowdClone", "[estimators]")
 
   // Read xml into input object
   Libxml2Document doc;
-  bool okay = doc.parseFromString(xml);
-  if (!okay)
-    throw std::runtime_error("cannot parse MomentumDistributionInput section");
+  REQUIRE(doc.parseFromString(xml));
   xmlNodePtr node = doc.getRoot();
   MomentumDistributionInput mdi(node);
 

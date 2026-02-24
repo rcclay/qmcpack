@@ -15,7 +15,7 @@
 #include "OhmmsData/Libxml2Doc.h"
 #include "OhmmsPETE/OhmmsMatrix.h"
 #include "Particle/ParticleSet.h"
-#include "ParticleBase/ParticleAttribOps.h"
+#include "CPU/VectorOps.h"
 #include "QMCWaveFunctions/WaveFunctionComponent.h"
 #include "QMCWaveFunctions/LatticeGaussianProduct.h"
 #include "QMCWaveFunctions/LatticeGaussianProductBuilder.h"
@@ -36,7 +36,7 @@ TEST_CASE("lattice gaussian", "[wavefunction]")
   Communicate* c;
   c = OHMMS::Controller;
 
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   // initialize simulationcell for kvectors
   const char* xmltext = R"(<tmp>
   <simulationcell>
@@ -52,8 +52,7 @@ TEST_CASE("lattice gaussian", "[wavefunction]")
   </simulationcell>
 </tmp>)";
   Libxml2Document doc;
-  bool okay = doc.parseFromString(xmltext);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(xmltext));
 
   // read lattice
   xmlNodePtr root  = doc.getRoot();
@@ -93,8 +92,7 @@ TEST_CASE("lattice gaussian", "[wavefunction]")
   <ionwf name="ionwf" source="ion" width="0.5 0.5"/>
 </tmp>
 )";
-  okay                  = doc.parseFromString(particles);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(particles));
 
   root = doc.getRoot();
 

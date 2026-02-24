@@ -18,7 +18,7 @@
 #include "QMCDrivers/RMC/RMCUpdatePbyP.h"
 #include "QMCDrivers/RMC/RMCUpdateAll.h"
 #include "QMCDrivers/DriftOperators.h"
-#include "ParticleBase/ParticleAttribOps.h"
+#include "CPU/VectorOps.h"
 #include "RandomNumberControl.h"
 #include "Concurrency/OpenMP.h"
 #include "Message/CommOperators.h"
@@ -221,7 +221,6 @@ void RMC::resetRun()
     for (int ip = 0; ip < NumThreads; ++ip)
     {
       std::ostringstream os;
-      estimatorClones[ip]->resetTargetParticleSet(*wClones[ip]);
       estimatorClones[ip]->setCollectionMode(false);
       Rng[ip] = RandomNumberControl::Children[ip]->makeClone();
 #if !defined(REMOVE_TRACEMANAGER)

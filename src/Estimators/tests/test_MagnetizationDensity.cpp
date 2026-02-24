@@ -121,8 +121,7 @@ TEST_CASE("MagnetizationDensity::MagnetizationDensity(SPInput, Lattice, SpeciesS
   using namespace testing;
   Libxml2Document doc;
   auto input_xml = magdensity::valid_mag_density_input_sections[magdensity::Inputs::valid_magdensity_input];
-  bool okay      = doc.parseFromString(input_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(input_xml));
   xmlNodePtr node = doc.getRoot();
   MagnetizationDensityInput mdi(node);
 
@@ -138,8 +137,7 @@ TEST_CASE("MagnetizationDensity::spawnCrowdClone()", "[estimators]")
   using namespace testing;
   Libxml2Document doc;
   auto input_xml = magdensity::valid_mag_density_input_sections[magdensity::Inputs::valid_magdensity_input];
-  bool okay      = doc.parseFromString(input_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(input_xml));
   xmlNodePtr node = doc.getRoot();
   MagnetizationDensityInput mdi(node);
 
@@ -156,8 +154,7 @@ TEST_CASE("MagnetizationDensity::integrals", "[estimators]")
   using namespace testing;
   Libxml2Document doc;
   auto input_xml = magdensity::valid_mag_density_input_sections[magdensity::Inputs::valid_magdensity_input];
-  bool okay      = doc.parseFromString(input_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(input_xml));
   xmlNodePtr node = doc.getRoot();
   MagnetizationDensityInput mdi(node);
 
@@ -183,7 +180,7 @@ TEST_CASE("MagnetizationDensity::gridAssignment", "[estimators]")
                                     {6.03341616, 0, 1.77067004},           //bin 6
                                     {2.78496304, 0, 5.31201011}};          //bin 7
 
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   lattice.R(0, 0) = 5.10509515;
   lattice.R(0, 1) = -3.23993545;
   lattice.R(0, 2) = 0.00000000;
@@ -203,8 +200,7 @@ TEST_CASE("MagnetizationDensity::gridAssignment", "[estimators]")
   auto mag_input_xml = testing::magdensity::valid_mag_density_input_sections
       [testing::magdensity::Inputs::valid_magdensity_input_unittest];
   Libxml2Document doc;
-  bool okay = doc.parseFromString(mag_input_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(mag_input_xml));
   xmlNodePtr node = doc.getRoot();
 
   MagnetizationDensityInput maginput(node);
@@ -242,10 +238,8 @@ TEST_CASE("MagnetizationDensity::integralAPI", "[estimators]")
   Libxml2Document doc_mc;
   auto input_xml_simpsons = magdensity::valid_mag_density_input_sections[magdensity::Inputs::valid_magdensity_input];
   auto input_xml_mc       = magdensity::valid_mag_density_input_sections[magdensity::Inputs::valid_magdensity_input_dr];
-  bool okay_simpsons      = doc_simpsons.parseFromString(input_xml_simpsons);
-  bool okay_mc            = doc_mc.parseFromString(input_xml_mc);
-  REQUIRE(okay_simpsons);
-  REQUIRE(okay_mc);
+  REQUIRE(doc_simpsons.parseFromString(input_xml_simpsons));
+  REQUIRE(doc_mc.parseFromString(input_xml_mc));
   xmlNodePtr node_simpsons = doc_simpsons.getRoot();
   xmlNodePtr node_mc       = doc_mc.getRoot();
   MagnetizationDensityInput mdi_simpsons(node_simpsons);
@@ -295,7 +289,7 @@ TEST_CASE("MagnetizationDensity::IntegrationTest", "[estimators]")
   using namespace testing;
 
   // O2 test example from pwscf non-collinear calculation.
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   lattice.R(0, 0) = 5.10509515;
   lattice.R(0, 1) = -3.23993545;
   lattice.R(0, 2) = 0.00000000;
@@ -315,8 +309,7 @@ TEST_CASE("MagnetizationDensity::IntegrationTest", "[estimators]")
   auto mag_input_xml = testing::magdensity::valid_mag_density_input_sections
       [testing::magdensity::Inputs::valid_magdensity_input_unittest];
   Libxml2Document doc;
-  bool okay = doc.parseFromString(mag_input_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(mag_input_xml));
   xmlNodePtr node = doc.getRoot();
 
   MagnetizationDensityInput maginput(node);
@@ -368,19 +361,21 @@ TEST_CASE("MagnetizationDensity::IntegrationTest", "[estimators]")
     mup(1, iorb) = uprow1[iorb];
     mdn(1, iorb) = dnrow1[iorb];
   }
-  auto spo_up = std::make_unique<ConstantSPOSet>("ConstantUpSet", nelec, norb);
-  auto spo_dn = std::make_unique<ConstantSPOSet>("ConstantDnSet", nelec, norb);
+  auto spo_up = std::make_unique<ConstantSPOSet<Value>>("ConstantUpSet", nelec, norb);
+  auto spo_dn = std::make_unique<ConstantSPOSet<Value>>("ConstantDnSet", nelec, norb);
 
   spo_up->setRefVals(mup);
   spo_dn->setRefVals(mdn);
   auto spinor_set = std::make_unique<SpinorSet>("ConstSpinorSet");
   spinor_set->set_spos(std::move(spo_up), std::move(spo_dn));
 
-  auto dd = std::make_unique<DiracDeterminant<>>(std::move(spinor_set), 0, nelec);
+  auto dd = std::make_unique<DiracDeterminant<>>(*spinor_set, 0, nelec);
 
+  std::vector<std::unique_ptr<SPOSet>> sposets;
+  sposets.push_back(std::move(spinor_set));
   std::vector<std::unique_ptr<DiracDeterminantBase>> dirac_dets;
   dirac_dets.push_back(std::move(dd));
-  auto sd = std::make_unique<SlaterDet>(elec_, std::move(dirac_dets));
+  auto sd = std::make_unique<SlaterDet>(elec_, std::move(sposets), std::move(dirac_dets));
 
   RuntimeOptions runtime_options;
   TrialWaveFunction psi(runtime_options);

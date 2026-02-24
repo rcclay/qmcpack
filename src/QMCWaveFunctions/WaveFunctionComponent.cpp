@@ -93,6 +93,17 @@ void WaveFunctionComponent::mw_evalGradWithSpin(const RefVectorWithLeader<WaveFu
                                                 std::vector<GradType>& grad_now,
                                                 std::vector<ComplexType>& spingrad_now) const
 {
+  mw_evalGrad(wfc_list, p_list, iat, grad_now);
+  for (int iw = 0; iw < wfc_list.size(); iw++)
+    spingrad_now[iw] = 0;
+}
+
+void WaveFunctionComponent::mw_evalGradWithSpin_serialized(const RefVectorWithLeader<WaveFunctionComponent>& wfc_list,
+                                                           const RefVectorWithLeader<ParticleSet>& p_list,
+                                                           int iat,
+                                                           std::vector<GradType>& grad_now,
+                                                           std::vector<ComplexType>& spingrad_now) const
+{
   assert(this == &wfc_list.getLeader());
   for (int iw = 0; iw < wfc_list.size(); iw++)
   {
@@ -149,6 +160,16 @@ void WaveFunctionComponent::mw_ratioGradWithSpin(const RefVectorWithLeader<WaveF
                                                  std::vector<GradType>& grad_new,
                                                  std::vector<ComplexType>& spingrad_new) const
 {
+  mw_ratioGrad(wfc_list, p_list, iat, ratios, grad_new);
+}
+
+void WaveFunctionComponent::mw_ratioGradWithSpin_serialized(const RefVectorWithLeader<WaveFunctionComponent>& wfc_list,
+                                                            const RefVectorWithLeader<ParticleSet>& p_list,
+                                                            int iat,
+                                                            std::vector<PsiValue>& ratios,
+                                                            std::vector<GradType>& grad_new,
+                                                            std::vector<ComplexType>& spingrad_new) const
+{
   assert(this == &wfc_list.getLeader());
   for (int iw = 0; iw < wfc_list.size(); iw++)
     ratios[iw] = wfc_list[iw].ratioGradWithSpin(p_list[iw], iat, grad_new[iw], spingrad_new[iw]);
@@ -202,7 +223,7 @@ void WaveFunctionComponent::extractOptimizableObjectRefs(UniqueOptObjRefs&)
                            "must be overloaded when the WFC is optimizable.");
 }
 
-void WaveFunctionComponent::checkOutVariables(const opt_variables_type& active)
+void WaveFunctionComponent::checkOutVariables(const OptVariables& active)
 {
   if (isOptimizable())
     throw std::logic_error("Bug!! " + getClassName() +
@@ -211,7 +232,7 @@ void WaveFunctionComponent::checkOutVariables(const opt_variables_type& active)
 }
 
 void WaveFunctionComponent::evaluateDerivativesWF(ParticleSet& P,
-                                                  const opt_variables_type& active,
+                                                  const OptVariables& active,
                                                   Vector<ValueType>& dlogpsi)
 {
   throw std::runtime_error("WaveFunctionComponent::evaluateDerivativesWF is not implemented by " + getClassName());
@@ -264,13 +285,22 @@ void WaveFunctionComponent::mw_evaluateSpinorRatios(
     const RefVector<std::pair<ValueVector, ValueVector>>& spinor_multiplier_list,
     std::vector<std::vector<ValueType>>& ratios) const
 {
+  mw_evaluateRatios(wfc_list, vp_list, ratios);
+}
+
+void WaveFunctionComponent::mw_evaluateSpinorRatios_serialized(
+    const RefVectorWithLeader<WaveFunctionComponent>& wfc_list,
+    const RefVectorWithLeader<const VirtualParticleSet>& vp_list,
+    const RefVector<std::pair<ValueVector, ValueVector>>& spinor_multiplier_list,
+    std::vector<std::vector<ValueType>>& ratios) const
+{
   assert(this == &wfc_list.getLeader());
   for (int iw = 0; iw < wfc_list.size(); iw++)
     wfc_list[iw].evaluateSpinorRatios(vp_list[iw], spinor_multiplier_list[iw], ratios[iw]);
 }
 
 void WaveFunctionComponent::evaluateDerivRatios(const VirtualParticleSet& VP,
-                                                const opt_variables_type& optvars,
+                                                const OptVariables& optvars,
                                                 std::vector<ValueType>& ratios,
                                                 Matrix<ValueType>& dratios)
 {
@@ -280,7 +310,7 @@ void WaveFunctionComponent::evaluateDerivRatios(const VirtualParticleSet& VP,
 
 void WaveFunctionComponent::evaluateSpinorDerivRatios(const VirtualParticleSet& VP,
                                                       const std::pair<ValueVector, ValueVector>& spinor_multiplier,
-                                                      const opt_variables_type& optvars,
+                                                      const OptVariables& optvars,
                                                       std::vector<ValueType>& ratios,
                                                       Matrix<ValueType>& dratios)
 {

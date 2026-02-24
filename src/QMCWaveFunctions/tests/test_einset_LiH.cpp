@@ -39,7 +39,7 @@ void test_einset_LiH_x(bool use_offload)
 {
   Communicate* c = OHMMS::Controller;
 
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   lattice.R = {-3.55, 0.0, 3.55, 0.0, 3.55, 3.55, -3.55, 3.55, 0.0};
 
   ParticleSetPool ptcl = ParticleSetPool(c);
@@ -54,6 +54,7 @@ void test_einset_LiH_x(bool use_offload)
   ions_.create({1, 1});
   ions_.R[0] = {0.0, 0.0, 0.0};
   ions_.R[1] = {3.55, 3.55, 3.55};
+  ions_.update();
 
   elec_.create({1, 1});
   elec_.setName("elec");
@@ -62,6 +63,7 @@ void test_einset_LiH_x(bool use_offload)
   elec_.R[0]                = {0.0, 0.0, 0.0};
   elec_.R[1]                = {0.0, 1.0, 0.0};
   const auto ei_table_index = elec_.addTable(ions_);
+  elec_.update();
 
   SpeciesSet& tspecies       = elec_.getSpeciesSet();
   int upIdx                  = tspecies.addSpecies("u");
@@ -79,8 +81,7 @@ void test_einset_LiH_x(bool use_offload)
     spo_xml = std::regex_replace(spo_xml, std::regex("omptarget"), "no");
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(spo_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(spo_xml));
 
   xmlNodePtr root = doc.getRoot();
 
@@ -229,8 +230,8 @@ void test_einset_LiH_x(bool use_offload)
     const size_t nvp_                  = 4;
     const size_t nvp_2                 = 3;
     const std::vector<size_t> nvp_list = {nvp_, nvp_2};
-    VirtualParticleSet VP_(elec_, nvp_);
-    VirtualParticleSet VP_2(elec_2, nvp_2);
+    VirtualParticleSet VP_(elec_);
+    VirtualParticleSet VP_2(elec_2);
 
     // move VPs
     std::vector<ParticleSet::SingleParticlePos> newpos_vp_(nvp_);

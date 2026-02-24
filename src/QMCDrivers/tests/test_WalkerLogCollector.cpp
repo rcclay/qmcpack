@@ -14,9 +14,9 @@
 
 #include "Message/Communicate.h"
 #include "QMCHamiltonians/QMCHamiltonian.h"
-#include "Particle/tests/MinimalParticlePool.h"
-#include "QMCHamiltonians/tests/MinimalHamiltonianPool.h"
-#include "QMCWaveFunctions/tests/MinimalWaveFunctionPool.h"
+#include <MinimalParticlePool.h>
+#include <MinimalHamiltonianPool.h>
+#include <MinimalWaveFunctionPool.h>
 #include "Utilities/ResourceCollection.h"
 #include "Utilities/ProjectData.h"
 
@@ -42,7 +42,7 @@ TEST_CASE("WalkerLogCollector::collect", "[estimators]")
   // This is where the pset properties "properies" gain the different hamiltonian operator values.
   auto hamiltonian_pool = MinimalHamiltonianPool::make_hamWithEE(comm, particle_pool, wavefunction_pool);
 
-  auto& twf = *(wavefunction_pool.getWaveFunction("wavefunction"));
+  TrialWaveFunction& twf(wavefunction_pool.getWaveFunction().value());
   auto& ham = *(hamiltonian_pool.getPrimary());
 
   // setup data structures for multiple walkers

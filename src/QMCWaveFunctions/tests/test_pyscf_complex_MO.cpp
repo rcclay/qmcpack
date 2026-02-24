@@ -26,6 +26,7 @@
 #include "Numerics/GaussianBasisSet.h"
 #include "QMCWaveFunctions/LCAO/LCAOrbitalBuilder.h"
 #include "QMCWaveFunctions/SPOSetBuilderFactory.h"
+#include "OhmmsData/Libxml2Doc.h"
 
 namespace qmcplusplus
 {
@@ -39,11 +40,10 @@ void test_C_diamond()
     Communicate* c = OHMMS::Controller;
 
     Libxml2Document doc;
-    bool okay = doc.parse("C_diamond-twist-third.structure.xml");
-    REQUIRE(okay);
+    REQUIRE(doc.parse("C_diamond-twist-third.structure.xml"));
     xmlNodePtr root = doc.getRoot();
 
-    ParticleSet::ParticleLayout lattice;
+    Lattice lattice;
     // BCC H
     lattice.R = {3.37316115, 3.37316115, 0.0, 0.0, 3.37316115, 3.37316115, 3.37316115, 0.0, 3.37316115};
     lattice.reset();
@@ -77,8 +77,7 @@ void test_C_diamond()
 
     Libxml2Document doc2;
 
-    okay = doc2.parse("C_diamond-twist-third.wfj.xml");
-    REQUIRE(okay);
+    REQUIRE(doc2.parse("C_diamond-twist-third.wfj.xml"));
     xmlNodePtr root2 = doc2.getRoot();
 
     WaveFunctionComponentBuilder::PSetMap particle_set_map;

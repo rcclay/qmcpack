@@ -38,7 +38,7 @@ struct LRRPAHandlerTemp : public LRHandlerBase
   DECLARE_COULOMB_TYPES
 
   //Typedef for the lattice-type.
-  using ParticleLayout   = ParticleSet::ParticleLayout;
+  using ParticleLayout   = Lattice;
   using BreakupBasisType = BreakupBasis;
 
   bool FirstTime;
@@ -98,10 +98,6 @@ struct LRRPAHandlerTemp : public LRHandlerBase
     fillFk(ref.getSimulationCell().getKLists());
     LR_rc = Basis.get_rc();
   }
-
-  void resetTargetParticleSet(ParticleSet& ref) override { myFunc.reset(ref); }
-
-  void resetTargetParticleSet(ParticleSet& ref, mRealType rs) { myFunc.reset(ref, rs); }
 
   inline mRealType evaluate(mRealType r, mRealType rinv) const override
   {
@@ -217,19 +213,19 @@ private:
 
   void fillFk(const KContainer& KList)
   {
-    Fk.resize(KList.kpts_cart.size());
-    const std::vector<int>& kshell(KList.kshell);
+    Fk.resize(KList.getKptsCartWorking().size());
+    const std::vector<int>& kshell(KList.getKShell());
     if (MaxKshell >= kshell.size())
       MaxKshell = kshell.size() - 1;
     Fk_symm.resize(MaxKshell);
     //       std::cout<<"Filling FK :"<<std::endl;
     for (int ks = 0, ki = 0; ks < Fk_symm.size(); ks++)
     {
-      mRealType k  = std::pow(KList.ksq[ki], 0.5);
+      mRealType k  = std::pow(KList.getKSQWorking()[ki], 0.5);
       mRealType uk = -1.0 * evalFk(k);
       Fk_symm[ks]  = uk;
       //         std::cout<<uk<<std::endl;
-      while (ki < KList.kshell[ks + 1] && ki < Fk.size())
+      while (ki < KList.getKShell()[ks + 1] && ki < Fk.size())
         Fk[ki++] = uk;
     }
     //for(int ki=0; ki<KList.kpts_cart.size(); ki++){

@@ -44,12 +44,11 @@ TEST_CASE("read_lattice_xml", "[particle_io][xml]")
     )";
 
     Libxml2Document doc;
-    bool okay = doc.parseFromString(particles);
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(particles));
 
     xmlNodePtr root = doc.getRoot();
 
-    CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> uLattice;
+    Lattice uLattice;
     LatticeParser lp(uLattice);
     REQUIRE_NOTHROW(lp.put(root));
 
@@ -76,12 +75,11 @@ TEST_CASE("read_lattice_xml", "[particle_io][xml]")
     )";
 
     Libxml2Document doc;
-    bool okay = doc.parseFromString(particles);
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(particles));
 
     xmlNodePtr root = doc.getRoot();
 
-    CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> uLattice;
+    Lattice uLattice;
     LatticeParser lp(uLattice);
     REQUIRE_THROWS_WITH(lp.put(root),
                         "LatticeParser::put. In \"bconds\", non periodic directions must be placed after the periodic "
@@ -105,12 +103,11 @@ TEST_CASE("read_lattice_xml", "[particle_io][xml]")
     )";
 
     Libxml2Document doc;
-    bool okay = doc.parseFromString(particles);
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(particles));
 
     xmlNodePtr root = doc.getRoot();
 
-    CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> uLattice;
+    Lattice uLattice;
     LatticeParser lp(uLattice);
     REQUIRE_THROWS_WITH(lp.put(root),
                         "LatticeParser::put. In \"bconds\", non periodic directions must be placed after the periodic "
@@ -138,12 +135,11 @@ TEST_CASE("read_lattice_xml_lrhandle", "[particle_io][xml]")
     )";
 
     Libxml2Document doc;
-    bool okay = doc.parseFromString(particles);
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(particles));
 
     xmlNodePtr root = doc.getRoot();
 
-    CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> uLattice;
+    Lattice uLattice;
     LatticeParser lp(uLattice);
     REQUIRE_NOTHROW(lp.put(root));
 
@@ -169,12 +165,11 @@ TEST_CASE("read_lattice_xml_lrhandle", "[particle_io][xml]")
     )";
 
     Libxml2Document doc;
-    bool okay = doc.parseFromString(particles);
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(particles));
 
     xmlNodePtr root = doc.getRoot();
 
-    CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> uLattice;
+    Lattice uLattice;
     LatticeParser lp(uLattice);
     REQUIRE_NOTHROW(lp.put(root));
   }
@@ -197,12 +192,11 @@ TEST_CASE("read_lattice_xml_lrhandle", "[particle_io][xml]")
     )";
 
     Libxml2Document doc;
-    bool okay = doc.parseFromString(particles);
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(particles));
 
     xmlNodePtr root = doc.getRoot();
 
-    CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> uLattice;
+    Lattice uLattice;
     LatticeParser lp(uLattice);
     REQUIRE_THROWS_WITH(lp.put(root),
                         "LatticeParser::put. Quasi 2D Ewald only works with boundary condition 'p p n'!");

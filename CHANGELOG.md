@@ -2,21 +2,254 @@
 
 Notable changes to QMCPACK are documented in this file.
 
-## [Unreleased]
+## [4.2.0] - 2026-02-12
 
-* IMPORTANT: the default drivers are now the batched versions in both QMCPACK and NEXUS. To recover legacy v3 behavior in QMCPACK,
-  set the driver_version parameter to legacy https://qmcpack.readthedocs.io/en/develop/input_overview.html#driver-version-parameter
-  . For NEXUS put driver = 'legacy' within generate_qmcpack sections. 
+This release is recommended for all users and includes several new features, improved GPU support, a broad range of other useful
+improvements, and compatibility and bug fixes. NEXUS also receives significant updates including a packaging update to make it
+function as a conventional Python package (requiring an update PYTHONPATH).
 
-* Support for backflow optimization has been removed as part of refactoring and cleaning the codebase. QMC runs using backflow
-  wavefunctions are still supported. This feature is expected to eventually be reimplemented in v4. Users needing
-  backflow optimization can use previously released versions of QMCPACK or work towards its reimplementation in the modern code.
-  [#4688](https://github.com/QMCPACK/qmcpack/pull/4688)
+* Upcoming breaking change: Classic/non-batched drivers will be removed in a future release. See
+  https://qmcpack.readthedocs.io/en/develop/performance_portable.html for instructions on using the batched/performance portable drivers.
+  New projects should only use the batched drivers.
+* Added new variable period for estimator measurements feature, input parameter estimator_period, and Nexus support
+  [#5574](https://github.com/QMCPACK/qmcpack/pull/5574), [#5577](https://github.com/QMCPACK/qmcpack/pull/5577).
+  Substantial speed and efficiency improvements are possible for properties with a long autocorrelation period.
+* GPU offload of SOC calculations completed [#5547](https://github.com/QMCPACK/qmcpack/pull/5547)
+* Batched implementation of G of r ( g(r), PairCorrEstimator ) [#5600](https://github.com/QMCPACK/qmcpack/pull/5600)
+* Batched structure factor estimator [#5490](https://github.com/QMCPACK/qmcpack/pull/5490),
+  [#5540](https://github.com/QMCPACK/qmcpack/pull/5540)
+* Orbital rotation support for fully complex wavefunctions on GPUs [#5549](https://github.com/QMCPACK/qmcpack/pull/5549)
+* Support for ROCm 7.0+ [#5548](https://github.com/QMCPACK/qmcpack/pull/5548)
+* Container with "complete" QMCPACK development version including Quantum ESPRESSO and PySCF
+  [#5681](https://github.com/QMCPACK/qmcpack/pull/5681), [#5782](https://github.com/QMCPACK/qmcpack/pull/5782). This will be
+  expanded and documented in future versions.
+* bandinfo.dat files are now consistently named by their SPOset and not einspline
+  [#5785](https://github.com/QMCPACK/qmcpack/pull/5785)
+* Bug fix to three-body Jastrow GPU implementation (caused rare GPU crash) [#5546](https://github.com/QMCPACK/qmcpack/pull/5546)
+* Docs for QP2 plugin installation requirement [#5667](https://github.com/QMCPACK/qmcpack/pull/5667)
+* Docs for timers [#5486](https://github.com/QMCPACK/qmcpack/pull/5486)
+* Docs for qmc-get-supercell tool. [#5611](https://github.com/QMCPACK/qmcpack/pull/5611)
+* Added 2dxy option to qmc-get-supercell tool [#5607](https://github.com/QMCPACK/qmcpack/pull/5607)
+* Add symmetry support for PySCF multiconfiguration methods to savetoqmcpack [#5564](https://github.com/QMCPACK/qmcpack/pull/5564)
+* Initial python coverage reporting [#5751](https://github.com/QMCPACK/qmcpack/pull/5751)
+* Reduced use of python pandas in tests [#5732](https://github.com/QMCPACK/qmcpack/pull/5732)
+* Alignment fixes for CUDA complex host scalars [#5760](https://github.com/QMCPACK/qmcpack/pull/5760)
+* Improved Aurora/Intel GPU LCAO performance [#5533](https://github.com/QMCPACK/qmcpack/pull/5533)
+* Added benchmark tests for batched BLAS routines [#5591](https://github.com/QMCPACK/qmcpack/pull/5591)
+* Added SYCL benchmark for `SolverInverters` [#5493](https://github.com/QMCPACK/qmcpack/pull/5493)
+* Expanded LMY engine configuration messages [#5488](https://github.com/QMCPACK/qmcpack/pull/5488)
+* Improvements to build process, testing, and fixing of minor bugs.
 
-* ENABLE_CUDA, ENABLE_ROCM, QMC_CUDA2HIP, ENABLE_SYCL and ENABLE_OFFLOAD CMake options are replaced by a single QMC_GPU option.
-  See details of this option explained in the user guide.
-  When not building from scratch, their cached entries in CMakeCache.txt needs to be removed.
+### Known issues:
+
+* Multireference/multideterminant wavefunctions from PySCF and GAMESS are reported as not correctly converted
+  [#5563](https://github.com/QMCPACK/qmcpack/issues/5563), [#5789](https://github.com/QMCPACK/qmcpack/issues/5789). Due to the
+  widespread use of multideterminants in QMC, where no issues have been reported, we currently believe the problems to be fully
+  related to the export and conversion of multideterminant wavefunctions from these codes.
+* Backflow wavefunctions are not working for ab initio (vs model) Hamiltonians in the batched drivers
+  [#5459](https://github.com/QMCPACK/qmcpack/issues/5459)
+* The energy density estimator is incorrect [#5468](https://github.com/QMCPACK/qmcpack/issues/5468)
+* AFQMC utilities and converters are not compatible with modern PySCF [#4653](https://github.com/QMCPACK/qmcpack/issues/4653)
+
+### NEXUS [2.2.0]
+
+* Refactored so that it can be used as a conventional Python package. PYTHONPATH should now point to the topmost nexus directory,
+  not nexus/lib. Modules and methods can now be accessed using the syntax nexus.<module>.s or function>
+  [#5700](https://github.com/QMCPACK/qmcpack/pull/5700)
+* New releases will be consistently versioned with the major, minor and patch number updated following semantic versioning.
+* Important fix for XML text parsing for non-uniform lists of numeric types. A list such as [0 0 0.1] could previously be misread
+  [#5756](https://github.com/QMCPACK/qmcpack/pull/5756)
+* New spin resolved lineplot capability in qdens [#5662](https://github.com/QMCPACK/qmcpack/pull/5662)
+* New capability to modify existing QMCPACK input files [#5631](https://github.com/QMCPACK/qmcpack/pull/5631)
+* Support for custom commands/scripts as simulation objects [#5613](https://github.com/QMCPACK/qmcpack/pull/5613)
+* Support opt.vp.h5 files and stochastic reconfiguration input generation [#5580](https://github.com/QMCPACK/qmcpack/pull/5580)
+* Support for override_variational_parameters in QMCPACK dependencies [#5713](https://github.com/QMCPACK/qmcpack/pull/5713)
+* Added Leonardo (CINECA) machine [#5759](https://github.com/QMCPACK/qmcpack/pull/5759)
+* Added Frontier (ORNL) support [#5519](https://github.com/QMCPACK/qmcpack/pull/5519)
+* Added Aurora (ANL) support [#5517](https://github.com/QMCPACK/qmcpack/pull/5517)
+* Updated and revised definitions for existing machines, e.g. [#5661](https://github.com/QMCPACK/qmcpack/pull/5661)
+* Improve Structure.center_molecule() to ensure equal vacuum padding on all sides [#5617](https://github.com/QMCPACK/qmcpack/pull/5617)
+* Docs for controlling bundled twist averaged calculations [#5722](https://github.com/QMCPACK/qmcpack/pull/5722)
+* Docs for Quantum ESPRESSO DFT+U format [#5710](https://github.com/QMCPACK/qmcpack/pull/5710)
+* Docs for code style [#5679](https://github.com/QMCPACK/qmcpack/pull/5679)
+* Docs for job bundling using nexus. [#5670](https://github.com/QMCPACK/qmcpack/pull/5670)
+* Updated GCTA example to QE 7.1 DFT+U format [#5691](https://github.com/QMCPACK/qmcpack/pull/5691)
+* Fixed python syntax format warnings e.g. [#5795](https://github.com/QMCPACK/qmcpack/pull/5795), [#5779](https://github.com/QMCPACK/qmcpack/pull/5779)
+* Fixed `Structure.recenter_k()` and `Structure.recenter()` [#5664](https://github.com/QMCPACK/qmcpack/pull/5664)
+* Matplot compatibility improved [#5622](https://github.com/QMCPACK/qmcpack/pull/5622)
+* Updated Numpy array shaping to comply with deprecation in Numpy 2.5 [#5757](https://github.com/QMCPACK/qmcpack/pull/5757)
+* Removed `Structure.magnetize()` [#5766](https://github.com/QMCPACK/qmcpack/pull/5766)
+
+## [4.1.0] - 2025-04-30
+
+This release is recommended for all users and includes improved support for calculating forces, better GPU support, updated build
+recipes and documentation for many machines, and a broad range of other useful improvements.
+
+* Fast forces with multideterminant wavefunctions [#5398](https://github.com/QMCPACK/qmcpack/pull/5398)
+* Significant improvement in AMD GPU performance with better memory handling [#5339](https://github.com/QMCPACK/qmcpack/pull/5339).
+  Note also updated Frontier instructions [#5399](https://github.com/QMCPACK/qmcpack/pull/5399). Setting environment variable
+  LIBOMPTARGET_AMDGPU_MAX_ASYNC_COPY_BYTES to 0 at run-time is currently recommended.
+* Ongoing performance optimization of LCAO / Gaussian basis set GPU evaluation e.g.
+  [#5357](https://github.com/QMCPACK/qmcpack/pull/5357), [#5342](https://github.com/QMCPACK/qmcpack/pull/5342)
+* Updated build recipes for numerous machines, including NERSC Perlmutter [#5464](https://github.com/QMCPACK/qmcpack/pull/5464) ,
+  ALCF Aurora [#5465](https://github.com/QMCPACK/qmcpack/pull/5465), and OLCF Frontier
+  [#5456](https://github.com/QMCPACK/qmcpack/pull/5456).
+* HPCToolkit start/stop API support. [#5361](https://github.com/QMCPACK/qmcpack/pull/5361)
+* VMC runs advise how to achieve load balance if the run is unbalanced [#5412](https://github.com/QMCPACK/qmcpack/pull/5412)
+* History method removed from RotatedSPOs for simplicity and fewer code paths [#5414](https://github.com/QMCPACK/qmcpack/pull/5414)
+* 3-body Jastrow ionic derivatives are now analytic, not based on finite differences
+  [#5380](https://github.com/QMCPACK/qmcpack/pull/5380)
+* PySCF LCAO to spline converter now compatible with NumPy v2 [#5364](https://github.com/QMCPACK/qmcpack/pull/5364)
+* Updated PR and contributor guidance e.g. [#5432](https://github.com/QMCPACK/qmcpack/pull/5432). Please read
+  https://qmcpack.readthedocs.io/en/develop/developing.html#github-pull-request-guidance 
+* The wiki and other external documentation is being coallesced in the manual. e.g. Our release process is now in the manual
+  [#5443](https://github.com/QMCPACK/qmcpack/pull/5443).
+* Ongoing refactoring to eventually enable unified real/complex builds and to reduce code duplication. 
+* Significantly improved reliability of statistical tests. Please report test failures.
+* Numerous minor bug fixes.
+
+### Known issues:
+
+* Backflow wavefunctions are not working for ab initio (vs model) Hamiltonians in the batched drivers
+  [#5459](https://github.com/QMCPACK/qmcpack/issues/5459)
+* The energy density estimator is incorrect [#5468](https://github.com/QMCPACK/qmcpack/issues/5468)
+* AFQMC utilities and converters are not compatible with modern PySCF [#4653](https://github.com/QMCPACK/qmcpack/issues/4653)
+
+### NEXUS
+
+* Documentation for command line options such as --status_only and --progress_tty
+  [#5393](https://github.com/QMCPACK/qmcpack/pull/5393), see
+  https://nexus-workflows.readthedocs.io/en/latest/user-scripts.html#nexus-command-line-options
+* Support for stochastic reconfiguration and orbital rotation / orbital optimization
+  [#5386](https://github.com/QMCPACK/qmcpack/pull/5386)
+* Grand-canonical twist averaging (GCTA) documentation and examples [#5316](https://github.com/QMCPACK/qmcpack/pull/5316)
+* Support for magnetization density estimator  [#5346](https://github.com/QMCPACK/qmcpack/pull/5346)
+* Support for several new CPU clusters, e.g. BES-MS machine  [#5416](https://github.com/QMCPACK/qmcpack/pull/5416), ORNL
+  Baseline  [#5371](https://github.com/QMCPACK/qmcpack/pull/5371)
+* Support orbital images for plotting/debugging of orbitals [#5448](https://github.com/QMCPACK/qmcpack/pull/5448)
+* Support QE HDF5 charge density results  [#5427](https://github.com/QMCPACK/qmcpack/pull/5427)
+* Job options are now supported, e.g. to set custom mpirun options for thread binding
+  [#5255](https://github.com/QMCPACK/qmcpack/pull/5255), [#5413](https://github.com/QMCPACK/qmcpack/pull/5413)
+* Update force keyword handling [#5405](https://github.com/QMCPACK/qmcpack/pull/5405)
+* Compatibility with spglib >=v2.5.0 [#5429](https://github.com/QMCPACK/qmcpack/pull/5429)
+
+## [4.0.0] - 2025-02-05
+
+This major release includes an important change in the default driver behavior, significantly expanded GPU support including fully
+GPU accelerated LCAO/Gaussian-basis set wavefunction support for both molecular and solid-state systems, improved GPU configuration
+options, a new fast spin-orbit implementation based on exact spin integration, a stochastic reconfiguration-based wavefunction
+optimizer for large parameter sets, self-healing wavefunction optimization, expanded implementation of the determinant localization (DLA)
+approach, and a new walker logging capability among many others. High-performance CPU execution is fully supported on laptops through
+to the largest CPU clusters. High-performance GPU execution on NVIDIA, Intel, and AMD GPUs is also fully supported on single GPUs up to
+the largest supercomputers. All users and developers are encouraged to check the extensive list of updates. In most cases small updates
+to old input files will be required to run with v4.0.0, which now also checks inputs more strictly for validity. NEXUS workflow scripts will
+need the least amount of changes. See the sections "QMCPACK's Performance Portable Implementation" and "Updating input files for batched
+drivers" in the manual, e.g., https://qmcpack.readthedocs.io/en/develop/performance_portable.html
+
+* IMPORTANT: the default drivers are now the batched versions in both QMCPACK and NEXUS. As detailed in the user guide, small
+  updates may be needed to inputs for the new batched versions. In addition to performance portable CPU and GPU support, the new
+  drivers check for unknown or inconsistent input settings. The batched implementation is sufficient to cover at least 95% of prior
+  QMCPACK publications. Less utilized features may not have been ported. Additional porting and optimizations will be guided by user
+  feedback. If you run into difficulties, please request support so that documentation can be updated to provide more guidance. To
+  recover legacy v3 behavior in QMCPACK, set the driver_version parameter to legacy
+  https://qmcpack.readthedocs.io/en/develop/input_overview.html#driver-version-parameter . For NEXUS put driver = 'legacy' within
+  generate_qmcpack sections. 
+* A single QMC_GPU option replaces the CMake options ENABLE_CUDA, ENABLE_ROCM, QMC_CUDA2HIP, ENABLE_SYCL and ENABLE_OFFLOAD. See
+  details of this option explained in the user guide. e.g. Set QMC_GPU to "openmp;cuda" for NVIDIA, "openmp;hip" for AMD, and
+  "openmp;sycl" for Intel GPUs. When not building from scratch, their cached entries in CMakeCache.txt needs to be removed.
   [#5267](https://github.com/QMCPACK/qmcpack/pull/5267)
+* Adopted Code of Conduct [#4922](https://github.com/QMCPACK/qmcpack/pull/4922)
+* GPU accelerated LCAO calculations with Gaussian basis sets for isolated molecules through periodic solids. E.g. via
+  [#5021](https://github.com/QMCPACK/qmcpack/pull/5021), [#4808](https://github.com/QMCPACK/qmcpack/pull/4808)
+* GPU acceleration of real-to-real spline wavefunctions (SplineR2R) [#5198](https://github.com/QMCPACK/qmcpack/pull/5198)
+* Updated build recipes for ALCF Aurora and Polaris [#5279](https://github.com/QMCPACK/qmcpack/pull/5279), OLCF Frontier
+  [#5284](https://github.com/QMCPACK/qmcpack/pull/5284), NERSC Perlmutter [#5281](https://github.com/QMCPACK/qmcpack/5281).
+* Fast implementation of spin orbit by exact spin integration [#5119](https://github.com/QMCPACK/qmcpack/pull/5119)
+* Simple implementation of Stochastic Reconfiguration optimization scheme [#5017](https://github.com/QMCPACK/qmcpack/pull/5017)
+* Improved regularization in Stochastic Reconfiguration optimization and added documentation [#5157](https://github.com/QMCPACK/qmcpack/pull/5157)
+* Implement determinant locality approximation (DLA) with T-move (TM) [#5103](https://github.com/QMCPACK/qmcpack/pull/5103)
+* Converter for determinants coming from a PySCF CAS-CI or CAS-SCF calculations [#5005](https://github.com/QMCPACK/qmcpack/pull/5005)
+* Fast, efficient implementation of SOC [#4933](https://github.com/QMCPACK/qmcpack/pull/4933)
+* New Self-Healing Overlap Estimator [#4991](https://github.com/QMCPACK/qmcpack/pull/4991)
+* New walker logging capability - write per walker data during QMC [#5019](https://github.com/QMCPACK/qmcpack/pull/5019)
+* Walkers have unique walker_ids to enable complete walker history analysis [#5089](https://github.com/QMCPACK/qmcpack/pull/5089),
+  [#5063](https://github.com/QMCPACK/qmcpack/pull/5063)
+* 1-body reduced density matrix spinor support [#4807](https://github.com/QMCPACK/qmcpack/pull/4807)
+* Support for backflow optimization has been removed as part of refactoring and cleaning the codebase. QMC runs using backflow
+  wavefunctions are still supported. This feature is expected to eventually be reimplemented. Users needing backflow optimization
+  can use previously released versions of QMCPACK or help work towards its reimplementation in the modern code.
+  [#4688](https://github.com/QMCPACK/qmcpack/pull/4688)
+* Samples input tag supported in batched drivers [#4224](https://github.com/QMCPACK/qmcpack/pull/4224)
+* Update Eref during warm up in the batched driver [#4906](https://github.com/QMCPACK/qmcpack/pull/4906)
+* Expanded SYCL implementation, e.g. batched determinant support [#5043](https://github.com/QMCPACK/qmcpack/pull/5043)
+* All examples updated to specify driver_version where needed [#5271](https://github.com/QMCPACK/qmcpack/pull/5271)
+* Specify recompute period in performance tests so mixed and full precision runs are directly comparable [#5248](https://github.com/QMCPACK/qmcpack/pull/5248)
+* Added AMD rocTX support [#5199](https://github.com/QMCPACK/qmcpack/pull/5199)
+* Allow exact spin integration for SOECP alongside wave function optimization [#5173](https://github.com/QMCPACK/qmcpack/pull/5173)
+* Print block and warmup timings [#5058](https://github.com/QMCPACK/qmcpack/pull/5058)
+* Print more timing information during optimization [#4960](https://github.com/QMCPACK/qmcpack/pull/4960)
+* Allow setting the number of grid points in the short range Ewald summation of Coulomb interaction [#4928](https://github.com/QMCPACK/qmcpack/pull/4928)
+* For hybrid representation spinor wavefunctions, skip incorrect norm check [#5287](https://github.com/QMCPACK/qmcpack/pull/5287)
+* Increased input consistency checking [#5209](https://github.com/QMCPACK/qmcpack/pull/5209)
+* Checks for NaNs during trial wavefunction ratio and gradient handling [#4804](https://github.com/QMCPACK/qmcpack/pull/4804)
+* Additional zero protection in multideterminant runs. [#4775](https://github.com/QMCPACK/qmcpack/pull/4775)
+* Prevent SOECP exact spin evaluation with multideterminant wave functions due to incomplete code paths [#5111](https://github.com/QMCPACK/qmcpack/pull/5111)
+* Improved optimizer robustness - accept more eigenvalues to fix occasional optimizer failures [#4917](https://github.com/QMCPACK/qmcpack/pull/4917)
+* Documentation on OneShiftOnly updated [#5155](https://github.com/QMCPACK/qmcpack/pull/5155)
+* Documentation and test for eigensolver option (used in wavefunction optimization). [#5006](https://github.com/QMCPACK/qmcpack/pull/5006)
+* Documentation explaining how to choose MPI ranks [#4931](https://github.com/QMCPACK/qmcpack/pull/4931)
+* Documentation on composing orbital rotations [#4755](https://github.com/QMCPACK/qmcpack/pull/4755)
+* Documentation on orbital rotation [#4729](https://github.com/QMCPACK/qmcpack/pull/4729)
+* Documentation for source code/developers via new doxygen cmake target (use 'make doxygen') [#4700](https://github.com/QMCPACK/qmcpack/pull/4700)
+* Build script for ORNL Baseline [#5004](https://github.com/QMCPACK/qmcpack/pull/5004)
+* Build script for NREL Kestrel [#5095](https://github.com/QMCPACK/qmcpack/pull/5095)
+* Build script for Improv at ANL LCRC [#4994](https://github.com/QMCPACK/qmcpack/pull/4994)
+* convert4qmc compatible with DIRAC versions > 22 [#5196](https://github.com/QMCPACK/qmcpack/pull/5196)
+* convertpw4qmcpack prints a completion message [#5246](https://github.com/QMCPACK/qmcpack/pull/5246)
+* qdens: Increased precision in XSF format output [#5233](https://github.com/QMCPACK/qmcpack/pull/5233)
+* qmc-fit: help keys are auto-populated correctly [#5124](https://github.com/QMCPACK/qmcpack/pull/5124)
+* Fixed AFQMC compilation with CUDA 12.x [#4776](https://github.com/QMCPACK/qmcpack/pull/4776)
+* Bug fix: Full precision batched drivers recompute Slater matrices every 10 blocks vs never [#5249](https://github.com/QMCPACK/qmcpack/pull/5249)
+* Bug fix: Proper workspace array determination for LAPACK::geev() [#5194](https://github.com/QMCPACK/qmcpack/pull/5194)
+* Bug fix: Fix TMDLA in batched DMC driver runs [#5208](https://github.com/QMCPACK/qmcpack/pull/5208)
+* Bug fix: Fix DLA+TMv1 [#5113](https://github.com/QMCPACK/qmcpack/pull/5113)
+* Bug fix: spinors with orbital optimization [#4923](https://github.com/QMCPACK/qmcpack/pull/4923)
+* Bug fix: complex hybrid representation [#4939](https://github.com/QMCPACK/qmcpack/pull/4939)
+* Bug fix: In TrialWaveFunction mw_evalGrad for spinor wave functions [#4911](https://github.com/QMCPACK/qmcpack/pull/4911)
+* Bug fix: T-move in batched DMC driver [#4902](https://github.com/QMCPACK/qmcpack/pull/4902)
+* Bug fix: Fix indexing inside SplineX2X when outputting few orbitals than it holds [#4871](https://github.com/QMCPACK/qmcpack/pull/4871)
+* Bug fix: Backend Changes to correct PBC ACForces [#4855](https://github.com/QMCPACK/qmcpack/pull/4855)
+* Bug fix: Fix rare bounds error in spline Jastrow [#4828](https://github.com/QMCPACK/qmcpack/pull/4828)
+* Bug fix: Fix incorrect Expressions for Hamiltonian and Overlap Matrices with Complex Wavefunctions [#4821](https://github.com/QMCPACK/qmcpack/pull/4821)
+* Bug fix: Fix wrong PhaseDiff and protect NaN for DMCBatched [#4763](https://github.com/QMCPACK/qmcpack/pull/4763)
+* Many smaller fixes including AFQMC maintenance, added checks, tests and cleanup.
+
+### NEXUS
+
+* NumPy 2 support [#5215](https://github.com/QMCPACK/qmcpack/pull/5215)
+* Extensive examples for specifying estimators [#5214](https://github.com/QMCPACK/qmcpack/pull/5214)
+* Implementation of Grand Canonical Twist Averaging (GCTA) with (spin)-adapted Fermi levels [#5029](https://github.com/QMCPACK/qmcpack/pull/5029)
+* Support for GCTA with SOC calculations [#5098](https://github.com/QMCPACK/qmcpack/pull/5098)
+* Support QE 7.2 DFT+U+V Hubbard format with nearest neighbors [#5230](https://github.com/QMCPACK/qmcpack/pull/5230)
+* Capability to run self-consistent DFT+U+V in QE > 7.1  [#4528](https://github.com/QMCPACK/qmcpack/pull/4528)
+* Support for supercell twists in PySCF workflows [#5073](https://github.com/QMCPACK/qmcpack/pull/5073)
+* Spinor workflows capability [#4787](https://github.com/QMCPACK/qmcpack/pull/4787)
+* Handle J3 terms in spin-orbit calculations [#5184](https://github.com/QMCPACK/qmcpack/pull/5184)
+* Added dependency versions requirements files [#5256](https://github.com/QMCPACK/qmcpack/pull/5256)
+* Support samples tag with batched drivers [#5134](https://github.com/QMCPACK/qmcpack/pull/5134)
+* Print warning for the Nexus user before Quantum ESPRESSO wavefunction rsync (can be slow) [#4984](https://github.com/QMCPACK/qmcpack/pull/4984)
+* Implement alternative to deprecated load_source [#4964](https://github.com/QMCPACK/qmcpack/pull/4964)
+* Updates for QMCPACK batched input generation [#4867](https://github.com/QMCPACK/qmcpack/pull/4867)
+* All inputs specify drivers where needed [#5278](https://github.com/QMCPACK/qmcpack/pull/5278)
+* Set correct cusp in SOC Jastrow [#4868](https://github.com/QMCPACK/qmcpack/pull/4868)
+* Support for Inti at ORNL [#5102](https://github.com/QMCPACK/qmcpack/pull/5102)
+* Support LLNL machines Lassen and Ruby [#5097](https://github.com/QMCPACK/qmcpack/pull/5097)
+* Support for NREL Kestrel [#5096](https://github.com/QMCPACK/qmcpack/pull/5096)
+* Support for ANL LCRC machine Improv [#4983](https://github.com/QMCPACK/qmcpack/pull/4983)
+* Support for SNL machines update [#4916](https://github.com/QMCPACK/qmcpack/pull/4916)
+* Updated PBS job states for ALCF Polaris [#4987](https://github.com/QMCPACK/qmcpack/pull/4987)
+* Bug fix for SOC J3 terms [#5200](https://github.com/QMCPACK/qmcpack/pull/5200)
+* Bug fix for 1RDM input generation [#5067](https://github.com/QMCPACK/qmcpack/pull/5067)
 
 ## [3.17.1] - 2023-08-25
 
@@ -28,7 +261,7 @@ This minor release is recommended for all users and includes a couple of build f
 
 ### NEXUS
 
-* NEXUS: Support for spinor inputs. [#4707](https://github.com/QMCPACK/qmcpack/pull/4707)
+* Support for spinor inputs. [#4707](https://github.com/QMCPACK/qmcpack/pull/4707)
 
 ## [3.17.0] - 2023-08-18
 
@@ -71,14 +304,14 @@ be ported towards v4 by the core QMCPACK developers without prior arrangement. P
 
 ### NEXUS
 
-* Nexus: Equilibration detection algorithm is now deterministic [#4557](https://github.com/QMCPACK/qmcpack/pull/4557)
-* Nexus: Support for Kagayaki cluster at JAIST [#4598](https://github.com/QMCPACK/qmcpack/pull/4598)
-* Nexus: GPU support fix for NERSC/Perlmutter [#4699](https://github.com/QMCPACK/qmcpack/pull/4699)
-* Nexus: Use simplices in convex_hull to support newer scipy versions [#4671](https://github.com/QMCPACK/qmcpack/pull/4671)
-* Nexus: Add pdos flag for Projwfc [#4655](https://github.com/QMCPACK/qmcpack/pull/4655)
-* Nexus: Adding crowds_serialize_walkers tag to dmc input list [#4651](https://github.com/QMCPACK/qmcpack/pull/4651)
-* Nexus: Qdens handles batched driver input/output [#4645](https://github.com/QMCPACK/qmcpack/pull/4645)
-* Nexus: Fix namelist read for Projwfc input [#4644](https://github.com/QMCPACK/qmcpack/pull/4644)
+* Equilibration detection algorithm is now deterministic [#4557](https://github.com/QMCPACK/qmcpack/pull/4557)
+* Support for Kagayaki cluster at JAIST [#4598](https://github.com/QMCPACK/qmcpack/pull/4598)
+* GPU support fix for NERSC/Perlmutter [#4699](https://github.com/QMCPACK/qmcpack/pull/4699)
+* Use simplices in convex_hull to support newer scipy versions [#4671](https://github.com/QMCPACK/qmcpack/pull/4671)
+* Add pdos flag for Projwfc [#4655](https://github.com/QMCPACK/qmcpack/pull/4655)
+* Adding crowds_serialize_walkers tag to dmc input list [#4651](https://github.com/QMCPACK/qmcpack/pull/4651)
+* Qdens handles batched driver input/output [#4645](https://github.com/QMCPACK/qmcpack/pull/4645)
+* Fix namelist read for Projwfc input [#4644](https://github.com/QMCPACK/qmcpack/pull/4644)
 
 ### Known problems
 
@@ -158,17 +391,17 @@ improving overall usability and maintainability.
 
 ### NEXUS
 
-* Nexus: Support for use of templates for job submission scripts [\#4344](https://github.com/QMCPACK/qmcpack/pull/4344)
-* Nexus: twist_info.dat files now added to results directory for easier analysis of twist average quantities
+* Support for use of templates for job submission scripts [\#4344](https://github.com/QMCPACK/qmcpack/pull/4344)
+* twist_info.dat files now added to results directory for easier analysis of twist average quantities
   [\#4302](https://github.com/QMCPACK/qmcpack/pull/4302)
-* Nexus: Initial support for Polaris at ALCF [\#4354](https://github.com/QMCPACK/qmcpack/pull/4354)
-* Nexus: Initial support for Perlmutter at NERSC [\#4356](https://github.com/QMCPACK/qmcpack/pull/4356)
-* Nexus: Support for gpusharing keyword for legacy CUDA [\#4403](https://github.com/QMCPACK/qmcpack/pull/4403)
-* Nexus: Support for handling multiple pickle protocols [\#4385](https://github.com/QMCPACK/qmcpack/pull/4385)
-* Nexus: CPU/GPU flags for batched code [\#4341](https://github.com/QMCPACK/qmcpack/pull/4341)
-* Nexus: Jastrow factors can be read from existing files [\#4339](https://github.com/QMCPACK/qmcpack/pull/4339)
-* Nexus: Fix VASP POSCAR write [\#4331](https://github.com/QMCPACK/qmcpack/pull/4331)
-* Nexus: Better handling of VASP pseudopotentials [\#4330](https://github.com/QMCPACK/qmcpack/pull/4330)
+* Initial support for Polaris at ALCF [\#4354](https://github.com/QMCPACK/qmcpack/pull/4354)
+* Initial support for Perlmutter at NERSC [\#4356](https://github.com/QMCPACK/qmcpack/pull/4356)
+* Support for gpusharing keyword for legacy CUDA [\#4403](https://github.com/QMCPACK/qmcpack/pull/4403)
+* Support for handling multiple pickle protocols [\#4385](https://github.com/QMCPACK/qmcpack/pull/4385)
+* CPU/GPU flags for batched code [\#4341](https://github.com/QMCPACK/qmcpack/pull/4341)
+* Jastrow factors can be read from existing files [\#4339](https://github.com/QMCPACK/qmcpack/pull/4339)
+* Fix VASP POSCAR write [\#4331](https://github.com/QMCPACK/qmcpack/pull/4331)
+* Better handling of VASP pseudopotentials [\#4330](https://github.com/QMCPACK/qmcpack/pull/4330)
 
 ### Known problems
 
@@ -239,21 +472,21 @@ be required, we recommend trying these drivers now and reporting any issues.
 
 ### NEXUS
 
-* Nexus: support to current batched driver style. Example inputs for batched
+* support to current batched driver style. Example inputs for batched
   runs using trial wavefunctions from QE are included in
   examples/qmcpack/rsqmc_quantum_espresso
   [\#4246](https://github.com/QMCPACK/qmcpack/pull/4246)
-* Nexus: add override_vp_parameters element
+* add override_vp_parameters element
   [\#4245](https://github.com/QMCPACK/qmcpack/pull/4245)
-* Nexus: fix convert4qmc hdf5 issue
+* fix convert4qmc hdf5 issue
   [\#4243](https://github.com/QMCPACK/qmcpack/pull/4243)
-* Nexus: extend angular channels for pseudopotentials up to l_max=21
+* extend angular channels for pseudopotentials up to l_max=21
   [\#4148](https://github.com/QMCPACK/qmcpack/pull/4148)
-* Nexus: Pass PYTHONPATH recorded at cmake step to nxs-test to ensure tests run
+* Pass PYTHONPATH recorded at cmake step to nxs-test to ensure tests run
   [\#3935](https://github.com/QMCPACK/qmcpack/pull/3935)
-* Nexus: Support for VASP keywords to version 6.3
+* Support for VASP keywords to version 6.3
   [\#4056](https://github.com/QMCPACK/qmcpack/pull/4056)
-* Nexus: Adding docs for limiting the number of simultaneously submitted jobs to
+* Adding docs for limiting the number of simultaneously submitted jobs to
   a queue  [\#4133](https://github.com/QMCPACK/qmcpack/pull/4133)
 
 ## [3.14.0] - 2022-04-06
@@ -277,7 +510,7 @@ introduced, currently optional, to disambiguate between the versions and their i
 
 ### NEXUS
 
-* Nexus: proper use of max\_seconds in legacy drivers [\#3877](https://github.com/QMCPACK/qmcpack/pull/3877)
+* proper use of max\_seconds in legacy drivers [\#3877](https://github.com/QMCPACK/qmcpack/pull/3877)
 
 ## [3.13.0] - 2022-02-16
 
@@ -306,13 +539,13 @@ calculations, and ongoing modernization of the code. This is a recommended relea
 
 ### NEXUS
 
-* Nexus: Add --user $USER to squeue command [\#3796](https://github.com/QMCPACK/qmcpack/pull/3796) 
-* Nexus: Add Example and tests for qdens-radial tool [\#3676](https://github.com/QMCPACK/qmcpack/pull/3676)
-* Nexus: Add Lowdin example [\#3666](https://github.com/QMCPACK/qmcpack/pull/3666)
-* Nexus: Fixed Nexus 'install' target [\#3720](https://github.com/QMCPACK/qmcpack/issues/3720)
-* Nexus: Harden Nexus excitation checks [\#3729](https://github.com/QMCPACK/qmcpack/pull/3729)
-* Nexus: Small fix to excitation checks [\#3701](https://github.com/QMCPACK/qmcpack/pull/3701)
-* Nexus: Faster configuration time [\#3706](https://github.com/QMCPACK/qmcpack/pull/3706)
+* Add --user $USER to squeue command [\#3796](https://github.com/QMCPACK/qmcpack/pull/3796) 
+* Add Example and tests for qdens-radial tool [\#3676](https://github.com/QMCPACK/qmcpack/pull/3676)
+* Add Lowdin example [\#3666](https://github.com/QMCPACK/qmcpack/pull/3666)
+* Fixed Nexus 'install' target [\#3720](https://github.com/QMCPACK/qmcpack/issues/3720)
+* Harden Nexus excitation checks [\#3729](https://github.com/QMCPACK/qmcpack/pull/3729)
+* Small fix to excitation checks [\#3701](https://github.com/QMCPACK/qmcpack/pull/3701)
+* Faster configuration time [\#3706](https://github.com/QMCPACK/qmcpack/pull/3706)
 
 ## [3.12.0] - 2021-12-08
 

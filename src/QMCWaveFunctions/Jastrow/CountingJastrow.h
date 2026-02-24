@@ -107,20 +107,20 @@ public:
 
   void extractOptimizableObjectRefs(UniqueOptObjRefs& opt_obj_refs) override { opt_obj_refs.push_back(*this); }
 
-  void checkInVariablesExclusive(opt_variables_type& active) final
+  void checkInVariablesExclusive(OptVariables& active) final
   {
     active.insertFrom(myVars);
     C->checkInVariables(active);
   }
 
-  void checkOutVariables(const opt_variables_type& active) override
+  void checkOutVariables(const OptVariables& active) override
   {
     myVars.getIndex(active);
     C->checkOutVariables(active);
   }
 
 
-  void resetParametersExclusive(const opt_variables_type& active) override
+  void resetParametersExclusive(const OptVariables& active) override
   {
     int ia, IJ, JI;
     std::string id;
@@ -473,7 +473,7 @@ public:
   }
 
   void evaluateDerivatives(ParticleSet& P,
-                           const opt_variables_type& active,
+                           const OptVariables& active,
                            Vector<ValueType>& dlogpsi,
                            Vector<ValueType>& dhpsioverpsi) override
   {
@@ -570,8 +570,8 @@ public:
       for (int I = 0; I < num_regions; ++I)
       {
         // get the number of active parameters for the Ith counting region
-        opt_variables_type I_vars = C->getVars(I);
-        int I_num_derivs          = I_vars.size();
+        OptVariables I_vars = C->getVars(I);
+        int I_num_derivs    = I_vars.size();
         // clear arrays before each evaluate
         std::fill(dCsum.begin(), dCsum.end(), 0);
         std::fill(dCggsum.begin(), dCggsum.end(), 0);
@@ -588,10 +588,10 @@ public:
           app_log() << "  Indices: ";
           std::copy(I_vars.Index.begin(), I_vars.Index.end(), std::ostream_iterator<int>(app_log(), ", "));
           app_log() << std::endl << "  Names: ";
-          for (auto it = I_vars.NameAndValue.begin(); it != I_vars.NameAndValue.end(); ++it)
+          for (auto it = I_vars.begin(); it != I_vars.end(); ++it)
             app_log() << (*it).first << ", ";
           app_log() << std::endl << "  Values: ";
-          for (auto it = I_vars.NameAndValue.begin(); it != I_vars.NameAndValue.end(); ++it)
+          for (auto it = I_vars.begin(); it != I_vars.end(); ++it)
             app_log() << (*it).second << ", ";
           // print out values from evaluate derivatives
           app_log() << std::endl << "  dCsum: ";
@@ -659,8 +659,8 @@ public:
       {
         app_log() << "    C[" << I << "] derivs: " << std::endl;
         // get the number of active parameters for the Ith counting region
-        opt_variables_type I_vars = C->getVars(I);
-        int I_num_derivs          = I_vars.size();
+        OptVariables I_vars = C->getVars(I);
+        int I_num_derivs    = I_vars.size();
         for (int pI = 0; pI < I_num_derivs; ++pI)
         {
           // index for active optimizable variables

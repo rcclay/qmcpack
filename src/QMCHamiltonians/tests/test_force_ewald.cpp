@@ -18,9 +18,7 @@
 #include "Particle/ParticleSetPool.h"
 #include "QMCHamiltonians/ForceChiesaPBCAA.h"
 #include "QMCHamiltonians/ForceCeperley.h"
-#include "QMCWaveFunctions/TrialWaveFunction.h"
 #include "LongRange/EwaldHandler3D.h"
-#include "Utilities/RuntimeOptions.h"
 
 #include <stdio.h>
 #include <string>
@@ -34,7 +32,7 @@ TEST_CASE("Chiesa Force BCC H Ewald3D", "[hamiltonian]")
 {
   Communicate* c = OHMMS::Controller;
 
-  CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> lattice;
+  Lattice lattice;
   lattice.BoxBConds = true; // periodic
   lattice.R.diagonal(3.77945227);
   lattice.LR_dim_cutoff = 40;
@@ -111,7 +109,7 @@ TEST_CASE("Chiesa Force BCC H Ewald3D", "[hamiltonian]")
 // test SR and LR pieces separately
 TEST_CASE("fccz sr lr clone", "[hamiltonian]")
 {
-  CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> lattice;
+  Lattice lattice;
   lattice.BoxBConds = true; // periodic
   lattice.R.diagonal(3.77945227);
   lattice.LR_dim_cutoff = 40;
@@ -177,14 +175,8 @@ TEST_CASE("fccz sr lr clone", "[hamiltonian]")
   CHECK(force.getForces()[1][1] == Approx(-0.078308730));
   CHECK(force.getForces()[1][2] == Approx(0.000000000));
 
-  // test cloning !!!! makeClone is not testable
-  // example call path:
-  //  QMCDrivers/CloneManager::makeClones
-  //  QMCHamiltonian::makeClone
-  //  OperatorBase::add2Hamiltonian -> ForceChiesaPBCAA::makeClone
-  RuntimeOptions runtime_options;
-  TrialWaveFunction psi(runtime_options);
-  std::unique_ptr<ForceChiesaPBCAA> clone(dynamic_cast<ForceChiesaPBCAA*>(force.makeClone(elec, psi).release()));
+  // test cloning
+  std::unique_ptr<ForceChiesaPBCAA> clone(dynamic_cast<ForceChiesaPBCAA*>(force.makeClone(elec).release()));
   clone->evaluate(elec);
   REQUIRE(clone->getAddIonIon() == force.getAddIonIon());
   CHECK(clone->getForcesIonIon()[0][0] == Approx(-0.0228366));
@@ -201,7 +193,7 @@ TEST_CASE("fccz sr lr clone", "[hamiltonian]")
 // 3 H atoms randomly distributed in a box
 TEST_CASE("fccz h3", "[hamiltonian]")
 {
-  CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> lattice;
+  Lattice lattice;
   lattice.BoxBConds = true; // periodic
   lattice.R.diagonal(3.77945227);
   lattice.LR_dim_cutoff = 40;

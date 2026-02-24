@@ -22,9 +22,17 @@ namespace qmcplusplus
    *  Exists to provide deterministic and known output to objects requiring SPOSet evaluations.      
    *
    */
-class ConstantSPOSet : public SPOSet
+template<typename T>
+class ConstantSPOSet : public SPOSetT<T>
 {
 public:
+  using SPOSet = SPOSetT<T>;
+
+  using ValueVector = typename SPOSet::ValueVector;
+  using ValueMatrix = typename SPOSet::ValueMatrix;
+  using GradVector  = typename SPOSet::GradVector;
+  using GradMatrix  = typename SPOSet::GradMatrix;
+
   ConstantSPOSet(const std::string& my_name) = delete;
 
   //Constructor needs number of particles and number of orbitals.  This is the minimum
@@ -36,7 +44,7 @@ public:
 
   std::string getClassName() const override;
 
-  void checkOutVariables(const opt_variables_type& active) override;
+  void checkOutVariables(const OptVariables& active) override;
 
   void setOrbitalSetSize(int norbs) override;
 
@@ -44,19 +52,19 @@ public:
   * @brief Setter method to set \phi_j(r_i). Stores input matrix in ref_psi_.
   * @param Nelec x Nion ValueType matrix of \phi_j(r_i)
   * @return void
-  */ 
+  */
   void setRefVals(const ValueMatrix& vals);
   /**
   * @brief Setter method to set \nabla_i \phi_j(r_i). Stores input matrix in ref_egrad_.
   * @param Nelec x Nion GradType matrix of \grad_i \phi_j(r_i)
   * @return void
-  */ 
+  */
   void setRefEGrads(const GradMatrix& grads);
   /**
   * @brief Setter method to set \nabla^2_i \phi_j(r_i). Stores input matrix in ref_elapl_.
   * @param Nelec x Nion GradType matrix of \grad^2_i \phi_j(r_i)
   * @return void
-  */ 
+  */
   void setRefELapls(const ValueMatrix& lapls);
 
   void evaluateValue(const ParticleSet& P, int iat, ValueVector& psi) override;
@@ -74,7 +82,7 @@ private:
   const int numparticles_; /// evaluate_notranspose arrays are nparticle x norb matrices.
                            /// To ensure consistent array sizing and enforcement,
                            /// we agree at construction how large these matrices will be.
-                           /// norb is stored in SPOSet::OrbitalSetSize.  
+                           /// norb is stored in SPOSet::OrbitalSetSize.
 
   //Value, electron gradient, and electron laplacian at "reference configuration".
   //i.e. before any attempted moves.

@@ -13,81 +13,105 @@
 
 namespace qmcplusplus
 {
-ConstantSPOSet::ConstantSPOSet(const std::string& my_name, const int nparticles, const int norbitals)
-    : SPOSet(my_name), numparticles_(nparticles)
+
+template<typename T>
+ConstantSPOSet<T>::ConstantSPOSet(const std::string& my_name, const int nparticles, const int norbitals)
+    : SPOSetT<T>(my_name), numparticles_(nparticles)
 {
-  OrbitalSetSize = norbitals;
-  ref_psi_.resize(numparticles_, OrbitalSetSize);
-  ref_egrad_.resize(numparticles_, OrbitalSetSize);
-  ref_elapl_.resize(numparticles_, OrbitalSetSize);
+  SPOSet::OrbitalSetSize = norbitals;
+  ref_psi_.resize(numparticles_, SPOSet::OrbitalSetSize);
+  ref_egrad_.resize(numparticles_, SPOSet::OrbitalSetSize);
+  ref_elapl_.resize(numparticles_, SPOSet::OrbitalSetSize);
 
   ref_psi_   = 0.0;
   ref_egrad_ = 0.0;
   ref_elapl_ = 0.0;
 };
 
-std::unique_ptr<SPOSet> ConstantSPOSet::makeClone() const
+template<typename T>
+std::unique_ptr<SPOSetT<T>> ConstantSPOSet<T>::makeClone() const
 {
-  auto myclone = std::make_unique<ConstantSPOSet>(my_name_, numparticles_, OrbitalSetSize);
+  auto myclone = std::make_unique<ConstantSPOSet>(SPOSet::my_name_, numparticles_, SPOSet::OrbitalSetSize);
   myclone->setRefVals(ref_psi_);
   myclone->setRefEGrads(ref_egrad_);
   myclone->setRefELapls(ref_elapl_);
   return myclone;
 };
 
-std::string ConstantSPOSet::getClassName() const { return "ConstantSPOSet"; };
+template<typename T>
+std::string ConstantSPOSet<T>::getClassName() const
+{ return "ConstantSPOSet"; }
 
-void ConstantSPOSet::checkOutVariables(const opt_variables_type& active)
+template<typename T>
+void ConstantSPOSet<T>::checkOutVariables(const OptVariables& active)
+{ APP_ABORT("ConstantSPOSet should not call checkOutVariables"); }
+
+template<typename T>
+void ConstantSPOSet<T>::setOrbitalSetSize(int norbs)
+{ APP_ABORT("ConstantSPOSet should not call setOrbitalSetSize()"); }
+
+template<typename T>
+void ConstantSPOSet<T>::setRefVals(const ValueMatrix& vals)
 {
-  APP_ABORT("ConstantSPOSet should not call checkOutVariables");
-};
-
-void ConstantSPOSet::setOrbitalSetSize(int norbs) { APP_ABORT("ConstantSPOSet should not call setOrbitalSetSize()"); }
-
-void ConstantSPOSet::setRefVals(const ValueMatrix& vals)
-{
-  assert(vals.cols() == OrbitalSetSize);
+  assert(vals.cols() == SPOSet::OrbitalSetSize);
   assert(vals.rows() == numparticles_);
   ref_psi_ = vals;
 };
-void ConstantSPOSet::setRefEGrads(const GradMatrix& grads)
+
+template<typename T>
+void ConstantSPOSet<T>::setRefEGrads(const GradMatrix& grads)
 {
-  assert(grads.cols() == OrbitalSetSize);
+  assert(grads.cols() == SPOSet::OrbitalSetSize);
   assert(grads.rows() == numparticles_);
   ref_egrad_ = grads;
 };
-void ConstantSPOSet::setRefELapls(const ValueMatrix& lapls)
+
+template<typename T>
+void ConstantSPOSet<T>::setRefELapls(const ValueMatrix& lapls)
 {
-  assert(lapls.cols() == OrbitalSetSize);
+  assert(lapls.cols() == SPOSet::OrbitalSetSize);
   assert(lapls.rows() == numparticles_);
   ref_elapl_ = lapls;
 };
 
-void ConstantSPOSet::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
+template<typename T>
+void ConstantSPOSet<T>::evaluateValue(const ParticleSet& P, int iat, ValueVector& psi)
 {
   const auto* vp = dynamic_cast<const VirtualParticleSet*>(&P);
-  int ptcl = vp ? vp->refPtcl : iat;
-  assert(psi.size() == OrbitalSetSize);
-  for (int iorb = 0; iorb < OrbitalSetSize; iorb++)
-    psi[iorb] = ref_psi_(ptcl, iorb);
+  const int ptcl = vp ? vp->refPtcl : iat;
+  auto& pset     = vp ? vp->getRefPS() : P;
+  assert(psi.size() == SPOSet::OrbitalSetSize);
+
+  const int group = pset.getGroupID(ptcl);
+  const int first = pset.first(group);
+  for (int iorb = 0; iorb < SPOSet::OrbitalSetSize; iorb++)
+    psi[iorb] = ref_psi_(ptcl - first, iorb);
 };
 
-void ConstantSPOSet::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi)
+template<typename T>
+void ConstantSPOSet<T>::evaluateVGL(const ParticleSet& P,
+                                    int iat,
+                                    ValueVector& psi,
+                                    GradVector& dpsi,
+                                    ValueVector& d2psi)
 {
-  for (int iorb = 0; iorb < OrbitalSetSize; iorb++)
+  const int group = P.getGroupID(iat);
+  const int first = P.first(group);
+  for (int iorb = 0; iorb < SPOSet::OrbitalSetSize; iorb++)
   {
-    psi[iorb]   = ref_psi_(iat, iorb);
-    dpsi[iorb]  = ref_egrad_(iat, iorb);
-    d2psi[iorb] = ref_elapl_(iat, iorb);
+    psi[iorb]   = ref_psi_(iat - first, iorb);
+    dpsi[iorb]  = ref_egrad_(iat - first, iorb);
+    d2psi[iorb] = ref_elapl_(iat - first, iorb);
   }
 };
 
-void ConstantSPOSet::evaluate_notranspose(const ParticleSet& P,
-                                          int first,
-                                          int last,
-                                          ValueMatrix& logdet,
-                                          GradMatrix& dlogdet,
-                                          ValueMatrix& d2logdet)
+template<typename T>
+void ConstantSPOSet<T>::evaluate_notranspose(const ParticleSet& P,
+                                             int first,
+                                             int last,
+                                             ValueMatrix& logdet,
+                                             GradMatrix& dlogdet,
+                                             ValueMatrix& d2logdet)
 {
   for (int iat = first, i = 0; iat < last; ++iat, ++i)
   {
@@ -97,4 +121,13 @@ void ConstantSPOSet::evaluate_notranspose(const ParticleSet& P,
     evaluateVGL(P, iat, v, g, l);
   }
 }
+
+#if !defined(MIXED_PRECISION)
+template class ConstantSPOSet<double>;
+template class ConstantSPOSet<std::complex<double>>;
+#endif
+template class ConstantSPOSet<float>;
+template class ConstantSPOSet<std::complex<float>>;
+
+
 } //namespace qmcplusplus

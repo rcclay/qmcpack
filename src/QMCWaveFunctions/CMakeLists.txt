@@ -110,10 +110,6 @@ if(OHMMS_DIM MATCHES 3)
     set(FERMION_SRCS ${FERMION_SRCS} PlaneWave/PWRealOrbitalSet.cpp)
   endif(QMC_COMPLEX)
 
-  if(NOT QMC_COMPLEX)
-    set(FERMION_SRCS ${FERMION_SRCS} AGPDeterminant.cpp AGPDeterminantBuilder.cpp)
-  endif(NOT QMC_COMPLEX)
-
 endif(OHMMS_DIM MATCHES 3)
 
 set(FERMION_SRCS
@@ -149,13 +145,14 @@ else(USE_OBJECT_TARGET)
 endif(USE_OBJECT_TARGET)
 
 target_include_directories(qmcwfs PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(qmcwfs PUBLIC qmcutil qmcparticle platform_runtime platform_LA)
+target_link_libraries(qmcwfs PUBLIC spline2 qmcutil qmcparticle
+platform_runtime platform_LA containers)
 target_link_libraries(qmcwfs PRIVATE einspline Math::FFTW3)
 
 add_library(qmcwfs_omptarget OBJECT ${JASTROW_OMPTARGET_SRCS} ${FERMION_OMPTARGET_SRCS})
 
 target_include_directories(qmcwfs_omptarget PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(qmcwfs_omptarget PUBLIC qmcutil qmcparticle containers platform_LA)
+target_link_libraries(qmcwfs_omptarget PUBLIC spline2 qmcutil qmcparticle containers platform_LA)
 
 target_link_libraries(qmcwfs PUBLIC qmcwfs_omptarget)
 

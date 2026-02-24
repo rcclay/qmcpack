@@ -17,7 +17,7 @@
 #include "Particle/ParticleSet.h"
 #include "QMCWaveFunctions/WaveFunctionComponent.h"
 #include "QMCWaveFunctions/Jastrow/RPAJastrow.h"
-#include "ParticleBase/ParticleAttribOps.h"
+#include "CPU/VectorOps.h"
 #include "ParticleIO/LatticeIO.h"
 
 
@@ -45,14 +45,13 @@ TEST_CASE("RPA Jastrow", "[wavefunction]")
   </simulationcell>
 </tmp>)";
   Libxml2Document doc;
-  bool okay = doc.parseFromString(xmltext);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(xmltext));
 
   xmlNodePtr root  = doc.getRoot();
   xmlNodePtr part1 = xmlFirstElementChild(root);
 
   // read lattice
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   LatticeParser lp(lattice);
   lp.put(part1);
   lattice.print(app_log(), 0);
@@ -88,8 +87,7 @@ TEST_CASE("RPA Jastrow", "[wavefunction]")
   xmltext = R"(<tmp>
   <jastrow name="Jee" type="Two-Body" function="rpa"/>
 </tmp>)";
-  okay    = doc.parseFromString(xmltext);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(xmltext));
 
   root = doc.getRoot();
 

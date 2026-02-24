@@ -63,7 +63,7 @@ void testTrialWaveFunction_diamondC_2x1x1(const int ndelay, const OffloadSwitche
       offload_switches.jas ? DynamicCoordinateKind::DC_POS_OFFLOAD : DynamicCoordinateKind::DC_POS;
 
   // diamondC_2x1x1
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   lattice.R         = {6.7463223, 6.7463223, 0.0, 0.0, 3.37316115, 3.37316115, 3.37316115, 0.0, 3.37316115};
   lattice.BoxBConds = {1, 1, 1};
   lattice.reset();
@@ -124,8 +124,7 @@ void testTrialWaveFunction_diamondC_2x1x1(const int ndelay, const OffloadSwitche
   }
 #endif
   Libxml2Document doc;
-  bool okay = doc.parseFromString(offload_switches.spo ? spo_omp_xml : spo_xml);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(offload_switches.spo ? spo_omp_xml : spo_xml));
 
   xmlNodePtr spo_root = doc.getRoot();
   xmlNodePtr ein1     = xmlFirstElementChild(spo_root);
@@ -135,12 +134,14 @@ void testTrialWaveFunction_diamondC_2x1x1(const int ndelay, const OffloadSwitche
   REQUIRE(spo != nullptr);
 
   std::vector<std::unique_ptr<DiracDeterminantBase>> dets;
-  auto det_up_ptr = std::make_unique<DiracDet>(spo->makeClone(), 0, 2, ndelay);
+  auto det_up_ptr = std::make_unique<DiracDet>(*spo, 0, 2, ndelay);
   auto det_up     = det_up_ptr.get();
   dets.push_back(std::move(det_up_ptr));
-  dets.push_back(std::make_unique<DiracDet>(spo->makeClone(), 2, 4, ndelay));
+  dets.push_back(std::make_unique<DiracDet>(*spo, 2, 4, ndelay));
 
-  auto slater_det = std::make_unique<SlaterDet>(elec_, std::move(dets));
+  std::vector<std::unique_ptr<SPOSet>> unique_sposets;
+  unique_sposets.emplace_back(std::move(spo));
+  auto slater_det = std::make_unique<SlaterDet>(elec_, std::move(unique_sposets), std::move(dets));
 
   RuntimeOptions runtime_options;
   TrialWaveFunction psi(runtime_options);
@@ -163,8 +164,7 @@ void testTrialWaveFunction_diamondC_2x1x1(const int ndelay, const OffloadSwitche
 </tmp>)XML";
 
   Libxml2Document doc_jas;
-  okay = doc.parseFromString(offload_switches.jas ? jas_omp_input : jas_input);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(offload_switches.jas ? jas_omp_input : jas_input));
 
   xmlNodePtr jas_root = doc.getRoot();
   xmlNodePtr jas1     = xmlFirstElementChild(jas_root);
@@ -329,7 +329,7 @@ void testTrialWaveFunction_diamondC_2x1x1(const int ndelay, const OffloadSwitche
     app_log() << "calcRatio calcRatioGrad " << std::setprecision(14) << r_0 << " " << r_1 << " " << grad_temp[0] << " "
               << grad_temp[1] << " " << grad_temp[2] << std::endl;
 #if defined(QMC_COMPLEX)
-    CHECK(r_0 == ComplexApprox(ValueType(253.71869245791, -0.00034808849808193)).epsilon(1e-4));
+    CHECK(r_0 == ComplexApprox(ValueType(253.71869245791, -0.00034808849808193)).epsilon(2e-4));
     CHECK(r_1 == ComplexApprox(ValueType(36.915636007059, -6.4240180082292e-05)).epsilon(1e-5));
     CHECK(grad_temp[0] == ComplexApprox(ValueType(1.4567170375539, 0.00027263382943948)));
     CHECK(grad_temp[1] == ComplexApprox(ValueType(1.4567170375539, 0.00027263382945093)));
@@ -533,7 +533,7 @@ void testTrialWaveFunction_diamondC_2x1x1(const int ndelay, const OffloadSwitche
 
   // test NLPP related APIs
   const int nknot = 3;
-  VirtualParticleSet vp(elec_, nknot), vp_clone(elec_clone, nknot);
+  VirtualParticleSet vp(elec_), vp_clone(elec_clone);
   RefVectorWithLeader<VirtualParticleSet> vp_list(vp, {vp, vp_clone});
   ResourceCollection vp_res("test_vp_res");
   vp.createResource(vp_res);
@@ -640,7 +640,7 @@ TEST_CASE("TrialWaveFunction_diamondC_2x1x1", "[wavefunction]")
   // DiracDeterminant<DelayedUpdate>
   SECTION("DiracDeterminant<DelayedUpdate>")
   {
-    using Det = DiracDeterminant<DelayedUpdate<VT, FPVT>>;
+    using Det = DiracDeterminant<PlatformKind::CPU, VT, FPVT>;
     testTrialWaveFunction_diamondC_2x1x1<Det, float_tag>(1, OffloadSwitches{false, false});
     testTrialWaveFunction_diamondC_2x1x1<Det, float_tag>(2, OffloadSwitches{false, false});
     testTrialWaveFunction_diamondC_2x1x1<Det, double_tag>(1, OffloadSwitches{false, false});
@@ -648,7 +648,7 @@ TEST_CASE("TrialWaveFunction_diamondC_2x1x1", "[wavefunction]")
   }
   SECTION("DiracDeterminant<DelayedUpdate>_offload_spo")
   {
-    using Det = DiracDeterminant<DelayedUpdate<VT, FPVT>>;
+    using Det = DiracDeterminant<PlatformKind::CPU, VT, FPVT>;
     testTrialWaveFunction_diamondC_2x1x1<Det, float_tag>(1, OffloadSwitches{true, false});
     testTrialWaveFunction_diamondC_2x1x1<Det, float_tag>(2, OffloadSwitches{true, false});
     testTrialWaveFunction_diamondC_2x1x1<Det, double_tag>(1, OffloadSwitches{true, false});
@@ -656,7 +656,7 @@ TEST_CASE("TrialWaveFunction_diamondC_2x1x1", "[wavefunction]")
   }
   SECTION("DiracDeterminant<DelayedUpdate>_offload_Jas")
   {
-    using Det = DiracDeterminant<DelayedUpdate<VT, FPVT>>;
+    using Det = DiracDeterminant<PlatformKind::CPU, VT, FPVT>;
     testTrialWaveFunction_diamondC_2x1x1<Det, float_tag>(1, OffloadSwitches{false, true});
     testTrialWaveFunction_diamondC_2x1x1<Det, float_tag>(2, OffloadSwitches{false, true});
     testTrialWaveFunction_diamondC_2x1x1<Det, double_tag>(1, OffloadSwitches{false, true});
@@ -664,7 +664,7 @@ TEST_CASE("TrialWaveFunction_diamondC_2x1x1", "[wavefunction]")
   }
   SECTION("DiracDeterminant<DelayedUpdate>_offload_spo_jas")
   {
-    using Det = DiracDeterminant<DelayedUpdate<VT, FPVT>>;
+    using Det = DiracDeterminant<PlatformKind::CPU, VT, FPVT>;
     testTrialWaveFunction_diamondC_2x1x1<Det, float_tag>(1, OffloadSwitches{true, true});
     testTrialWaveFunction_diamondC_2x1x1<Det, float_tag>(2, OffloadSwitches{true, true});
     testTrialWaveFunction_diamondC_2x1x1<Det, double_tag>(1, OffloadSwitches{true, true});

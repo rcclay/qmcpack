@@ -30,7 +30,7 @@ namespace qmcplusplus
 // PBC case
 TEST_CASE("Stress BCC H Ewald3D", "[hamiltonian]")
 {
-  CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> lattice;
+  Lattice lattice;
   lattice.BoxBConds = true; // periodic
   lattice.R.diagonal(3.24957306);
   lattice.LR_dim_cutoff = 40;
@@ -76,10 +76,10 @@ TEST_CASE("Stress BCC H Ewald3D", "[hamiltonian]")
   LRCoulombSingleton::CoulombDerivHandler = std::make_unique<EwaldHandler3D>(ions);
   LRCoulombSingleton::CoulombDerivHandler->initBreakup(ions);
 
-  StressPBC est(ions, elec, psi);
+  StressPBC est(ions, elec);
 
   elec.update();
-  est.evaluate(elec);
+  est.evaluate(psi, elec);
 
   // i-i = e-e stress is validated against Quantum Espresso's ewald method
   //  they are also double checked using finite-difference

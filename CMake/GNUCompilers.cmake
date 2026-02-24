@@ -69,6 +69,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 
+# Disable psABI diagnostic, mostly for std::pair<T,T> with C++17
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-psabi")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+
 # treat VLA as error
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=vla")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wvla")
@@ -152,8 +156,6 @@ endif(QMC_BUILD_STATIC)
 # Coverage
 if(ENABLE_GCOV)
   set(GCOV_SUPPORTED TRUE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -O0 -fno-inline -fno-inline-small-functions -fno-default-inline")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -O0 -fno-inline -fno-inline-small-functions -fno-default-inline")
 endif(ENABLE_GCOV)

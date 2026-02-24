@@ -79,8 +79,7 @@ void test_LiH_msd(const std::string& spo_xml_string,
   elec_.resetGroups();
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(spo_xml_string);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(spo_xml_string));
 
   xmlNodePtr ein_xml = doc.getRoot();
 
@@ -141,7 +140,7 @@ void test_LiH_msd(const std::string& spo_xml_string,
   CHECK(ratio == ValueApprox(1.374307585));
 
 
-  opt_variables_type active;
+  OptVariables active;
   twf.checkInVariables(active);
 
   const int nparam = active.size_of_active();
@@ -180,7 +179,7 @@ void test_LiH_msd(const std::string& spo_xml_string,
 
     CHECK(std::real(ratio_0) == Approx(2.350046921));
 
-    VirtualParticleSet VP(elec_, 2);
+    VirtualParticleSet VP(elec_);
     std::vector<PosType> newpos2(2);
     std::vector<ValueType> ratios2(2);
     newpos2[0] = newpos - elec_.R[1];
@@ -440,8 +439,7 @@ void test_Bi_msd(const std::string& spo_xml_string,
   elec_.resetGroups();
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(spo_xml_string);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(spo_xml_string));
 
   xmlNodePtr ein_xml = doc.getRoot();
 

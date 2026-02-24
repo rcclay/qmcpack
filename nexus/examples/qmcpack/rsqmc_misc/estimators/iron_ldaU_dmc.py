@@ -94,7 +94,6 @@ p2q = generate_pw2qmcpack(
     )
 
 optJ12 = generate_qmcpack(
-    driver               = 'legacy',
     identifier           = 'optJ12',
     path                 = basepath + 'optJ12',
     job                  = job(cores=16,threads=4,app='qmcpack'),
@@ -117,7 +116,6 @@ optJ12 = generate_qmcpack(
 
 J3_rcut = system.structure.rwigner()
 optJ123 = generate_qmcpack(
-    driver               = 'legacy',
     identifier           = 'optJ123',
     path                 = basepath + 'optJ123',
     job                  = job(cores=16,threads=4,app='qmcpack'),
@@ -142,28 +140,36 @@ optJ123 = generate_qmcpack(
 
 
 #===== Spin density =====
-from qmcpack_input import spindensity
+from nexus.qmcpack_input import spindensity
 sdens = spindensity(
     dr = (0.05, 0.05, 0.05),   # Bohr units
-    #grid = (100,100,100),  # Alternative to dr, an NxNxN grid can be specified
+    #grid = (100,100,100),     # Alternative to dr, an NxNxN grid can be specified
     )
 
+#===== Magnetization density =====
+from nexus.qmcpack_input import magnetizationdensity
+magdens = magnetizationdensity(
+    dr         = (0.05, 0.05, 0.05),    # Grid spacing in Bohr (matching spin density)
+    integrator = 'simpsons',            # Integration method
+    samples    = 9,                     # Number of samples for integration
+)
+
 #===== Energy density =====
-from qmcpack_input import generate_energydensity
+from nexus.qmcpack_input import generate_energydensity
 edens = generate_energydensity(
     coord = 'cartesian',
     grid  = (100, 100, 100),
 )
 
 #===== Momentum distribution =====
-from qmcpack_input import momentumdistribution
+from nexus.qmcpack_input import momentumdistribution
 mom_dist = momentumdistribution(
     samples = 40,
     kmax    = 8.0,
 )
 
 #===== One body density matrix =====
-from qmcpack_input import onebodydensitymatrices, sposet
+from nexus.qmcpack_input import onebodydensitymatrices, sposet
 nbnd = nscf.input.system.nbnd   # Total number of bands solved in KS-DFT for each spin channel (occupied + virtual)
 # For magnetic systems such as iron, the spin-up and spin-down 1RDMs are distinct.
 # Currently, the 1RDM estimator can only project onto a single specified basis.
@@ -184,14 +190,13 @@ dm_est = onebodydensitymatrices(
 # Finally, note that for large numbers of blocks, the stat.h5 file's disk footprint can get considerably large.
 # This is especially true for dense grids, say spindensity with (300x300x300).
 qmc = generate_qmcpack(
-    driver               = 'legacy',
     #skip_submit          = True,
     identifier           = 'qmc',
     path                 = basepath + 'qmc',
     job                  = job(cores=16,threads=4,app='qmcpack'),
     system               = system,
     twistnum             = 0,
-    estimators           = [sdens, edens, mom_dist, dm_est],  # Requested estimators. These will be run in all QMC series.
+    estimators           = [sdens, magdens, edens, mom_dist, dm_est],  # Requested estimators. These will be run in all QMC series.
     calculations         = [
     vmc(
         walkers_per_rank = 256,

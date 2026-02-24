@@ -129,7 +129,7 @@ void check_force_copy(ForceChiesaPBCAA& force, ForceChiesaPBCAA& force2)
 // PBC case
 TEST_CASE("Chiesa Force", "[hamiltonian]")
 {
-  CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> lattice;
+  Lattice lattice;
   lattice.BoxBConds = true; // periodic
   lattice.R.diagonal(5.0);
   lattice.LR_dim_cutoff = 25;
@@ -244,7 +244,7 @@ TEST_CASE("Chiesa Force", "[hamiltonian]")
   // copied.  Would be nice if there were a better way than inspection
   // to ensure all the members are copied/set up/tested.
 
-  std::unique_ptr<OperatorBase> base_force2 = force.makeClone(elec, psi);
+  std::unique_ptr<OperatorBase> base_force2 = force.makeClone(elec);
   ForceChiesaPBCAA* force2                  = dynamic_cast<ForceChiesaPBCAA*>(base_force2.get());
   REQUIRE(force2 != nullptr);
 
@@ -352,9 +352,9 @@ TEST_CASE("Ion-ion Force", "[hamiltonian]")
   elecSpecies(massIdx, upIdx)    = 1.0;
   elec.resetGroups();
 
-  CoulombPotential<OperatorBase::Return_t> ionForce(ions, false, true);
-  CoulombPotential<OperatorBase::Return_t> elecIonForce(elec, ions, true); // Should be zero
-  CoulombPotential<OperatorBase::Return_t> elecForce(elec, true, true);    // Should be zero
+  CoulombPotential ionForce(ions, false, true);
+  CoulombPotential elecIonForce(elec, ions, true); // Should be zero
+  CoulombPotential elecForce(elec, true, true);    // Should be zero
 
   double coeff0[3] = {-0.60355339059, -0.35355339059, 0.0};
   double coeff1[3] = {0.60355339059, -0.35355339059, 0.0};
@@ -466,9 +466,8 @@ TEST_CASE("AC Force", "[hamiltonian]")
 
   force_old.put(oldh1);
   force_new.put(newh1);
-  const auto vold = force_old.evaluate(elec);
-  const auto vnew = force_new.evaluate(elec);
-  force_old.resetTargetParticleSet(elec); // does nothing?
+  const auto vold = force_old.evaluate(psi, elec);
+  const auto vnew = force_new.evaluate(psi, elec);
 
   CHECK(vold == Approx(0));
   CHECK(vnew == Approx(0));

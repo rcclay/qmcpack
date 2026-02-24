@@ -12,9 +12,10 @@
 #include "catch.hpp"
 #include "EstimatorManagerInput.h"
 #include "EstimatorManagerInputTest.h"
-#include "EstimatorInputDelegates.h"
 #include "ValidOneBodyDensityMatricesInput.h"
 #include "ValidSpinDensityInput.h"
+#include "ValidStructureFactorInput.h"
+#include "test_EstimatorManagerInput.h"
 
 namespace qmcplusplus
 {
@@ -48,16 +49,14 @@ TEST_CASE("EstimatorManagerInput::testInserts", "[estimators]")
   {
     using Input = testing::ValidOneBodyDensityMatricesInput;
     Libxml2Document doc;
-    bool okay = doc.parseFromString(Input::getXml(Input::valid::VANILLA));
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(Input::getXml(Input::valid::VANILLA)));
     xmlNodePtr node = doc.getRoot();
     emit.testAppendFromXML<OneBodyDensityMatricesInput>(emi, node);
   }
   {
     Libxml2Document doc;
     using spin_input = testing::ValidSpinDensityInput;
-    bool okay        = doc.parseFromString(spin_input::xml[spin_input::GRID]);
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(spin_input::xml[spin_input::GRID]));
     xmlNodePtr node = doc.getRoot();
     emit.testAppendFromXML<SpinDensityInput>(emi, node);
   }
@@ -69,7 +68,7 @@ TEST_CASE("EstimatorManagerInput::readXML", "[estimators]")
   Libxml2Document estimators_doc = createEstimatorManagerNewInputXML();
   EstimatorManagerInput emi(estimators_doc.getRoot());
 
-  CHECK(emi.get_estimator_inputs().size() == 3);
+  CHECK(emi.get_estimator_inputs().size() == n_opest_new_input_xml);
   CHECK(emi.get_scalar_estimator_inputs().size() == 4);
 
   // CHECK EMI throws if unparsable estimators are in input.
@@ -77,8 +76,7 @@ TEST_CASE("EstimatorManagerInput::readXML", "[estimators]")
   std::string bad_estimator = R"XML(
 <estimator type="NeutrinoDensity" name="bad_estimator"/>
 )XML";
-  bool okay                 = doc.parseFromString(bad_estimator);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(bad_estimator));
   xmlNodePtr node      = doc.getRoot();
   int max_node_recurse = 1;
   estimators_doc.addChild(xmlCopyNode(node, max_node_recurse));
@@ -104,16 +102,14 @@ TEST_CASE("EstimatorManagerInput::moveFromEstimatorInputs", "[estimators]")
   {
     using Input = testing::ValidOneBodyDensityMatricesInput;
     Libxml2Document doc;
-    bool okay = doc.parseFromString(Input::getXml(Input::valid::VANILLA));
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(Input::getXml(Input::valid::VANILLA)));
     xmlNodePtr node = doc.getRoot();
     emit.testAppendFromXML<OneBodyDensityMatricesInput>(emi, node);
   }
   {
     Libxml2Document doc;
     using spin_input = testing::ValidSpinDensityInput;
-    bool okay        = doc.parseFromString(spin_input::xml[spin_input::GRID]);
-    REQUIRE(okay);
+    REQUIRE(doc.parseFromString(spin_input::xml[spin_input::GRID]));
     xmlNodePtr node = doc.getRoot();
     emit.testAppendFromXML<SpinDensityInput>(emi, node);
   }
@@ -131,12 +127,12 @@ TEST_CASE("EstimatorManagerInput::moveConstructor", "[estimators]")
   Libxml2Document estimators_doc = createEstimatorManagerNewInputXML();
   EstimatorManagerInput emi(estimators_doc.getRoot());
 
-  CHECK(emi.get_estimator_inputs().size() == 3);
+  CHECK(emi.get_estimator_inputs().size() == n_opest_new_input_xml);
   CHECK(emi.get_scalar_estimator_inputs().size() == 4);
 
   EstimatorManagerInput emi_moved_to(std::move(emi));
 
-  CHECK(emi_moved_to.get_estimator_inputs().size() == 3);
+  CHECK(emi_moved_to.get_estimator_inputs().size() == n_opest_new_input_xml);
   CHECK(emi_moved_to.get_scalar_estimator_inputs().size() == 4);
 }
 
@@ -149,8 +145,56 @@ TEST_CASE("EstimatorManagerInput::MergeConstructor", "[estimators]")
   EstimatorManagerInput emi_local(estimators_doc.getRoot());
   EstimatorManagerInput emi_merged{emi_global, emi_local};
 
-  CHECK(emi_merged.get_estimator_inputs().size() == 3);
+  CHECK(emi_merged.get_estimator_inputs().size() == n_opest_new_input_xml);
   CHECK(emi_merged.get_scalar_estimator_inputs().size() == 5);
+}
+
+TEST_CASE("EstimatorManagerInput::Name")
+{
+  // This test case covers the logic of name and type initialization when
+  // they are missing input as well as there proper handling within
+  // the various estimator input classes.
+  //
+  // This seems better to test at the integration level than at
+  // individual input since the emni and the est inputs must work
+  // together to have these always have the semantics expected.
+  //
+  // It should also cover breakage in the canned estimator manager
+  // input mocking.
+  using namespace testing;
+  Libxml2Document estimators_doc = createEstimatorManagerNewInputXML();
+  EstimatorManagerInput emi_local(estimators_doc.getRoot());
+
+  auto checkNameType = [](EstimatorManagerInput& emi, auto ent) {
+    using EstimatorInput = typename decltype(ent)::Type;
+    auto indexes         = emi.getEstimatorTypeIndexes<EstimatorInput>();
+    for (auto index : indexes)
+    {
+      auto& eden_input = std::get<EstimatorInput>(emi.get_estimator_inputs()[index]);
+      CHECK(eden_input.get_name() == ent.name);
+      CHECK(eden_input.get_type() == ent.type);
+    }
+  };
+  checkNameType(emi_local, ExpectedEstimatorInputNameType<EnergyDensityInput>{});
+  checkNameType(emi_local, ExpectedEstimatorInputNameType<OneBodyDensityMatricesInput>{});
+  checkNameType(emi_local, ExpectedEstimatorInputNameType<MomentumDistributionInput>{});
+  checkNameType(emi_local, ExpectedEstimatorInputNameType<StructureFactorInput>{});
+
+  // auto& estimator_inputs = emi_merged.get_estimator_inputs();
+  // auto eden_indexes      = emi_merged.getEstimatorTypeIndexes<EnergyDensityInput>();
+  // for (auto eden_index : eden_indexes)
+  // {
+  //   auto& eden_input = std::get<EnergyDensityInput>(estimator_inputs[eden_index]);
+  //   CHECK(eden_input.get_name() == "EDcell");
+  //   CHECK(eden_input.get_type() == "EnergyDensity");
+  // }
+  // auto one_body_indexes = emi_merged.getEstimatorTypeIndexes<EnergyDensityInput>();
+  // for (auto one_body_index : one_body_indexes)
+  // {
+  //   auto& one_body_input = std::get<OneBodyDensityMatricesInput>(estimator_inputs[one_body_index]);
+  //   CHECK(one_body_input.get_name() == "OneBodyDensityMatrices");
+  //   CHECK(one_body_input.get_type() == "OneBodyDensityMatrices");
+  // }
 }
 
 } // namespace qmcplusplus

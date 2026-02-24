@@ -20,6 +20,7 @@
 #include "QMCHamiltonian.h"
 #include "Particle/DistanceTable.h"
 #include "QMCWaveFunctions/TrialWaveFunction.h"
+#include "QMCWaveFunctions/Fermion/MultiSlaterDetTableMethod.h"
 #include "Utilities/TimerManager.h"
 #include "BareKineticEnergy.h"
 #include "Containers/MinimalContainers/RecordArray.hpp"
@@ -525,14 +526,14 @@ void QMCHamiltonian::finalize_traces()
  *@param P input configuration containing N particles
  *@return the local energy
  */
-QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluate(ParticleSet& P)
+QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluate(TrialWaveFunction& psi, ParticleSet& P)
 {
   ScopedTimer local_timer(ham_timer_);
   LocalEnergy = 0.0;
   for (int i = 0; i < H.size(); ++i)
   {
     ScopedTimer h_timer(my_timers_[i]);
-    H[i]->evaluate(P);
+    H[i]->evaluate(psi, P);
     updateComponent(*H[i], *this, P);
 #if !defined(REMOVE_TRACEMANAGER)
     H[i]->collectScalarTraces();
@@ -542,14 +543,14 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluate(ParticleSet& P)
   return LocalEnergy;
 }
 
-QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateDeterministic(ParticleSet& P)
+QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateDeterministic(TrialWaveFunction& psi, ParticleSet& P)
 {
   ScopedTimer local_timer(ham_timer_);
   LocalEnergy = 0.0;
   for (int i = 0; i < H.size(); ++i)
   {
     ScopedTimer h_timer(my_timers_[i]);
-    H[i]->evaluateDeterministic(P);
+    H[i]->evaluateDeterministic(psi, P);
     updateComponent(*H[i], *this, P);
 #if !defined(REMOVE_TRACEMANAGER)
     H[i]->collectScalarTraces();
@@ -634,8 +635,9 @@ std::vector<QMCHamiltonian::FullPrecRealType> QMCHamiltonian::mw_evaluate(
   return local_energies;
 }
 
-QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateValueAndDerivatives(ParticleSet& P,
-                                                                             const opt_variables_type& optvars,
+QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateValueAndDerivatives(TrialWaveFunction& psi,
+                                                                             ParticleSet& P,
+                                                                             const OptVariables& optvars,
                                                                              Vector<ValueType>& dlogpsi,
                                                                              Vector<ValueType>& dhpsioverpsi)
 {
@@ -647,13 +649,13 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateValueAndDerivatives(Par
 
   {
     ScopedTimer h_timer(my_timers_[0]);
-    LocalEnergy = KineticEnergy = H[0]->evaluateValueAndDerivatives(P, optvars, dlogpsi, dhpsioverpsi);
+    LocalEnergy = KineticEnergy = H[0]->evaluateValueAndDerivatives(psi, P, optvars, dlogpsi, dhpsioverpsi);
   }
 
   for (int i = 1; i < H.size(); ++i)
   {
     ScopedTimer h_timer(my_timers_[i]);
-    LocalEnergy += H[i]->evaluateValueAndDerivatives(P, optvars, dlogpsi, dhpsioverpsi);
+    LocalEnergy += H[i]->evaluateValueAndDerivatives(psi, P, optvars, dlogpsi, dhpsioverpsi);
   }
   return LocalEnergy;
 }
@@ -662,7 +664,7 @@ std::vector<QMCHamiltonian::FullPrecRealType> QMCHamiltonian::mw_evaluateValueAn
     const RefVectorWithLeader<QMCHamiltonian>& ham_list,
     const RefVectorWithLeader<TrialWaveFunction>& wf_list,
     const RefVectorWithLeader<ParticleSet>& p_list,
-    const opt_variables_type& optvars,
+    const OptVariables& optvars,
     RecordArray<ValueType>& dlogpsi,
     RecordArray<ValueType>& dhpsioverpsi)
 {
@@ -679,7 +681,8 @@ std::vector<QMCHamiltonian::FullPrecRealType> QMCHamiltonian::mw_evaluateValueAn
       ScopedTimer local_timer(ham_leader.my_timers_[i_ham_op]);
       const auto HC_list(extract_HC_list(ham_list, i_ham_op));
 
-      ham_leader.H[i_ham_op]->mw_evaluateWithParameterDerivatives(HC_list, p_list, optvars, dlogpsi, dhpsioverpsi);
+      ham_leader.H[i_ham_op]->mw_evaluateWithParameterDerivatives(HC_list, wf_list, p_list, optvars, dlogpsi,
+                                                                  dhpsioverpsi);
 
       for (int iw = 0; iw < ham_list.size(); iw++)
         updateComponent(HC_list[iw], ham_list[iw], p_list[iw]);
@@ -695,24 +698,26 @@ std::vector<QMCHamiltonian::FullPrecRealType> QMCHamiltonian::mw_evaluateValueAn
   return local_energies;
 }
 
-QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateVariableEnergy(ParticleSet& P, bool free_nlpp)
+QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateVariableEnergy(TrialWaveFunction& psi,
+                                                                        ParticleSet& P,
+                                                                        bool free_nlpp)
 {
   RealType nlpp = 0.0;
-  RealType ke   = H[0]->evaluate(P);
+  RealType ke   = H[0]->evaluate(psi, P);
   if (free_nlpp)
     for (int i = 1; i < H.size(); ++i)
     {
       if (H[i]->isNonLocal())
-        nlpp += H[i]->evaluate(P);
+        nlpp += H[i]->evaluate(psi, P);
     }
   return ke + nlpp;
 }
 
-void QMCHamiltonian::auxHevaluate(ParticleSet& P)
+void QMCHamiltonian::auxHevaluate(TrialWaveFunction& psi, ParticleSet& P)
 {
   for (int i = 0; i < auxH.size(); ++i)
   {
-    RealType sink = auxH[i]->evaluate(P);
+    RealType sink = auxH[i]->evaluate(psi, P);
     auxH[i]->setObservables(Observables);
 #if !defined(REMOVE_TRACEMANAGER)
     auxH[i]->collectScalarTraces();
@@ -723,7 +728,7 @@ void QMCHamiltonian::auxHevaluate(ParticleSet& P)
 }
 
 ///This is more efficient. Only calculate auxH elements if moves are accepted.
-void QMCHamiltonian::auxHevaluate(ParticleSet& P, Walker_t& ThisWalker)
+void QMCHamiltonian::auxHevaluate(TrialWaveFunction& psi, ParticleSet& P, Walker_t& ThisWalker)
 {
 #if !defined(REMOVE_TRACEMANAGER)
   collect_walker_traces(ThisWalker, P.current_step);
@@ -731,7 +736,7 @@ void QMCHamiltonian::auxHevaluate(ParticleSet& P, Walker_t& ThisWalker)
   for (int i = 0; i < auxH.size(); ++i)
   {
     auxH[i]->setHistories(ThisWalker);
-    RealType sink = auxH[i]->evaluate(P);
+    RealType sink = auxH[i]->evaluate(psi, P);
     auxH[i]->setObservables(Observables);
 #if !defined(REMOVE_TRACEMANAGER)
     auxH[i]->collectScalarTraces();
@@ -740,7 +745,11 @@ void QMCHamiltonian::auxHevaluate(ParticleSet& P, Walker_t& ThisWalker)
   }
 }
 ///Evaluate properties only.
-void QMCHamiltonian::auxHevaluate(ParticleSet& P, Walker_t& ThisWalker, bool do_properties, bool do_collectables)
+void QMCHamiltonian::auxHevaluate(TrialWaveFunction& psi,
+                                  ParticleSet& P,
+                                  Walker_t& ThisWalker,
+                                  bool do_properties,
+                                  bool do_collectables)
 {
 #if !defined(REMOVE_TRACEMANAGER)
   collect_walker_traces(ThisWalker, P.current_step);
@@ -752,7 +761,7 @@ void QMCHamiltonian::auxHevaluate(ParticleSet& P, Walker_t& ThisWalker, bool do_
     if ((is_property && do_properties) || (is_collectable && do_collectables))
     {
       auxH[i]->setHistories(ThisWalker);
-      RealType sink = auxH[i]->evaluate(P);
+      RealType sink = auxH[i]->evaluate(psi, P);
       auxH[i]->setObservables(Observables);
 #if !defined(REMOVE_TRACEMANAGER)
       auxH[i]->collectScalarTraces();
@@ -781,14 +790,14 @@ void QMCHamiltonian::rejectedMove(ParticleSet& P, Walker_t& ThisWalker)
   }
 }
 
-QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateWithToperator(ParticleSet& P)
+QMCHamiltonian::FullPrecRealType QMCHamiltonian::evaluateWithToperator(TrialWaveFunction& psi, ParticleSet& P)
 {
   ScopedTimer local_timer(ham_timer_);
   LocalEnergy = 0.0;
   for (int i = 0; i < H.size(); ++i)
   {
     ScopedTimer h_timer(my_timers_[i]);
-    H[i]->evaluateWithToperator(P);
+    H[i]->evaluateWithToperator(psi, P);
     updateComponent(*H[i], *this, P);
 #if !defined(REMOVE_TRACEMANAGER)
     H[i]->collectScalarTraces();
@@ -848,8 +857,8 @@ std::vector<QMCHamiltonian::FullPrecRealType> QMCHamiltonian::mw_evaluateWithTop
 
   return local_energies;
 }
-void QMCHamiltonian::evaluateElecGrad(ParticleSet& P,
-                                      TrialWaveFunction& psi,
+void QMCHamiltonian::evaluateElecGrad(TrialWaveFunction& psi,
+                                      ParticleSet& P,
                                       ParticleSet::ParticlePos& Egrad,
                                       RealType delta)
 {
@@ -869,14 +878,14 @@ void QMCHamiltonian::evaluateElecGrad(ParticleSet& P,
       P.R[iel][dim] = rp;
       P.update();
       psi.evaluateLog(P);
-      ep = evaluateDeterministic(P);
+      ep = evaluateDeterministic(psi, P);
 
       //minus
       RealType rm   = r0 - delta;
       P.R[iel][dim] = rm;
       P.update();
       psi.evaluateLog(P);
-      em = evaluateDeterministic(P);
+      em = evaluateDeterministic(psi, P);
 
       Egrad[iel][dim] = (ep - em) / (2.0 * delta);
       P.R[iel][dim]   = r0;
@@ -914,23 +923,6 @@ QMCHamiltonian::FullPrecRealType QMCHamiltonian::getEnsembleAverage()
   return sum;
 }
 
-/** return pointer to the QMCHamtiltonian with the name
- *@param aname the name of Hamiltonian
- *@return the pointer to the named term.
- *
- * If not found, return 0
- */
-OperatorBase* QMCHamiltonian::getHamiltonian(const std::string& aname)
-{
-  for (int i = 0; i < H.size(); ++i)
-    if (H[i]->getName() == aname)
-      return H[i].get();
-  for (int i = 0; i < auxH.size(); ++i)
-    if (auxH[i]->getName() == aname)
-      return auxH[i].get();
-  return nullptr;
-}
-
 RefVector<OperatorBase> QMCHamiltonian::getTWFDependentComponents()
 {
   RefVector<OperatorBase> components;
@@ -938,14 +930,6 @@ RefVector<OperatorBase> QMCHamiltonian::getTWFDependentComponents()
     if (H[i]->dependsOnWaveFunction())
       components.push_back(*H[i]);
   return components;
-}
-
-void QMCHamiltonian::resetTargetParticleSet(ParticleSet& P)
-{
-  for (int i = 0; i < H.size(); i++)
-    H[i]->resetTargetParticleSet(P);
-  for (int i = 0; i < auxH.size(); i++)
-    auxH[i]->resetTargetParticleSet(P);
 }
 
 void QMCHamiltonian::setRandomGenerator(RandomBase<FullPrecRealType>* rng)
@@ -956,11 +940,11 @@ void QMCHamiltonian::setRandomGenerator(RandomBase<FullPrecRealType>* rng)
     auxH[i]->setRandomGenerator(rng);
 }
 
-int QMCHamiltonian::makeNonLocalMoves(ParticleSet& P, NonLocalTOperator& move_op)
+int QMCHamiltonian::makeNonLocalMoves(TrialWaveFunction& psi, ParticleSet& P, NonLocalTOperator& move_op)
 {
   int num_moves = 0;
   for (int i = 0; i < H.size(); ++i)
-    num_moves += H[i]->makeNonLocalMovesPbyP(P, move_op);
+    num_moves += H[i]->makeNonLocalMovesPbyP(psi, P, move_op);
   return num_moves;
 }
 
@@ -972,7 +956,7 @@ std::vector<int> QMCHamiltonian::mw_makeNonLocalMoves(const RefVectorWithLeader<
 {
   std::vector<int> num_accepts(ham_list.size(), 0);
   for (int iw = 0; iw < ham_list.size(); ++iw)
-    num_accepts[iw] = ham_list[iw].makeNonLocalMoves(p_list[iw], move_op);
+    num_accepts[iw] = ham_list[iw].makeNonLocalMoves(wf_list[iw], p_list[iw], move_op);
   return num_accepts;
 }
 
@@ -1050,17 +1034,21 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
   //resize everything;
   const int ngroups = psi_wrapper_in.numGroups();
 
-  std::vector<ValueMatrix> X_;    //Working arrays for derivatives
-  std::vector<ValueMatrix> Minv_; //Working array for derivatives.
-  std::vector<ValueMatrix> B_;
-  std::vector<ValueMatrix> B_gs_;
-  std::vector<ValueMatrix> M_;
-  std::vector<ValueMatrix> M_gs_;
+  std::vector<ValueMatrix> X_;       // [Nptcl, Nptcl] auxiliary X matrix (Minv.B.Minv)
+  std::vector<ValueMatrix> Minv_;    // [Nptcl, Nptcl] inverse slater matrix over GS orbs
+  std::vector<ValueMatrix> B_;       // [Nptcl, Norb] B matrix (Op(M)) over all orbs
+  std::vector<ValueMatrix> B_gs_;    // [Nptcl, Nocc] subset of B over GS orbs
+  std::vector<ValueMatrix> M_;       // [Nptcl, Norb] slater matrix over all orbs
+  std::vector<ValueMatrix> M_gs_;    // [Nptcl, Nocc] subset of M over GS orbs
+  std::vector<ValueMatrix> Minv_B_;  // [Nptcl, Norb] Minv.B
+  std::vector<ValueMatrix> Minv_Mv_; // [Nptcl, Nvirt] Minv.M over virtual orbs
 
-  std::vector<std::vector<ValueMatrix>> dM_;
-  std::vector<std::vector<ValueMatrix>> dM_gs_;
-  std::vector<std::vector<ValueMatrix>> dB_;
-  std::vector<std::vector<ValueMatrix>> dB_gs_;
+  std::vector<std::vector<ValueMatrix>> dM_;      // Derivative of slater matrix
+  std::vector<std::vector<ValueMatrix>> dB_;      // Derivative of B matrix
+  std::vector<std::vector<ValueMatrix>> dM_gs_;   // subset of dM over GS orbs
+  std::vector<std::vector<ValueMatrix>> dB_gs_;   // subset of dB over GS orbs
+  std::vector<std::vector<ValueMatrix>> Minv_dM_; // Minv.dM
+  std::vector<std::vector<ValueMatrix>> Minv_dB_; // Minv.dB
 
   {
     M_.resize(ngroups);
@@ -1069,6 +1057,8 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
     B_.resize(ngroups);
     B_gs_.resize(ngroups);
     Minv_.resize(ngroups);
+    Minv_B_.resize(ngroups);
+    Minv_Mv_.resize(ngroups);
 
     for (int gid = 0; gid < ngroups; gid++)
     {
@@ -1077,9 +1067,12 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
       const int first  = P.first(gid);
       const int last   = P.last(gid);
       const int nptcls = last - first;
+      const int nvirt  = norbs - nptcls;
 
       M_[sid].resize(nptcls, norbs);
       B_[sid].resize(nptcls, norbs);
+      Minv_B_[sid].resize(nptcls, norbs);
+      Minv_Mv_[sid].resize(nptcls, nvirt);
 
       M_gs_[sid].resize(nptcls, nptcls);
       Minv_[sid].resize(nptcls, nptcls);
@@ -1088,9 +1081,11 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
     }
 
     dM_.resize(OHMMS_DIM);
-    dM_gs_.resize(OHMMS_DIM);
     dB_.resize(OHMMS_DIM);
+    dM_gs_.resize(OHMMS_DIM);
     dB_gs_.resize(OHMMS_DIM);
+    Minv_dM_.resize(OHMMS_DIM);
+    Minv_dB_.resize(OHMMS_DIM);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
@@ -1098,6 +1093,8 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
       dB_[idim].resize(ngroups);
       dM_gs_[idim].resize(ngroups);
       dB_gs_[idim].resize(ngroups);
+      Minv_dM_[idim].resize(ngroups);
+      Minv_dB_[idim].resize(ngroups);
 
       for (int gid = 0; gid < ngroups; gid++)
       {
@@ -1111,6 +1108,8 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
         dB_[idim][sid].resize(nptcls, norbs);
         dM_gs_[idim][sid].resize(nptcls, nptcls);
         dB_gs_[idim][sid].resize(nptcls, nptcls);
+        Minv_dM_[idim][sid].resize(nptcls, norbs);
+        Minv_dB_[idim][sid].resize(nptcls, norbs);
       }
     }
     psi_wrapper_in.wipeMatrices(M_);
@@ -1119,13 +1118,17 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
     psi_wrapper_in.wipeMatrices(B_);
     psi_wrapper_in.wipeMatrices(Minv_);
     psi_wrapper_in.wipeMatrices(B_gs_);
+    psi_wrapper_in.wipeMatrices(Minv_B_);
+    psi_wrapper_in.wipeMatrices(Minv_Mv_);
 
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
       psi_wrapper_in.wipeMatrices(dM_[idim]);
-      psi_wrapper_in.wipeMatrices(dM_gs_[idim]);
       psi_wrapper_in.wipeMatrices(dB_[idim]);
+      psi_wrapper_in.wipeMatrices(dM_gs_[idim]);
       psi_wrapper_in.wipeMatrices(dB_gs_[idim]);
+      psi_wrapper_in.wipeMatrices(Minv_dM_[idim]);
+      psi_wrapper_in.wipeMatrices(Minv_dB_[idim]);
     }
   }
   ParticleSet::ParticleGradient wfgradraw_(ions.getTotalNum());
@@ -1152,8 +1155,52 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
 
   {
     psi_wrapper_in.getGSMatrices(B_, B_gs_);
-    psi_wrapper_in.buildX(Minv_, B_gs_, X_);
+    // X_ is now built by buildIntermediates; could go back to buildX depending on future refactoring
+    // psi_wrapper_in.buildX(Minv_, B_gs_, X_);
+    psi_wrapper_in.buildIntermediates(Minv_, B_, M_, X_, Minv_B_, Minv_Mv_);
   }
+
+
+  // ===== Initialize some multidet quantities =====
+
+  // values for MultiDiracDet i, excited det j (also include GS det at j==0)
+  std::vector<Vector<ValueType>> fvals_O;     // (O D[i][j]/D[i][j])
+  std::vector<Vector<ValueType>> fvals_dmu;   // d/dmu(log(D[i][j])
+  std::vector<Vector<ValueType>> fvals_dmu_O; // d/dmu(O D[i][j]/D[i][j])
+
+  // same order as Dets in msd; index of associated SPOset in psi_wrapper_in.sposets_
+  std::vector<int> mdd_spo_ids;
+  std::vector<const WaveFunctionComponent*> mdd_list;
+
+  if (psi_wrapper_in.hasMultiSlaterDet())
+  {
+    const auto& msd = static_cast<const MultiSlaterDetTableMethod&>(psi_wrapper_in.getMultiSlaterDet());
+
+    auto n_mdd = msd.getDetSize();
+    fvals_O.resize(n_mdd);
+    fvals_dmu.resize(n_mdd);
+    fvals_dmu_O.resize(n_mdd);
+
+    for (size_t i_mdd = 0; i_mdd < n_mdd; i_mdd++)
+    {
+      const MultiDiracDeterminant& multidiracdet_i = msd.getDet(i_mdd);
+      mdd_list.push_back(static_cast<const WaveFunctionComponent*>(&multidiracdet_i));
+      // particle group id for this multidiracdet
+      const int gid = P.getGroupID(multidiracdet_i.getFirstIndex());
+      // SPOSet location in psi_wrapper_in.sposets_ for this particle group
+      const int sid = psi_wrapper_in.getTWFGroupIndex(gid);
+      mdd_spo_ids.push_back(sid);
+      fvals_O[i_mdd].resize(multidiracdet_i.getNumDets());
+      fvals_dmu[i_mdd].resize(multidiracdet_i.getNumDets());
+      fvals_dmu_O[i_mdd].resize(multidiracdet_i.getNumDets());
+    }
+    psi_wrapper_in.wipeVectors(fvals_O);
+
+    // compute (OD/D) for all excited DiracDets D
+    psi_wrapper_in.computeMDDerivatives_Obs(Minv_Mv_, Minv_B_, mdd_spo_ids, mdd_list, fvals_O);
+  }
+
+
   //And now we compute the 3N force derivatives.  3 at a time for each atom.
   for (int iat = 0; iat < ions.getTotalNum(); iat++)
   {
@@ -1165,9 +1212,11 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
       psi_wrapper_in.wipeMatrices(dM_[idim]);
-      psi_wrapper_in.wipeMatrices(dM_gs_[idim]);
       psi_wrapper_in.wipeMatrices(dB_[idim]);
+      psi_wrapper_in.wipeMatrices(dM_gs_[idim]);
       psi_wrapper_in.wipeMatrices(dB_gs_[idim]);
+      psi_wrapper_in.wipeMatrices(Minv_dM_[idim]);
+      psi_wrapper_in.wipeMatrices(Minv_dB_[idim]);
     }
 
     {
@@ -1179,18 +1228,53 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
       if (H[i]->dependsOnWaveFunction())
         H[i]->evaluateOneBodyOpMatrixForceDeriv(P, ions, psi_wrapper_in, iat, dB_);
 
+
+    psi_wrapper_in.buildIntermediates_dmu(Minv_, dB_, dM_, Minv_dB_, Minv_dM_);
+
     for (int idim = 0; idim < OHMMS_DIM; idim++)
     {
       psi_wrapper_in.getGSMatrices(dB_[idim], dB_gs_[idim]);
       psi_wrapper_in.getGSMatrices(dM_[idim], dM_gs_[idim]);
 
-      ValueType fval          = 0.0;
-      fval                    = psi_wrapper_in.computeGSDerivative(Minv_, X_, dM_gs_[idim], dB_gs_[idim]);
-      dedr_complex[iat][idim] = fval;
+      psi_wrapper_in.wipeVectors(fvals_dmu);
+      psi_wrapper_in.wipeVectors(fvals_dmu_O);
 
-      ValueType wfcomp = 0.0;
-      wfcomp           = psi_wrapper_in.trAB(Minv_, dM_gs_[idim]);
-      wfgradraw_[iat][idim] += wfcomp; //The determinantal piece of the WF grad.
+      // d_mu(OPsi/Psi)
+      ValueType fval_dmu_O = 0.0;
+      // d_mu(log Psi)
+      ValueType fval_dmu = 0.0;
+
+      // this is OD/D terms, which does not depend on d_mu, so will be same for every ionid/dim
+      // we don't use it here, but computeMDDerivatives_total returns it (and needs it internally anyway, so it adds no additional cost)
+      ValueType fval_O = 0.0;
+
+
+      /// NOTE: depending on which matrix products we are precomputing, we may be able to save a factor of Nptcl here
+      ///       (Minv.dB - X.dM) == (Minv_dB - Minv_B.Minv_dM)
+      ///       not worth doing the extra gemm if we only need the trace here,
+      ///       but if we're already doing the gemm for the multidet terms, then we can use that here
+      fval_dmu_O = psi_wrapper_in.computeGSDerivative(Minv_, X_, dM_gs_[idim], dB_gs_[idim]);
+
+      /// TODO: can save a factor of nptcl here because we already have Minv_dM
+      fval_dmu = psi_wrapper_in.trAB(Minv_, dM_gs_[idim]);
+
+      dedr_complex[iat][idim] = fval_dmu_O;
+      wfgradraw_[iat][idim] += fval_dmu;
+
+      if (psi_wrapper_in.hasMultiSlaterDet())
+      {
+        const auto& msd = static_cast<const MultiSlaterDetTableMethod&>(psi_wrapper_in.getMultiSlaterDet());
+        // compute d_mu(OD/D) and d_mu(logD) for all excited DiracDets D
+        psi_wrapper_in.computeMDDerivatives_dmu(Minv_Mv_, Minv_B_, Minv_dM_[idim], Minv_dB_[idim], mdd_spo_ids,
+                                                mdd_list, fvals_dmu_O, fvals_dmu);
+
+        // compute {d_mu(O Psi/Psi), d_mu(log Psi), (O Psi/Psi)} (don't need (O Psi/Psi) here, but we get it for free)
+        std::tie(fval_dmu_O, fval_dmu, fval_O) =
+            psi_wrapper_in.computeMDDerivatives_total(mdd_list, fvals_dmu_O, fvals_O, fvals_dmu);
+
+        dedr_complex[iat][idim] += fval_dmu_O; // multidet part of d_mu(OPsi/Psi)
+        wfgradraw_[iat][idim] += fval_dmu;     // multidet part of d_mu(log(Psi))
+      }
     }
     convertToReal(dedr_complex[iat], dEdR[iat]);
     convertToReal(wfgradraw_[iat], wf_grad[iat]);

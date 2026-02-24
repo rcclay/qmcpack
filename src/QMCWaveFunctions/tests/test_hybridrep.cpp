@@ -35,7 +35,7 @@ TEST_CASE("Hybridrep SPO from HDF diamond_1x1x1", "[wavefunction]")
 {
   Communicate* c = OHMMS::Controller;
 
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   // diamondC_1x1x1
   lattice.R = {3.37316115, 3.37316115, 0.0, 0.0, 3.37316115, 3.37316115, 3.37316115, 0.0, 3.37316115};
 
@@ -49,8 +49,9 @@ TEST_CASE("Hybridrep SPO from HDF diamond_1x1x1", "[wavefunction]")
   ions_.setName("ion");
   ptcl.addParticleSet(std::move(ions_uptr));
   ions_.create({2});
-  ions_.R[0]              = {0.0, 0.0, 0.0};
-  ions_.R[1]              = {1.68658058, 1.68658058, 1.68658058};
+  ions_.R[0] = {0.0, 0.0, 0.0};
+  ions_.R[1] = {1.68658058, 1.68658058, 1.68658058};
+  ions_.update();
   SpeciesSet& ion_species = ions_.getSpeciesSet();
   int C_Idx               = ion_species.addSpecies("C");
   int C_chargeIdx         = ion_species.addAttribute("charge");
@@ -64,9 +65,10 @@ TEST_CASE("Hybridrep SPO from HDF diamond_1x1x1", "[wavefunction]")
   elec_.setName("elec");
   ptcl.addParticleSet(std::move(elec_uptr));
   elec_.create({3});
-  elec_.R[0]                 = {0.4, 0.0, 0.0};
-  elec_.R[1]                 = {0.0, 1.0, 0.0};
-  elec_.R[2]                 = {0.0, 0.5, 0.5};
+  elec_.R[0] = {0.4, 0.0, 0.0};
+  elec_.R[1] = {0.0, 1.0, 0.0};
+  elec_.R[2] = {0.0, 0.5, 0.5};
+  elec_.update();
   SpeciesSet& tspecies       = elec_.getSpeciesSet();
   int upIdx                  = tspecies.addSpecies("u");
   int chargeIdx              = tspecies.addAttribute("charge");
@@ -80,8 +82,7 @@ TEST_CASE("Hybridrep SPO from HDF diamond_1x1x1", "[wavefunction]")
 )";
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(particles);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(particles));
 
   xmlNodePtr root = doc.getRoot();
 
@@ -193,7 +194,7 @@ TEST_CASE("Hybridrep SPO from HDF diamond_2x1x1", "[wavefunction]")
 {
   Communicate* c = OHMMS::Controller;
 
-  ParticleSet::ParticleLayout lattice;
+  Lattice lattice;
   // diamondC_2x1x1
   lattice.R = {6.7463223, 6.7463223, 0.0, 0.0, 3.37316115, 3.37316115, 3.37316115, 0.0, 3.37316115};
 
@@ -207,10 +208,11 @@ TEST_CASE("Hybridrep SPO from HDF diamond_2x1x1", "[wavefunction]")
   ions_.setName("ion");
   ptcl.addParticleSet(std::move(ions_uptr));
   ions_.create({4});
-  ions_.R[0]              = {0.0, 0.0, 0.0};
-  ions_.R[1]              = {1.68658058, 1.68658058, 1.68658058};
-  ions_.R[2]              = {3.37316115, 3.37316115, 0.0};
-  ions_.R[3]              = {5.05974173, 5.05974173, 1.68658058};
+  ions_.R[0] = {0.0, 0.0, 0.0};
+  ions_.R[1] = {1.68658058, 1.68658058, 1.68658058};
+  ions_.R[2] = {3.37316115, 3.37316115, 0.0};
+  ions_.R[3] = {5.05974173, 5.05974173, 1.68658058};
+  ions_.update();
   SpeciesSet& ion_species = ions_.getSpeciesSet();
   int C_Idx               = ion_species.addSpecies("C");
   int C_chargeIdx         = ion_species.addAttribute("charge");
@@ -224,9 +226,10 @@ TEST_CASE("Hybridrep SPO from HDF diamond_2x1x1", "[wavefunction]")
   elec_.setName("elec");
   ptcl.addParticleSet(std::move(elec_uptr));
   elec_.create({3});
-  elec_.R[0]                 = {0.4, 0.0, 0.0};
-  elec_.R[1]                 = {0.0, 1.0, 0.0};
-  elec_.R[2]                 = {0.0, 0.5, 0.5};
+  elec_.R[0] = {0.4, 0.0, 0.0};
+  elec_.R[1] = {0.0, 1.0, 0.0};
+  elec_.R[2] = {0.0, 0.5, 0.5};
+  elec_.update();
   SpeciesSet& tspecies       = elec_.getSpeciesSet();
   int upIdx                  = tspecies.addSpecies("u");
   int chargeIdx              = tspecies.addAttribute("charge");
@@ -240,8 +243,7 @@ TEST_CASE("Hybridrep SPO from HDF diamond_2x1x1", "[wavefunction]")
 )";
 
   Libxml2Document doc;
-  bool okay = doc.parseFromString(particles);
-  REQUIRE(okay);
+  REQUIRE(doc.parseFromString(particles));
 
   xmlNodePtr root = doc.getRoot();
 

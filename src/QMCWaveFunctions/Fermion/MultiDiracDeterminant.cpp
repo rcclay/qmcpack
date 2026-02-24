@@ -1212,7 +1212,7 @@ int MultiDiracDeterminant::build_occ_vec(const OffloadVector<int>& data,
 
 
 void MultiDiracDeterminant::evaluateDerivatives(ParticleSet& P,
-                                                const opt_variables_type& optvars,
+                                                const OptVariables& optvars,
                                                 Vector<ValueType>& dlogpsi,
                                                 Vector<ValueType>& dhpsioverpsi,
                                                 const MultiDiracDeterminant& pseudo_dn,
@@ -1261,7 +1261,7 @@ void MultiDiracDeterminant::evaluateDerivatives(ParticleSet& P,
 
 
 void MultiDiracDeterminant::evaluateDerivativesWF(ParticleSet& P,
-                                                  const opt_variables_type& optvars,
+                                                  const OptVariables& optvars,
                                                   Vector<ValueType>& dlogpsi,
                                                   const MultiDiracDeterminant& pseudo_dn,
                                                   const PsiValue& psiCurrent,
@@ -1291,6 +1291,11 @@ void MultiDiracDeterminant::evaluateDerivativesWF(ParticleSet& P,
   Phi->evaluateDerivativesWF(P, optvars, dlogpsi, psiCurrent, Coeff, C2node_up, C2node_dn, detValues_up_host_view,
                              detValues_dn_host_view, M_up_host_view, M_dn_host_view, Minv_up_host_view,
                              Minv_dn_host_view, detData_local, lookup_tbl);
+}
+
+void MultiDiracDeterminant::registerTWFFastDerivWrapper(const ParticleSet& P, TWFFastDerivWrapper& twf) const
+{
+  twf.addGroup(P, P.getGroupID(FirstIndex), Phi.get());
 }
 
 } // namespace qmcplusplus
