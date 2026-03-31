@@ -141,7 +141,7 @@ jobs:
         if: contains(matrix.jobname, 'Gcov') && github.repository_owner == 'QMCPACK'
         uses: codecov/codecov-action@v5
         with:
-          files: ../qmcpack-build/coverage.xml
+          files: ../qmcpack-build/coverage.xml,../qmcpack-build/python_coverage.xml
           flags: tests-deterministic # optional
           name: codecov-QMCPACK # optional
           fail_ci_if_error: true # optional (default = false)
@@ -172,7 +172,7 @@ jobs:
         run: |
           brew upgrade || brew link --overwrite python@3.12
           brew install gcc@14 ninja hdf5 fftw boost
-          python3 -m pip install numpy==1.26.4 h5py
+          python3 -m pip install numpy h5py
 
       - name: Configure
         run: tests/test_automation/github-actions/ci/run_step.sh configure

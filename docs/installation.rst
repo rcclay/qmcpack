@@ -351,7 +351,7 @@ the path to the source directory.
                          Also supported: CMAKE_CXX_FLAGS_DEBUG,
                          CMAKE_CXX_FLAGS_RELEASE, and CMAKE_CXX_FLAGS_RELWITHDEBINFO
     CMAKE_INSTALL_PREFIX Set the install location (if using the optional install step)
-    INSTALL_NEXUS        Install Nexus alongside QMCPACK (if using the optional install step)
+    QMC_INSTALL_NEXUS    Install Nexus alongside QMCPACK (if using the optional install step)
 
 - Additional QMCPACK build options
 
@@ -443,6 +443,13 @@ the path to the source directory.
     
 
 See :ref:`Sanitizer-Libraries` for more information.
+
+- Code coverage related
+  
+  ::
+
+    ENABLE_GCOV  OFF(default)/ON, build with C++ source code line coverage measurement using gcov
+    ENABLE_PYCOV OFF(default)/ON, build with Python source code line coverage measurement using coverage.py
 
 
 Installation from CMake

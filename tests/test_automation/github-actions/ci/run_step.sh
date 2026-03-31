@@ -127,6 +127,7 @@ case "$1" in
               -DCMAKE_C_COMPILER=gcc-14 \
               -DCMAKE_CXX_COMPILER=g++-14 \
               -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
+              -DQMC_INSTALL_NEXUS=OFF \
               ${GITHUB_WORKSPACE}
       ;;
       *"GCC9"*"-CUDA-AFQMC"*)
@@ -166,6 +167,7 @@ case "$1" in
               -DMPI_C_COMPILER=mpicc \
               -DMPI_CXX_COMPILER=mpicxx \
               -DENABLE_GCOV=TRUE \
+              -DENABLE_PYCOV=TRUE \
               ${GITHUB_WORKSPACE}
       ;;
       *"GCC"*"-Werror"*)
@@ -355,21 +357,20 @@ case "$1" in
     # see https://gcovr.com/en/stable/faq.html#why-does-c-code-have-so-many-uncovered-branches
     gcovr --exclude-unreachable-branches --exclude-throw-branches --root=${GITHUB_WORKSPACE}/.. --xml-pretty -o coverage.xml
     du -hs coverage.xml
-    cat coverage.xml
+    #cat coverage.xml
+    python3-coverage combine nexus/nexus/tests/.coverage*
+    du -hs .coverage
+    python3-coverage report
+    python3-coverage xml -o python_coverage.xml
+    du -hs python_coverage.xml
+    # Debug only: overwrite gcov file with python coverage to test codecov.io
+    #mv python_coverage.xml coverage.xml
     ;;
   
   # Install the library (not triggered at the moment)
   install)
     cd ${GITHUB_WORKSPACE}/../qmcpack-build
     ninja install
-    ;;
-
-  rebase)
-    source external_codes/github_actions/auto-rebase.sh
-    ;;
-  
-  pull-rebase)
-    source external_codes/github_actions/trigger-rebase-on-push.sh
     ;;
 
   *)
