@@ -41,7 +41,7 @@ else()
   set(HAM_SRCS ${HAM_SRCS} test_SOECPotential.cpp)
 endif()
 
-set(FORCE_SRCS ${FORCE_SRCS} test_ion_derivs.cpp)
+set(FORCE_SRCS ${FORCE_SRCS} test_ion_derivs.cpp test_zvzb_stress.cpp)
 
 set(UTEST_HDF_INPUT ${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp/pwscf.pwscf.h5)
 maybe_symlink(${UTEST_HDF_INPUT} ${UTEST_DIR}/diamondC_1x1x1.pwscf.h5)
