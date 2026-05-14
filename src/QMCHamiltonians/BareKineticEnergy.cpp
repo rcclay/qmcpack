@@ -353,6 +353,11 @@ void BareKineticEnergy::evaluateOneBodyOpMatrix(ParticleSet& P,
       }
     }
   }
+  app_log()<<"--- B_kin_up = \n";
+  app_log()<<B[0]<<std::endl;
+  app_log()<<"--- B_kin_dn = \n";
+  app_log()<<B[1]<<std::endl;
+
 }
 
 void BareKineticEnergy::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
@@ -530,6 +535,7 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
 // psi.getIonGradIonGradELaplM(P, source, iat, dm, dgmat, dlapl);
 //  psi.evaluateJastrowVGL(P, G, L);
 //  psi.evaluateJastrowGradSource(P, source, iat, dG, dL);
+
   for (int ig = 0; ig < ngroups; ig++)
   {
     const IndexType sid    = psi.getTWFGroupIndex(ig);
@@ -538,21 +544,26 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
     const IndexType last   = P.last(ig);
     const IndexType nptcls = last - first;
 
+    const int D    = OHMMS_DIM;
+    const RealType inv2m = -minus_over_2m_[ig];  // minus_over_2m_ == -1/(2m) → inv2m = +1/(2m)
     for (int iel = first; iel < last; iel++)
     {
+      int ip = iel - first;
       for (int iorb = 0; iorb < norbs; iorb++)
       {
-	                             //x /xx
-        Bstrain[sid][iel-first][iorb]=RealType(minus_over_2m_[ig]) *
-	  (-0.5*hess_M[sid][iel-first][iorb][0]+hess_M[sid][iel-first][iorb][0]+hess_M[sid][iel-first][iorb][4]+
-	    hess_M[sid][iel-first][iorb][8] + P.R[iel][0]*(ghess_M[sid][iel-first][iorb][0][0]+ghess_M[sid][iel-first][iorb][0][4]+ ghess_M[sid][iel-first][iorb][0][8]));
-//              Bforce[idim][sid][iel - first][iorb] = RealType(minus_over_2m_[ig]) *
-//              (dlapl[idim][sid][iel - first][iorb] +
-//               RealType(2.0) *
-//                   (dot(GradType(G[iel]), dgmat[idim][sid][iel - first][iorb]) +
-//                    dot(GradType(dG[idim][iel]), grad_M[sid][iel - first][iorb])) +
-//               M[sid][iel - first][iorb] * ValueType(dL[idim][iel] + 2.0 * dot(dG[idim][iel], G[iel])) +
-//               ValueType(L[iel] + dot(G[iel], G[iel])) * dm[idim][sid][iel - first][iorb]);
+        ValueType term1 = ValueType(0.0);
+        if (mu == nu)
+          term1 = ValueType(0.5) * lapl_M[sid][ip][iorb];
+
+        ValueType term2 = ValueType(2.0) * hess_M[sid][ip][iorb][mu * D + nu];
+
+        ValueType dnu_lapl_phi = ValueType(0.0);
+        for (int a = 0; a < D; ++a)
+          dnu_lapl_phi += ghess_M[sid][ip][iorb][nu][a * D + a];
+
+        ValueType term3 = ValueType(P.R[iel][mu]) * dnu_lapl_phi;
+
+        Bstrain[sid][ip][iorb] = ValueType(inv2m) * (term1 + term2 + term3);
       }
     }
   }  
