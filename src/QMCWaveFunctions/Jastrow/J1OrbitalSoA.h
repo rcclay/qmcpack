@@ -686,6 +686,78 @@ public:
     }
     return g_return;
   }
+
+  inline ValueType evalStrainGrad(const ParticleSet& P,
+		                  const int mu, const int nu, 
+				  ParticleSet::ParticleGradient& G,
+				  ParticleSet::ParticleLaplacian& L) override
+  {
+    ValueType strain_grad = ValueType(0.0);
+
+    const auto& d_ie = P.getDistTableAB(myTableID);
+
+    for (int iel = 0; iel < Nelec; ++iel)
+    {
+      const auto& dist  = d_ie.getDistRow(iel);
+      const auto& displ = d_ie.getDisplRow(iel);
+
+      for (int iat = 0; iat < Nions; ++iat)
+      {
+        const int gid = Ions.getGroupID(iat);
+        auto* func    = J1UniqueFunctors[gid].get();
+        if (func == nullptr)
+          continue;
+
+        valT dudr, d2udr2, d3udr3;
+        func->evaluate(dist[iat], dudr, d2udr2, d3udr3);
+
+        const posT& dr = displ[iat];
+        const valT r   = dist[iat];
+
+        strain_grad += ValueType(dr[mu] * dr[nu] * dudr / r);
+      }
+    }
+
+
+
+    for (int iel = 0; iel < Nelec; ++iel)
+    {
+      const auto& dist  = d_ie.getDistRow(iel);
+      const auto& displ = d_ie.getDisplRow(iel);
+
+      for (int iat = 0; iat < Nions; ++iat)
+      {
+        const int gid = Ions.getGroupID(iat);
+        auto* func    = J1UniqueFunctors[gid].get();
+        if (func == nullptr)
+          continue;
+
+        valT dudr, d2udr2, d3udr3;
+        func->evaluate(dist[iat], dudr, d2udr2, d3udr3);
+
+        const posT& dr = displ[iat];
+        const valT r   = dist[iat];
+        const valT rinv  = 1.0 / r;
+        const valT rinv2 = rinv * rinv;
+
+        // A = u'(r)/r
+        const valT A = dudr * rinv;
+        // B = u''(r) - u'(r)/r
+        const valT B = d2udr2 - dudr * rinv;
+
+        // Add contribution to the three Cartesian components lambda = 0,1,2
+        for (int lambda = 0; lambda < OHMMS_DIM; ++lambda)
+        {
+          G[iel][lambda] +=
+              (lambda == nu ? A * dr[mu] : valT(0.0)) +
+              B * dr[lambda] * dr[mu] * dr[nu] * rinv2;
+        }
+      }
+    }
+
+    //RCC If QMCPACK returns -J, then this needs to be -d/dstrain J.  
+    return -strain_grad;
+  }
 };
 
 extern template class J1OrbitalSoA<BsplineFunctor<QMCTraits::RealType>>;

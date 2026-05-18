@@ -189,6 +189,22 @@ public:
                    const int mu, const int nu,
                    std::vector<ValueMatrix>& dmvec) const;
 
+
+  /** @brief Returns mu,nu components of the strain gradient of J, grad(J), and lapl(J).
+   *
+   *  @param[in] P particle set.
+   *  @param[in] mu,nu  the strain_mu,nu indices the derivatives are taken w.r.t.
+   *  @param[in,out] dval d/dstrain J 
+   *  @param[in,out] dG d/dstrain grad(J)
+   *  @param[in,out] dL d/dstrain lapl(J)
+   *
+   *  @return Void
+   */
+  void getStrainGradJ(const ParticleSet& P, const int mu, const int nu, 
+		      ValueType & dval,
+		      ParticleSet::ParticleGradient& dG,
+		      ParticleSet::ParticleLaplacian& dL) const;
+
   /** @brief Returns x,y,z components of ion gradient of slater matrices and their laplacians..
    *
    *  @param[in] P particle set.

@@ -1041,6 +1041,84 @@ void TwoBodyJastrow<FT>::evaluateDerivRatios(const VirtualParticleSet& VP,
   }
 }
 
+template<typename FT>
+typename TwoBodyJastrow<FT>::QTFull::ValueType TwoBodyJastrow<FT>::evalStrainGrad(const ParticleSet& P,
+		                                   const int mu, const int nu, 
+				                   ParticleSet::ParticleGradient& G,
+				                   ParticleSet::ParticleLaplacian& L)
+{
+    ValueType strain_grad = ValueType(0.0);
+
+    const auto& d_ee = P.getDistTableAA(my_table_ID_);
+
+    for (int i = 1; i < N; ++i)
+    {
+      const auto& dist  = d_ee.getDistRow(i);
+      const auto& displ = d_ee.getDisplRow(i);
+
+      const int igt = P.GroupID[i] * NumGroups;
+
+      for (int j = 0; j < i; ++j)
+      {
+        FT* func = F[igt + P.GroupID[j]];
+        if (func == nullptr)
+          continue;
+
+        valT dudr, d2udr2;
+        func->evaluate(dist[j], dudr, d2udr2);
+
+        const posT& dr = displ[j];
+        const valT r   = dist[j];
+
+        strain_grad -= ValueType(dr[mu] * dr[nu] * dudr / r);
+      }
+    }
+
+
+    for (int i = 1; i < N; ++i)
+    {
+      const auto& dist  = d_ee.getDistRow(i);
+      const auto& displ = d_ee.getDisplRow(i);
+
+      const int igt = P.GroupID[i] * NumGroups;
+
+      for (int j = 0; j < i; ++j)
+      {
+        FT* func = F[igt + P.GroupID[j]];
+        if (func == nullptr)
+          continue;
+
+        valT dudr, d2udr2;
+        func->evaluate(dist[j], dudr, d2udr2);
+
+        const posT& dr = displ[j];
+        const valT r   = dist[j];
+        const valT rinv  = 1.0 / r;
+        const valT rinv2 = rinv * rinv;
+
+        // A = u'(r)/r
+        const valT A = dudr * rinv;
+        // B = u''(r) - u'(r)/r
+        const valT B = d2udr2 - dudr * rinv;
+
+        GradType pair_contrib;
+        for (int lambda = 0; lambda < OHMMS_DIM; ++lambda)
+        {
+          pair_contrib[lambda] =
+              (lambda == nu ? A * dr[mu] : valT(0.0)) +
+              B * dr[lambda] * dr[mu] * dr[nu] * rinv2;
+        }
+
+        // contribution to electron i
+        G[i] += pair_contrib;
+        // opposite contribution to electron j
+        G[j] -= pair_contrib;
+      }
+    }
+
+    return strain_grad;
+}
+
 template class TwoBodyJastrow<BsplineFunctor<QMCTraits::RealType>>;
 template class TwoBodyJastrow<PadeFunctor<QMCTraits::RealType>>;
 template class TwoBodyJastrow<UserFunctor<QMCTraits::RealType>>;

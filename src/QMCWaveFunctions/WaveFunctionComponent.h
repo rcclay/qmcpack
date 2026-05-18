@@ -269,6 +269,24 @@ public:
   }
 
 
+  /** Returns strain derivative of WaveFunctionComponent
+   *  Also returns by reference strain derivatives of electron
+   *  gradient and laplacian
+   *  
+   * @param P quantum particle set (electrons)
+   * @param mu index of strain
+   * @param nu index of strain
+   * @param G strain derivative of gradient
+   * @param L strain derivative of Laplacian
+   * @return d/dstrain component
+   */
+  virtual ValueType evalStrainGrad(const ParticleSet& P,
+		                   const int mu, const int nu, 
+				   ParticleSet::ParticleGradient& G,
+				   ParticleSet::ParticleLaplacian& L)
+  {
+    return 0.0;
+  }
   /** evaluate the ratio of the new to old WaveFunctionComponent value and the new gradient
    * @param P the active ParticleSet
    * @param iat the index of a particle

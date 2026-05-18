@@ -268,6 +268,11 @@ public:
                            const OptVariables& optvars,
                            std::vector<ValueType>& ratios,
                            Matrix<ValueType>& dratios) override;
+  
+  ValueType evalStrainGrad(const ParticleSet& P,
+		           const int mu, const int nu, 
+		           ParticleSet::ParticleGradient& G,
+		           ParticleSet::ParticleLaplacian& L) override;
 };
 
 extern template class TwoBodyJastrow<BsplineFunctor<QMCTraits::RealType>>;

@@ -236,6 +236,9 @@ void TWFFastDerivWrapper::getIonGradM(const ParticleSet& P,
   }
 }
 
+//This makes the assumption that the strain is generated according to:
+//  phi_e(r') = phi(r), where r is the original coordinate, r' is the strained
+//  coordinate.  Under this scenario, ironically d/de phi = 0.  
 void TWFFastDerivWrapper::getStrainGradM(const ParticleSet& P,
                                       const int mu, const int nu,
                                       std::vector<ValueMatrix>& dmvec) const
@@ -260,18 +263,28 @@ void TWFFastDerivWrapper::getStrainGradM(const ParticleSet& P,
     for (IndexType iptcl = 0; iptcl < nptcls; iptcl++)
       for (IndexType iorb = 0; iorb < norbs; iorb++)
       {
-	app_log()<<" i="<<i<<" iptcl="<<iptcl<<" iorb="<<iorb<<" M="<<M[iptcl][iorb]<<" grad="<<grad_phi[iptcl][iorb]<<std::endl;
 
-        dmvec[i][iptcl][iorb] += -(P.R[first+iptcl][mu]*grad_phi[iptcl][iorb][nu]);
-	if (mu==nu)
-          dmvec[i][iptcl][iorb] += -0.5*M[iptcl][iorb];
+        //dmvec[i][iptcl][iorb] += -(P.R[first+iptcl][mu]*grad_phi[iptcl][iorb][nu]);
+	//if (mu==nu)
+        //  dmvec[i][iptcl][iorb] += -0.5*M[iptcl][iorb];
+	dmvec[i][iptcl][iorb] = 0;
       }
 
-    //for (IndexType iat = 0; iat<nions; iat++)
-   // {
-
-   // }
   }
+}
+
+
+void TWFFastDerivWrapper::getStrainGradJ(const ParticleSet& P,
+                                      const int mu, const int nu,
+                                      ValueType& dval,
+				      ParticleSet::ParticleGradient& dG,
+				      ParticleSet::ParticleLaplacian& dL) const
+{
+  ValueType strain_deriv = 0.0;
+  for (int i = 0; i < jastrow_list_.size(); ++i)
+    strain_deriv += jastrow_list_[i]->evalStrainGrad(P,mu,nu,dG,dL);
+  dval=strain_deriv;
+  
 }
 
 void TWFFastDerivWrapper::getIonGradIonGradELaplM(const ParticleSet& P,
