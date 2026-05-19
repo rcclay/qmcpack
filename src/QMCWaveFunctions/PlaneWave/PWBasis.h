@@ -74,13 +74,64 @@ private:
 
 public:
   //enumeration for the value, laplacian, gradients and size
-  enum
+ /* enum
   {
     PW_VALUE,
     PW_LAP,
     PW_GRADX,
     PW_GRADY,
     PW_GRADZ,
+    PW_MAXINDEX
+  };*/
+
+    enum
+  {
+    PW_VALUE = 0,
+    PW_LAP,
+    PW_GRADX,
+    PW_GRADY,
+    PW_GRADZ,
+
+    PW_HESS00,
+    PW_HESS01,
+    PW_HESS02,
+    PW_HESS10,
+    PW_HESS11,
+    PW_HESS12,
+    PW_HESS20,
+    PW_HESS21,
+    PW_HESS22,
+
+    PW_GHESS000,
+    PW_GHESS001,
+    PW_GHESS002,
+    PW_GHESS010,
+    PW_GHESS011,
+    PW_GHESS012,
+    PW_GHESS020,
+    PW_GHESS021,
+    PW_GHESS022,
+
+    PW_GHESS100,
+    PW_GHESS101,
+    PW_GHESS102,
+    PW_GHESS110,
+    PW_GHESS111,
+    PW_GHESS112,
+    PW_GHESS120,
+    PW_GHESS121,
+    PW_GHESS122,
+
+    PW_GHESS200,
+    PW_GHESS201,
+    PW_GHESS202,
+    PW_GHESS210,
+    PW_GHESS211,
+    PW_GHESS212,
+    PW_GHESS220,
+    PW_GHESS221,
+    PW_GHESS222,
+
     PW_MAXINDEX
   };
 
@@ -254,7 +305,77 @@ public:
    * recursion algorithm. Order of Y,dY and d2Y is kept correct.
    * These can be "dotted" with coefficients later to complete orbital evaluations.
    */
-  inline void evaluateAll(const ParticleSet& P, int iat)
+    inline void evaluateAll(const ParticleSet& P, int iat)
+  {
+    const PosType& r(P.activeR(iat));
+    BuildRecursionCoefs(r);
+    RealType twistdotr = dot(twist_cart, r);
+    ComplexType pw0(std::cos(twistdotr), std::sin(twistdotr));
+
+    ComplexType* restrict zptr = Z.data();
+    for (int ig = 0; ig < NumPlaneWaves; ig++, zptr += PW_MAXINDEX)
+    {
+      ComplexType pw(pw0);
+      for (int idim = 0; idim < 3; idim++)
+        pw *= C(idim, gvecs_shifted[ig][idim]);
+
+      const PosType& q = kplusgvecs_cart[ig];
+      const ValueType ipw(-pw.imag(), pw.real());   // i * pw
+      const ValueType mipw(pw.imag(), -pw.real());  // -i * pw
+
+      const ValueType qx = q[0];
+      const ValueType qy = q[1];
+      const ValueType qz = q[2];
+
+      zptr[PW_VALUE] = pw;
+      zptr[PW_LAP]   = minusModKplusG2[ig] * pw;
+
+      zptr[PW_GRADX] = qx * ipw;
+      zptr[PW_GRADY] = qy * ipw;
+      zptr[PW_GRADZ] = qz * ipw;
+
+      zptr[PW_HESS00] = -(qx * qx) * pw;
+      zptr[PW_HESS01] = -(qx * qy) * pw;
+      zptr[PW_HESS02] = -(qx * qz) * pw;
+      zptr[PW_HESS10] = -(qy * qx) * pw;
+      zptr[PW_HESS11] = -(qy * qy) * pw;
+      zptr[PW_HESS12] = -(qy * qz) * pw;
+      zptr[PW_HESS20] = -(qz * qx) * pw;
+      zptr[PW_HESS21] = -(qz * qy) * pw;
+      zptr[PW_HESS22] = -(qz * qz) * pw;
+
+      zptr[PW_GHESS000] = (qx * qx * qx) * mipw;
+      zptr[PW_GHESS001] = (qx * qx * qy) * mipw;
+      zptr[PW_GHESS002] = (qx * qx * qz) * mipw;
+      zptr[PW_GHESS010] = (qx * qy * qx) * mipw;
+      zptr[PW_GHESS011] = (qx * qy * qy) * mipw;
+      zptr[PW_GHESS012] = (qx * qy * qz) * mipw;
+      zptr[PW_GHESS020] = (qx * qz * qx) * mipw;
+      zptr[PW_GHESS021] = (qx * qz * qy) * mipw;
+      zptr[PW_GHESS022] = (qx * qz * qz) * mipw;
+
+      zptr[PW_GHESS100] = (qy * qx * qx) * mipw;
+      zptr[PW_GHESS101] = (qy * qx * qy) * mipw;
+      zptr[PW_GHESS102] = (qy * qx * qz) * mipw;
+      zptr[PW_GHESS110] = (qy * qy * qx) * mipw;
+      zptr[PW_GHESS111] = (qy * qy * qy) * mipw;
+      zptr[PW_GHESS112] = (qy * qy * qz) * mipw;
+      zptr[PW_GHESS120] = (qy * qz * qx) * mipw;
+      zptr[PW_GHESS121] = (qy * qz * qy) * mipw;
+      zptr[PW_GHESS122] = (qy * qz * qz) * mipw;
+
+      zptr[PW_GHESS200] = (qz * qx * qx) * mipw;
+      zptr[PW_GHESS201] = (qz * qx * qy) * mipw;
+      zptr[PW_GHESS202] = (qz * qx * qz) * mipw;
+      zptr[PW_GHESS210] = (qz * qy * qx) * mipw;
+      zptr[PW_GHESS211] = (qz * qy * qy) * mipw;
+      zptr[PW_GHESS212] = (qz * qy * qz) * mipw;
+      zptr[PW_GHESS220] = (qz * qz * qx) * mipw;
+      zptr[PW_GHESS221] = (qz * qz * qy) * mipw;
+      zptr[PW_GHESS222] = (qz * qz * qz) * mipw;
+    }
+  }
+ /* inline void evaluateAll(const ParticleSet& P, int iat)
   {
     const PosType& r(P.activeR(iat));
     BuildRecursionCoefs(r);
@@ -279,7 +400,7 @@ public:
       zptr[3] = kplusgvecs_cart[ig][1] * ComplexType(-pw.imag(), pw.real());
       zptr[4] = kplusgvecs_cart[ig][2] * ComplexType(-pw.imag(), pw.real());
     }
-  }
+  }*/
 #else
   inline void evaluate(const PosType& pos)
   {
@@ -288,7 +409,7 @@ public:
       phi[ig] = dot(kplusgvecs_cart[ig], pos);
     eval_e2iphi(NumPlaneWaves, phi.data(), Zv.data());
   }
-  inline void evaluateAll(const ParticleSet& P, int iat)
+  /*inline void evaluateAll(const ParticleSet& P, int iat)
   {
     const PosType& r(P.activeR(iat));
     evaluate(r);
@@ -303,6 +424,71 @@ public:
       zptr[2]         = kplusgvecs_cart[ig][0] * ComplexType(-pw.imag(), pw.real());
       zptr[3]         = kplusgvecs_cart[ig][1] * ComplexType(-pw.imag(), pw.real());
       zptr[4]         = kplusgvecs_cart[ig][2] * ComplexType(-pw.imag(), pw.real());
+    }
+  }*/
+    inline void evaluateAll(const ParticleSet& P, int iat)
+  {
+    const PosType& r(P.activeR(iat));
+    evaluate(r);
+
+    ComplexType* restrict zptr = Z.data();
+    for (int ig = 0; ig < NumPlaneWaves; ig++, zptr += PW_MAXINDEX)
+    {
+      const ComplexType& pw = Zv[ig];
+      const ValueType ipw(-pw.imag(), pw.real());   // i * pw
+      const ValueType mipw(pw.imag(), -pw.real());  // -i * pw
+      const PosType& q = kplusgvecs_cart[ig];
+
+      const ValueType qx = q[0];
+      const ValueType qy = q[1];
+      const ValueType qz = q[2];
+
+      zptr[PW_VALUE] = pw;
+      zptr[PW_LAP]   = minusModKplusG2[ig] * pw;
+
+      zptr[PW_GRADX] = qx * ipw;
+      zptr[PW_GRADY] = qy * ipw;
+      zptr[PW_GRADZ] = qz * ipw;
+
+      zptr[PW_HESS00] = -(qx * qx) * pw;
+      zptr[PW_HESS01] = -(qx * qy) * pw;
+      zptr[PW_HESS02] = -(qx * qz) * pw;
+      zptr[PW_HESS10] = -(qy * qx) * pw;
+      zptr[PW_HESS11] = -(qy * qy) * pw;
+      zptr[PW_HESS12] = -(qy * qz) * pw;
+      zptr[PW_HESS20] = -(qz * qx) * pw;
+      zptr[PW_HESS21] = -(qz * qy) * pw;
+      zptr[PW_HESS22] = -(qz * qz) * pw;
+
+      zptr[PW_GHESS000] = (qx * qx * qx) * mipw;
+      zptr[PW_GHESS001] = (qx * qx * qy) * mipw;
+      zptr[PW_GHESS002] = (qx * qx * qz) * mipw;
+      zptr[PW_GHESS010] = (qx * qy * qx) * mipw;
+      zptr[PW_GHESS011] = (qx * qy * qy) * mipw;
+      zptr[PW_GHESS012] = (qx * qy * qz) * mipw;
+      zptr[PW_GHESS020] = (qx * qz * qx) * mipw;
+      zptr[PW_GHESS021] = (qx * qz * qy) * mipw;
+      zptr[PW_GHESS022] = (qx * qz * qz) * mipw;
+
+      zptr[PW_GHESS100] = (qy * qx * qx) * mipw;
+      zptr[PW_GHESS101] = (qy * qx * qy) * mipw;
+      zptr[PW_GHESS102] = (qy * qx * qz) * mipw;
+      zptr[PW_GHESS110] = (qy * qy * qx) * mipw;
+      zptr[PW_GHESS111] = (qy * qy * qy) * mipw;
+      zptr[PW_GHESS112] = (qy * qy * qz) * mipw;
+      zptr[PW_GHESS120] = (qy * qz * qx) * mipw;
+      zptr[PW_GHESS121] = (qy * qz * qy) * mipw;
+      zptr[PW_GHESS122] = (qy * qz * qz) * mipw;
+
+      zptr[PW_GHESS200] = (qz * qx * qx) * mipw;
+      zptr[PW_GHESS201] = (qz * qx * qy) * mipw;
+      zptr[PW_GHESS202] = (qz * qx * qz) * mipw;
+      zptr[PW_GHESS210] = (qz * qy * qx) * mipw;
+      zptr[PW_GHESS211] = (qz * qy * qy) * mipw;
+      zptr[PW_GHESS212] = (qz * qy * qz) * mipw;
+      zptr[PW_GHESS220] = (qz * qz * qx) * mipw;
+      zptr[PW_GHESS221] = (qz * qz * qy) * mipw;
+      zptr[PW_GHESS222] = (qz * qz * qz) * mipw;
     }
   }
 #endif

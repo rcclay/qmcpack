@@ -123,4 +123,124 @@ void PWOrbitalSet::evaluate_notranspose(const ParticleSet& P,
     }
   }
 }
+void PWOrbitalSet::evaluateVGH(const ParticleSet& P,
+                               int iat,
+                               ValueVector& psi,
+                               GradVector& dpsi,
+                               HessVector& grad_grad_psi)
+{
+  myBasisSet->evaluateAll(P, iat);
+  MatrixOperators::product(*C, myBasisSet->Z, Temp);
+
+  const ValueType* restrict tptr = Temp.data();
+  for (int j = 0; j < OrbitalSetSize; j++, tptr += PW_MAXINDEX)
+  {
+    psi[j] = tptr[PW_VALUE];
+
+    dpsi[j] = GradType(tptr[PW_GRADX], tptr[PW_GRADY], tptr[PW_GRADZ]);
+
+    grad_grad_psi[j](0, 0) = tptr[PW_HESS00];
+    grad_grad_psi[j](0, 1) = tptr[PW_HESS01];
+    grad_grad_psi[j](0, 2) = tptr[PW_HESS02];
+    grad_grad_psi[j](1, 0) = tptr[PW_HESS10];
+    grad_grad_psi[j](1, 1) = tptr[PW_HESS11];
+    grad_grad_psi[j](1, 2) = tptr[PW_HESS12];
+    grad_grad_psi[j](2, 0) = tptr[PW_HESS20];
+    grad_grad_psi[j](2, 1) = tptr[PW_HESS21];
+    grad_grad_psi[j](2, 2) = tptr[PW_HESS22];
+  }
+}
+
+void PWOrbitalSet::evaluateVGHGH(const ParticleSet& P,
+                                 int iat,
+                                 ValueVector& psi,
+                                 GradVector& dpsi,
+                                 HessVector& grad_grad_psi,
+                                 GGGVector& grad_grad_grad_psi)
+{
+  myBasisSet->evaluateAll(P, iat);
+  MatrixOperators::product(*C, myBasisSet->Z, Temp);
+
+  const ValueType* restrict tptr = Temp.data();
+  for (int j = 0; j < OrbitalSetSize; j++, tptr += PW_MAXINDEX)
+  {
+    psi[j] = tptr[PW_VALUE];
+
+    dpsi[j] = GradType(tptr[PW_GRADX], tptr[PW_GRADY], tptr[PW_GRADZ]);
+
+    grad_grad_psi[j](0, 0) = tptr[PW_HESS00];
+    grad_grad_psi[j](0, 1) = tptr[PW_HESS01];
+    grad_grad_psi[j](0, 2) = tptr[PW_HESS02];
+    grad_grad_psi[j](1, 0) = tptr[PW_HESS10];
+    grad_grad_psi[j](1, 1) = tptr[PW_HESS11];
+    grad_grad_psi[j](1, 2) = tptr[PW_HESS12];
+    grad_grad_psi[j](2, 0) = tptr[PW_HESS20];
+    grad_grad_psi[j](2, 1) = tptr[PW_HESS21];
+    grad_grad_psi[j](2, 2) = tptr[PW_HESS22];
+
+    grad_grad_grad_psi[j][0](0, 0) = tptr[PW_GHESS000];
+    grad_grad_grad_psi[j][0](0, 1) = tptr[PW_GHESS001];
+    grad_grad_grad_psi[j][0](0, 2) = tptr[PW_GHESS002];
+    grad_grad_grad_psi[j][0](1, 0) = tptr[PW_GHESS010];
+    grad_grad_grad_psi[j][0](1, 1) = tptr[PW_GHESS011];
+    grad_grad_grad_psi[j][0](1, 2) = tptr[PW_GHESS012];
+    grad_grad_grad_psi[j][0](2, 0) = tptr[PW_GHESS020];
+    grad_grad_grad_psi[j][0](2, 1) = tptr[PW_GHESS021];
+    grad_grad_grad_psi[j][0](2, 2) = tptr[PW_GHESS022];
+
+    grad_grad_grad_psi[j][1](0, 0) = tptr[PW_GHESS100];
+    grad_grad_grad_psi[j][1](0, 1) = tptr[PW_GHESS101];
+    grad_grad_grad_psi[j][1](0, 2) = tptr[PW_GHESS102];
+    grad_grad_grad_psi[j][1](1, 0) = tptr[PW_GHESS110];
+    grad_grad_grad_psi[j][1](1, 1) = tptr[PW_GHESS111];
+    grad_grad_grad_psi[j][1](1, 2) = tptr[PW_GHESS112];
+    grad_grad_grad_psi[j][1](2, 0) = tptr[PW_GHESS120];
+    grad_grad_grad_psi[j][1](2, 1) = tptr[PW_GHESS121];
+    grad_grad_grad_psi[j][1](2, 2) = tptr[PW_GHESS122];
+
+    grad_grad_grad_psi[j][2](0, 0) = tptr[PW_GHESS200];
+    grad_grad_grad_psi[j][2](0, 1) = tptr[PW_GHESS201];
+    grad_grad_grad_psi[j][2](0, 2) = tptr[PW_GHESS202];
+    grad_grad_grad_psi[j][2](1, 0) = tptr[PW_GHESS210];
+    grad_grad_grad_psi[j][2](1, 1) = tptr[PW_GHESS211];
+    grad_grad_grad_psi[j][2](1, 2) = tptr[PW_GHESS212];
+    grad_grad_grad_psi[j][2](2, 0) = tptr[PW_GHESS220];
+    grad_grad_grad_psi[j][2](2, 1) = tptr[PW_GHESS221];
+    grad_grad_grad_psi[j][2](2, 2) = tptr[PW_GHESS222];
+  }
+}
+
+void PWOrbitalSet::evaluate_notranspose(const ParticleSet& P,
+                                        int first,
+                                        int last,
+                                        ValueMatrix& logdet,
+                                        GradMatrix& dlogdet,
+                                        HessMatrix& grad_grad_logdet)
+{
+  for (int iat = first, i = 0; iat < last; iat++, i++)
+  {
+    ValueVector v(logdet[i], logdet.cols());
+    GradVector g(dlogdet[i], dlogdet.cols());
+    HessVector h(grad_grad_logdet[i], grad_grad_logdet.cols());
+    evaluateVGH(P, iat, v, g, h);
+  }
+}
+
+void PWOrbitalSet::evaluate_notranspose(const ParticleSet& P,
+                                        int first,
+                                        int last,
+                                        ValueMatrix& logdet,
+                                        GradMatrix& dlogdet,
+                                        HessMatrix& grad_grad_logdet,
+                                        GGGMatrix& grad_grad_grad_logdet)
+{
+  for (int iat = first, i = 0; iat < last; iat++, i++)
+  {
+    ValueVector v(logdet[i], logdet.cols());
+    GradVector g(dlogdet[i], dlogdet.cols());
+    HessVector h(grad_grad_logdet[i], grad_grad_logdet.cols());
+    GGGVector gh(grad_grad_grad_logdet[i], grad_grad_grad_logdet.cols());
+    evaluateVGHGH(P, iat, v, g, h, gh);
+  }
+}
 } // namespace qmcplusplus

@@ -71,7 +71,7 @@ void PWBasis::reset()
 {
   trimforecut();
   //logC.resize(3,2*maxmaxg+1);
-  Z.resize(NumPlaneWaves, 2 + DIM);
+  Z.resize(NumPlaneWaves, PW_MAXINDEX);
   Zv.resize(NumPlaneWaves);
   phi.resize(NumPlaneWaves);
 }
