@@ -1041,6 +1041,7 @@ void TwoBodyJastrow<FT>::evaluateDerivRatios(const VirtualParticleSet& VP,
   }
 }
 
+
 template<typename FT>
 typename TwoBodyJastrow<FT>::QTFull::ValueType TwoBodyJastrow<FT>::evalStrainGrad(const ParticleSet& P,
 		                                   const int mu, const int nu, 
@@ -1064,42 +1065,21 @@ typename TwoBodyJastrow<FT>::QTFull::ValueType TwoBodyJastrow<FT>::evalStrainGra
         if (func == nullptr)
           continue;
 
-        valT dudr, d2udr2;
-        func->evaluate(dist[j], dudr, d2udr2);
 
-        const posT& dr = displ[j];
-        const valT r   = dist[j];
-
-        strain_grad -= ValueType(dr[mu] * dr[nu] * dudr / r);
-      }
-    }
-
-
-    for (int i = 1; i < N; ++i)
-    {
-      const auto& dist  = d_ee.getDistRow(i);
-      const auto& displ = d_ee.getDisplRow(i);
-
-      const int igt = P.GroupID[i] * NumGroups;
-
-      for (int j = 0; j < i; ++j)
-      {
-        FT* func = F[igt + P.GroupID[j]];
-        if (func == nullptr)
-          continue;
-
-        valT dudr, d2udr2;
-        func->evaluate(dist[j], dudr, d2udr2);
+        // Need third derivative too. If available, use 4-argument evaluate:
+        valT uval(0.0), dudr(0.0), d2udr2(0.0), d3udr3(0.0);
+        uval = func->evaluate(dist[j], dudr, d2udr2, d3udr3);
 
         const posT& dr = displ[j];
         const valT r   = dist[j];
         const valT rinv  = 1.0 / r;
         const valT rinv2 = rinv * rinv;
 
-        // A = u'(r)/r
-        const valT A = dudr * rinv;
-        // B = u''(r) - u'(r)/r
-        const valT B = d2udr2 - dudr * rinv;
+
+        strain_grad -= ValueType(dr[mu] * dr[nu] * dudr / r);
+        // ----- strain derivative of gradient -----
+        const valT A = dudr * rinv;            // u'(r)/r
+        const valT B = d2udr2 - dudr * rinv;   // u''(r) - u'(r)/r
 
         GradType pair_contrib;
         for (int lambda = 0; lambda < OHMMS_DIM; ++lambda)
@@ -1109,13 +1089,21 @@ typename TwoBodyJastrow<FT>::QTFull::ValueType TwoBodyJastrow<FT>::evalStrainGra
               B * dr[lambda] * dr[mu] * dr[nu] * rinv2;
         }
 
-        // contribution to electron i
         G[i] += pair_contrib;
-        // opposite contribution to electron j
         G[j] -= pair_contrib;
+
+        // ----- strain derivative of laplacian -----
+        const valT lapl_deriv_radial =
+            d3udr3 + lapfac * (d2udr2 * rinv - dudr * rinv2);
+
+        const valT pair_lapl_strain = dr[mu] * dr[nu] * rinv * lapl_deriv_radial;
+       
+        // same sign contribution to both particles
+        L[i] -= pair_lapl_strain;
+        L[j] -= pair_lapl_strain;
+
       }
     }
-
     return strain_grad;
 }
 

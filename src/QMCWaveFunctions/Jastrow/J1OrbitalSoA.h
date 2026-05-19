@@ -696,7 +696,7 @@ public:
 
     const auto& d_ie = P.getDistTableAB(myTableID);
 
-    for (int iel = 0; iel < Nelec; ++iel)
+/*    for (int iel = 0; iel < Nelec; ++iel)
     {
       const auto& dist  = d_ie.getDistRow(iel);
       const auto& displ = d_ie.getDisplRow(iel);
@@ -716,9 +716,10 @@ public:
 
         strain_grad += ValueType(dr[mu] * dr[nu] * dudr / r);
       }
-    }
+    }*/
 
 
+    constexpr valT lapfac = OHMMS_DIM - RealType(1);
 
     for (int iel = 0; iel < Nelec; ++iel)
     {
@@ -732,7 +733,7 @@ public:
         if (func == nullptr)
           continue;
 
-        valT dudr, d2udr2, d3udr3;
+        valT dudr(0.0), d2udr2(0.0), d3udr3(0.0);
         func->evaluate(dist[iat], dudr, d2udr2, d3udr3);
 
         const posT& dr = displ[iat];
@@ -745,6 +746,7 @@ public:
         // B = u''(r) - u'(r)/r
         const valT B = d2udr2 - dudr * rinv;
 
+        strain_grad += ValueType(dr[mu] * dr[nu] * dudr / r);
         // Add contribution to the three Cartesian components lambda = 0,1,2
         for (int lambda = 0; lambda < OHMMS_DIM; ++lambda)
         {
@@ -752,9 +754,15 @@ public:
               (lambda == nu ? A * dr[mu] : valT(0.0)) +
               B * dr[lambda] * dr[mu] * dr[nu] * rinv2;
         }
+
+        // ----- strain derivative of laplacian -----
+        const valT lapl_deriv_radial =
+            d3udr3 + lapfac * (d2udr2 * rinv - dudr * rinv2);
+
+        L[iel] -= dr[mu] * dr[nu] * rinv * lapl_deriv_radial;
       }
     }
-
+    
     //RCC If QMCPACK returns -J, then this needs to be -d/dstrain J.  
     return -strain_grad;
   }

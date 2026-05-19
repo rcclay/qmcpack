@@ -252,27 +252,29 @@ void TWFFastDerivWrapper::getStrainGradM(const ParticleSet& P,
     const IndexType nptcls = last - first;
     const IndexType norbs  = spos_[i]->getOrbitalSetSize();
 
-    GradMatrix grad_phi;
-    ValueMatrix lapl_phi;
-    ValueMatrix M;
-    M.resize(nptcls,norbs);
-    grad_phi.resize(nptcls, norbs);
-    lapl_phi.resize(nptcls, norbs);
-
-    spos_[i]->evaluate_notranspose(P, first, last, M, grad_phi, lapl_phi);
-    for (IndexType iptcl = 0; iptcl < nptcls; iptcl++)
-      for (IndexType iorb = 0; iorb < norbs; iorb++)
-      {
-
-        //dmvec[i][iptcl][iorb] += -(P.R[first+iptcl][mu]*grad_phi[iptcl][iorb][nu]);
-	//if (mu==nu)
-        //  dmvec[i][iptcl][iorb] += -0.5*M[iptcl][iorb];
-	dmvec[i][iptcl][iorb] = 0;
-      }
-
+    spos_[i]->evaluateGradStrain(P, first, last, mu, nu, dmvec[i]);
   }
 }
 
+void TWFFastDerivWrapper::getStrainGradM(const ParticleSet& P,
+		                         const int mu,
+                                         const int nu,
+                                         std::vector<ValueMatrix>& dmvec,
+                                         std::vector<GradMatrix>& dgmat,
+                                         std::vector<ValueMatrix>& dlmat) const
+{
+  IndexType ngroups = dmvec.size();
+  for (IndexType i = 0; i < ngroups; i++)
+  {
+    const IndexType gid    = groups_[i];
+    const IndexType first  = P.first(i);
+    const IndexType last   = P.last(i);
+    const IndexType nptcls = last - first;
+    const IndexType norbs  = spos_[i]->getOrbitalSetSize();
+
+    spos_[i]->evaluateGradStrain(P, first, last, mu, nu, dmvec[i], dgmat[i], dlmat[i]);
+  }
+}
 
 void TWFFastDerivWrapper::getStrainGradJ(const ParticleSet& P,
                                       const int mu, const int nu,
@@ -1019,6 +1021,7 @@ TWFFastDerivWrapper::IndexType TWFFastDerivWrapper::getRowM(const ParticleSet& P
 
   return sid;
 }
+
 
 void TWFFastDerivWrapper::createResource(ResourceCollection& collection)
 {

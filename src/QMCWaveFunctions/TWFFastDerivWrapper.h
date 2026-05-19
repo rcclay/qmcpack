@@ -190,6 +190,12 @@ public:
                    std::vector<ValueMatrix>& dmvec) const;
 
 
+  void getStrainGradM(const ParticleSet& P,
+                                        const int mu,
+                                        const int nu,
+                                        std::vector<ValueMatrix>& dmvec,
+                                        std::vector<GradMatrix>& dgmat,
+                                        std::vector<ValueMatrix>& dlmat) const;
   /** @brief Returns mu,nu components of the strain gradient of J, grad(J), and lapl(J).
    *
    *  @param[in] P particle set.

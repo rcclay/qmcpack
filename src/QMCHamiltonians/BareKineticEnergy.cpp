@@ -333,7 +333,7 @@ void BareKineticEnergy::evaluateOneBodyOpMatrix(ParticleSet& P,
   }
 
   psi.getEGradELaplM(P, M, grad_M, lapl_M);
-  psi.evaluateJastrowVGL(P, G, L);
+  RealType jval=psi.evaluateJastrowVGL(P, G, L);
 
   for (int ig = 0; ig < ngroups; ig++)
   {
@@ -353,11 +353,6 @@ void BareKineticEnergy::evaluateOneBodyOpMatrix(ParticleSet& P,
       }
     }
   }
-  app_log()<<"--- B_kin_up = \n";
-  app_log()<<B[0]<<std::endl;
-  app_log()<<"--- B_kin_dn = \n";
-  app_log()<<B[1]<<std::endl;
-
 }
 
 void BareKineticEnergy::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
@@ -457,39 +452,36 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
 }
 
 void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
-                                                          const TWFFastDerivWrapper& psi,
-                                                          const int mu, const int nu,
-                                                          std::vector<ValueMatrix>& Bstrain)
+                                                           const TWFFastDerivWrapper& psi,
+                                                           const int mu,
+                                                           const int nu,
+                                                           std::vector<ValueMatrix>& Bstrain)
 {
-  using HessMatrix = SPOSet::HessMatrix;
-  using GGGMatrix  = SPOSet::GGGMatrix;
   const IndexType ngroups = P.groups();
   const IndexType nelec   = P.getTotalNum();
 
-  ParticleSet::ParticleGradient Gtmp, G;
-  ParticleSet::ParticleLaplacian Ltmp, L;
-  Gtmp.resize(nelec);
+  // Jastrow value/gradient/laplacian
+  ParticleSet::ParticleGradient G;
+  ParticleSet::ParticleLaplacian L;
   G.resize(nelec);
-  Ltmp.resize(nelec);
   L.resize(nelec);
 
+  // Strain derivatives of Jastrow gradient and laplacian
+  ParticleSet::ParticleGradient dG;
+  ParticleSet::ParticleLaplacian dL;
+  dG.resize(nelec);
+  dL.resize(nelec);
+
+  // Orbital quantities
   std::vector<ValueMatrix> M;
   std::vector<GradMatrix> grad_M;
   std::vector<ValueMatrix> lapl_M;
-  std::vector<HessMatrix> hess_M;
-  std::vector<GGGMatrix>  ghess_M;
 
-  TinyVector<ParticleSet::ParticleGradient, OHMMS_DIM> dG;
-  TinyVector<ParticleSet::ParticleLaplacian, OHMMS_DIM> dL;
+  // Strain derivatives of orbital quantities
+  std::vector<ValueMatrix> dM;
+  std::vector<GradMatrix> dgrad_M;
+  std::vector<ValueMatrix> dlapl_M;
 
-  for (int dim = 0; dim < OHMMS_DIM; dim++)
-  {
-    dG[dim] = Gtmp;
-    dL[dim] = Ltmp;
-  }
-
-  assert(Bstrain.size() == ngroups);
-  std::vector<ValueMatrix> mtmp;
   for (int ig = 0; ig < ngroups; ig++)
   {
     const IndexType sid    = psi.getTWFGroupIndex(ig);
@@ -500,41 +492,32 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
 
     ValueMatrix zeromat;
     GradMatrix zerogradmat;
-    HessMatrix zerohess;
-    GGGMatrix zeroghess;
 
     zeromat.resize(nptcls, norbs);
     zerogradmat.resize(nptcls, norbs);
-    zerohess.resize(nptcls,norbs);
-    zeroghess.resize(nptcls,norbs);
-    mtmp.push_back(zeromat);
+
     M.push_back(zeromat);
     grad_M.push_back(zerogradmat);
     lapl_M.push_back(zeromat);
-    hess_M.push_back(zerohess);
-    ghess_M.push_back(zeroghess);
+
+    dM.push_back(zeromat);
+    dgrad_M.push_back(zerogradmat);
+    dlapl_M.push_back(zeromat);
   }
 
-
-  std::vector<std::vector<ValueMatrix>> dm, dlapl;
-  std::vector<std::vector<GradMatrix>> dgmat;
-  dm.push_back(mtmp);
-  dm.push_back(mtmp);
-  dm.push_back(mtmp);
-
-  dlapl.push_back(mtmp);
-  dlapl.push_back(mtmp);
-  dlapl.push_back(mtmp);
-
-  dgmat.push_back(grad_M);
-  dgmat.push_back(grad_M);
-  dgmat.push_back(grad_M);
-
+  // Build ordinary orbital matrices
   psi.getEGradELaplM(P, M, grad_M, lapl_M);
-  psi.getEGradHessGHessM(P, M, grad_M, hess_M, ghess_M);
-// psi.getIonGradIonGradELaplM(P, source, iat, dm, dgmat, dlapl);
-//  psi.evaluateJastrowVGL(P, G, L);
-//  psi.evaluateJastrowGradSource(P, source, iat, dG, dL);
+
+  // Build strain derivatives of orbital matrices
+  psi.getStrainGradM(P, mu, nu, dM, dgrad_M, dlapl_M);
+
+  // Build ordinary Jastrow VGL
+  psi.evaluateJastrowVGL(P, G, L);
+
+  // Build strain derivatives of Jastrow gradient/laplacian
+  // Assumes this new API exists on the wrapper and internally dispatches to the Jastrow components
+  ValueType dJ(0.0);
+  psi.getStrainGradJ(P, mu, nu, dJ, dG, dL);
 
   for (int ig = 0; ig < ngroups; ig++)
   {
@@ -542,32 +525,31 @@ void BareKineticEnergy::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
     const IndexType norbs  = psi.numOrbitals(sid);
     const IndexType first  = P.first(ig);
     const IndexType last   = P.last(ig);
-    const IndexType nptcls = last - first;
 
-    const int D    = OHMMS_DIM;
-    const RealType inv2m = -minus_over_2m_[ig];  // minus_over_2m_ == -1/(2m) → inv2m = +1/(2m)
     for (int iel = first; iel < last; iel++)
     {
-      int ip = iel - first;
+      const int ip = iel - first;
+
+      const ValueType jlap_term = ValueType(dL[iel] + 2.0 * dot(dG[iel], G[iel]));
+      const ValueType jval_term = ValueType(L[iel] + dot(G[iel], G[iel]));
+
       for (int iorb = 0; iorb < norbs; iorb++)
       {
-        ValueType term1 = ValueType(0.0);
-        if (mu == nu)
-          term1 = ValueType(0.5) * lapl_M[sid][ip][iorb];
-
-        ValueType term2 = ValueType(2.0) * hess_M[sid][ip][iorb][mu * D + nu];
-
-        ValueType dnu_lapl_phi = ValueType(0.0);
-        for (int a = 0; a < D; ++a)
-          dnu_lapl_phi += ghess_M[sid][ip][iorb][nu][a * D + a];
-
-        ValueType term3 = ValueType(P.R[iel][mu]) * dnu_lapl_phi;
-
-        Bstrain[sid][ip][iorb] = ValueType(inv2m) * (term1 + term2 + term3);
+        Bstrain[sid][ip][iorb] =
+            RealType(minus_over_2m_[ig]) *
+            (
+                dlapl_M[sid][ip][iorb]
+                + RealType(2.0) *
+                      (dot(GradType(dG[iel]), grad_M[sid][ip][iorb]) +
+                       dot(GradType(G[iel]), dgrad_M[sid][ip][iorb]))
+                + jlap_term * M[sid][ip][iorb]
+                + jval_term * dM[sid][ip][iorb]
+            );
       }
     }
-  }  
+  }
 }
+
 void BareKineticEnergy::createResource(ResourceCollection& collection) const
 {
   auto new_res        = std::make_unique<MultiWalkerResource>();

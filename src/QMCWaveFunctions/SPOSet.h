@@ -543,6 +543,74 @@ public:
                                      int iat_src,
                                      GradVector& gradphi);
 
+
+  /** evaluate the strain derivatives of the values of this single-particle orbital set
+   * for [first,last) particles
+   *
+   * Under the convention that the strained orbital satisfies
+   * \f$ \phi_{\epsilon}(\mathbf{r}') = \phi(\mathbf{r}) \f$,
+   * the explicit strain derivative of the orbital value vanishes,
+   * \f[
+   *   \frac{\partial \phi}{\partial \epsilon_{\mu\nu}} = 0.
+   * \f]
+   *
+   * @param P current ParticleSet
+   * @param first starting index of the particles
+   * @param last ending index of the particles
+   * @param mu first strain index
+   * @param nu second strain index
+   * @param dstrain_phi strain derivative of orbital values
+   */
+  virtual void evaluateGradStrain(const ParticleSet& P,
+                                  int first,
+                                  int last,
+                                  const int mu,
+                                  const int nu,
+                                  ValueMatrix& dstrain_phi);
+
+  /** evaluate the strain derivatives of the values, gradients, and laplacians
+   * of this single-particle orbital set for [first,last) particles
+   *
+   * Under the convention that the strained orbital satisfies
+   * \f$ \phi_{\epsilon}(\mathbf{r}') = \phi(\mathbf{r}) \f$,
+   * the explicit orbital value strain derivative vanishes,
+   * while the differential operators transform under strain.  The default
+   * implementation corresponds to
+   * \f[
+   *   \frac{\partial \phi}{\partial \epsilon_{\mu\nu}} = 0,
+   * \f]
+   * \f[
+   *   \frac{\partial}{\partial \epsilon_{\mu\nu}}
+   *   \left(\partial_{\lambda}\phi\right)
+   *   =
+   *   -\delta_{\lambda\mu}\,\partial_{\nu}\phi,
+   * \f]
+   * and
+   * \f[
+   *   \frac{\partial}{\partial \epsilon_{\mu\nu}}
+   *   \left(\nabla^2\phi\right)
+   *   =
+   *   -2\,\partial_{\mu}\partial_{\nu}\phi.
+   * \f]
+   *
+   * @param P current ParticleSet
+   * @param first starting index of the particles
+   * @param last ending index of the particles
+   * @param mu first strain index
+   * @param nu second strain index
+   * @param dstrain_phi strain derivative of orbital values
+   * @param dstrain_gradphi strain derivative of orbital gradients
+   * @param dstrain_laplphi strain derivative of orbital laplacians
+   */
+  virtual void evaluateGradStrain(const ParticleSet& P,
+                                  int first,
+                                  int last,
+                                  const int mu,
+                                  const int nu,
+                                  ValueMatrix& dstrain_phi,
+                                  GradMatrix& dstrain_gradphi,
+                                  ValueMatrix& dstrain_laplphi);
+
   /** access the k point related to the given orbital */
   virtual PosType get_k(int orb) { return PosType(); }
 

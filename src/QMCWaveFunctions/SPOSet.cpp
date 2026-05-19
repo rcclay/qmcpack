@@ -464,6 +464,53 @@ void SPOSetT<T>::evaluateGradSourceRow(const ParticleSet& P,
                            "::evaluateGradSourceRow "
                            "must be overloaded when the SPOSet has ion derivatives.");
 }
+template<typename T>
+void SPOSetT<T>::evaluateGradStrain(const ParticleSet& P,
+                                    int first,
+                                    int last,
+                                    const int mu, const int nu,
+                                    ValueMatrix& dstrain_phi)
+{
+
+  for (int iat = first, i = 0; iat < last; ++iat, ++i)
+  {
+    for (int jorb = 0; jorb < dstrain_phi.cols(); ++jorb)
+    {
+      dstrain_phi(i, jorb) = ValueType(0.0);
+    }
+  }
+
+}
+
+template<typename T>
+void SPOSetT<T>::evaluateGradStrain(const ParticleSet& P,
+                                    int first,
+                                    int last,
+                                    const int mu, const int nu,
+                                    ValueMatrix& dstrain_phi,
+				    GradMatrix& dstrain_gradphi,
+				    ValueMatrix& dstrain_laplphi)
+{
+  for (int iat = first, i = 0; iat < last; ++iat, ++i)
+  {
+    ValueVector psi_row(dstrain_phi.cols());
+    GradVector grad_row(dstrain_gradphi.cols());
+    HessVector hess_row(dstrain_laplphi.cols());
+
+    evaluateVGH(P, iat, psi_row, grad_row, hess_row);
+
+    for (int jorb = 0; jorb < dstrain_phi.cols(); ++jorb)
+    {
+      dstrain_phi(i, jorb) = ValueType(0.0);
+
+      dstrain_gradphi(i, jorb) = GradType();
+      dstrain_gradphi(i, jorb)[mu] = -grad_row[jorb][nu];
+
+      dstrain_laplphi(i, jorb) = ValueType(-2.0) * hess_row[jorb](mu, nu);
+    }
+  }
+}
+
 
 template<typename T>
 void SPOSetT<T>::evaluate_spin(const ParticleSet& P, int iat, ValueVector& psi, ValueVector& dpsi)
