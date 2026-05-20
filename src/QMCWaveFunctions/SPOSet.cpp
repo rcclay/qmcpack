@@ -469,16 +469,40 @@ void SPOSetT<T>::evaluateGradStrain(const ParticleSet& P,
                                     int first,
                                     int last,
                                     const int mu, const int nu,
-                                    ValueMatrix& dstrain_phi)
+                                    ValueMatrix& dstrain_phi,
+				    bool strain_coordinates)
 {
+ if(strain_coordinates)
+   for (int iat = first, i = 0; iat < last; ++iat, ++i)
+   {
+     for (int jorb = 0; jorb < dstrain_phi.cols(); ++jorb)
+     {
+       dstrain_phi(i, jorb) = ValueType(0.0);
+     }
+   }
 
-  for (int iat = first, i = 0; iat < last; ++iat, ++i)
-  {
-    for (int jorb = 0; jorb < dstrain_phi.cols(); ++jorb)
+ else	 
+   for (int iat = first, i = 0; iat < last; ++iat, ++i)
     {
-      dstrain_phi(i, jorb) = ValueType(0.0);
+      ValueVector psi_row(dstrain_phi.cols());
+      GradVector grad_row(dstrain_phi.cols());
+      ValueVector lapl_row(dstrain_phi.cols());
+
+      evaluateVGL(P, iat, psi_row, grad_row, lapl_row);
+
+      for (int jorb = 0; jorb < dstrain_phi.cols(); ++jorb)
+      {
+        dstrain_phi(i, jorb) =
+            -ValueType(P.activeR(iat)[mu]) * grad_row[jorb][nu];
+        //Actually, this term would be required if we guaranteed the normalization of the
+	//Orbitals was preserved.  However, we don't do this in QMCPACK.  Maybe explore 
+	//as a better ZVZB estimator later.
+	
+        //if (mu == nu)
+        //  dstrain_phi(i, jorb) -= ValueType(0.5) * psi_row[jorb];
+      }
     }
-  }
+
 
 }
 
@@ -489,26 +513,31 @@ void SPOSetT<T>::evaluateGradStrain(const ParticleSet& P,
                                     const int mu, const int nu,
                                     ValueMatrix& dstrain_phi,
 				    GradMatrix& dstrain_gradphi,
-				    ValueMatrix& dstrain_laplphi)
+				    ValueMatrix& dstrain_laplphi,bool strain_coordinates)
 {
-  for (int iat = first, i = 0; iat < last; ++iat, ++i)
-  {
-    ValueVector psi_row(dstrain_phi.cols());
-    GradVector grad_row(dstrain_gradphi.cols());
-    HessVector hess_row(dstrain_laplphi.cols());
-
-    evaluateVGH(P, iat, psi_row, grad_row, hess_row);
-
-    for (int jorb = 0; jorb < dstrain_phi.cols(); ++jorb)
+  if(strain_coordinates)
+    for (int iat = first, i = 0; iat < last; ++iat, ++i)
     {
-      dstrain_phi(i, jorb) = ValueType(0.0);
+      ValueVector psi_row(dstrain_phi.cols());
+      GradVector grad_row(dstrain_gradphi.cols());
+      HessVector hess_row(dstrain_laplphi.cols());
 
-      dstrain_gradphi(i, jorb) = GradType();
-      dstrain_gradphi(i, jorb)[mu] = -grad_row[jorb][nu];
+      evaluateVGH(P, iat, psi_row, grad_row, hess_row);
 
-      dstrain_laplphi(i, jorb) = ValueType(-2.0) * hess_row[jorb](mu, nu);
+      for (int jorb = 0; jorb < dstrain_phi.cols(); ++jorb)
+      {
+        dstrain_phi(i, jorb) = ValueType(0.0);
+
+        dstrain_gradphi(i, jorb) = GradType();
+        dstrain_gradphi(i, jorb)[mu] = -grad_row[jorb][nu];
+
+        dstrain_laplphi(i, jorb) = ValueType(-2.0) * hess_row[jorb](mu, nu);
+      }
     }
-  }
+  else
+    throw std::runtime_error("Need specialization of " + getClassName() +
+                           "::evaluateGradStrain(...dphi,dgradphi,dlaplphi) for unstrained coordinates\n");
+  
 }
 
 

@@ -317,6 +317,28 @@ public:
                                              const PosType& dr,
                                              std::vector<std::vector<ValueMatrix>>& dB);
 
+    /**
+   * @brief Evaluate strain derivative contribution to B of electron iel and ion iat.
+   *
+   * @param[in] P target particle set (electrons)
+   * @param[in] iat ion ID
+   * @param[in] psi TrialWaveFunction wrapper for fast derivatives
+   * @param[in] iel electron ID
+   * @param[in] r distance between ion iat and electron iel
+   * @param[in] dr displacement vector from ion iat to electron iel
+   * @param[in] mu first strain index
+   * @param[in] nu second strain index
+   * @param[in,out] Bstrain adds the contribution of iel and iat to the strain derivative of the B matrix
+   */
+  void evaluateOneBodyOpMatrixStrainContribution(ParticleSet& P,
+                                                 const int iat,
+                                                 const TWFFastDerivWrapper& psi,
+                                                 const int iel,
+                                                 const RealType r,
+                                                 const PosType& dr,
+                                                 const int mu,
+                                                 const int nu,
+                                                 std::vector<ValueMatrix>& Bstrain);
   void print(std::ostream& os);
 
   inline void setRmax(int rmax) { Rmax = rmax; }

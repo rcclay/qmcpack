@@ -117,7 +117,6 @@ NonLocalECPComponent::RealType NonLocalECPComponent::evaluateOne(ParticleSet& W,
                                                                  bool use_DLA)
 {
   buildQuadraturePointDeltaPosAndPartialPotential(r, dr, deltaV_, knot_pots_);
-
   const bool use_TMDLA = tmove_xy && use_DLA;
 
   if (vp)
@@ -588,7 +587,6 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixContribution(ParticleSet& W,
 
   phi_row.resize(numOrbs);
   temp_row.resize(numOrbs);
-
   buildQuadraturePointDeltaPosAndPartialPotential(r, dr, deltaV_, knot_pots_);
 
   for (int j = 0; j < nknot; j++)
@@ -813,6 +811,154 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixdRContribution(ParticleSet& W,
       dB[idim][sid][thisEIndex][iorb] += RealType(-1.0) * gpot[iorb][idim] - glpoly[iorb][idim] + gwfn[iorb][idim];
 }
 
+
+void NonLocalECPComponent::evaluateOneBodyOpMatrixStrainContribution(ParticleSet& W,
+                                                                     const int iat,
+                                                                     const TWFFastDerivWrapper& psi,
+                                                                     const int iel,
+                                                                     const RealType r,
+                                                                     const PosType& dr,
+                                                                     const int mu,
+                                                                     const int nu,
+                                                                     std::vector<ValueMatrix>& Bstrain)
+{
+  using ValueVector = SPOSet::ValueVector;
+  using GradVector  = SPOSet::GradVector;
+
+  constexpr RealType czero(0);
+  constexpr RealType cone(1);
+
+  const IndexType gid        = W.getGroupID(iel);
+  const IndexType sid        = psi.getTWFGroupIndex(gid);
+  const IndexType firstIndex = W.first(gid);
+  const IndexType thisIndex  = iel - firstIndex;
+  const IndexType norbs      = psi.numOrbitals(sid);
+
+  ValueVector phi_row, dphi_explicit_row;
+  GradVector gradphi_row;
+  phi_row.resize(norbs);
+  dphi_explicit_row.resize(norbs);
+  gradphi_row.resize(norbs);
+
+  buildQuadraturePointDeltaPosAndPartialPotential(r, dr, deltaV_, knot_pots_);
+
+  // Reference Jastrow strain derivative at the original electron position
+  ParticleSet::ParticleGradient dG_ref;
+  ParticleSet::ParticleLaplacian dL_ref;
+  dG_ref.resize(W.getTotalNum());
+  dL_ref.resize(W.getTotalNum());
+  dG_ref = 0.0;
+  dL_ref = 0.0;
+  ValueType dJ_ref(0.0);
+  psi.getStrainGradJ(W, mu, nu, dJ_ref, dG_ref, dL_ref);
+
+  const RealType rinv = cone / r;
+
+  // radial potential and derivative
+  std::vector<RealType> vrad_loc(nchannel), dvrad_loc(nchannel);
+  for (int ip = 0; ip < nchannel; ip++)
+  {
+    RealType secondderiv = 0.0;
+    vrad_loc[ip]  = nlpp_m[ip]->splint(r, dvrad_loc[ip], secondderiv) * wgt_angpp_m[ip];
+  }
+
+  // precompute strain derivative of r
+  const RealType drad_strain = dr[mu] * dr[nu] * rinv;
+
+  for (int j = 0; j < nknot; j++)
+  {
+    // Move electron to quadrature point
+    W.makeMove(iel, deltaV_[j], false);
+
+    // Orbital value and gradient at q_alpha
+    psi.getRowM(W, iel, phi_row);
+    SPOSet& spo(*psi.getSPOSet(sid));
+    spo.evaluateVGL(W, iel, phi_row, gradphi_row, dphi_explicit_row); // dphi_explicit_row used as scratch lapl buffer only
+    // NOTE: phi_row is overwritten by evaluateVGL, which is okay because it recomputes value too.
+
+    // explicit strain derivative of orbital values at q_alpha
+    ValueMatrix dphi_mat(1, norbs);
+    spo.evaluateGradStrain(W, iel, iel + 1, mu, nu, dphi_mat, false);
+    for (int iorb = 0; iorb < norbs; iorb++)
+      dphi_explicit_row[iorb] = dphi_mat(0, iorb);
+
+    // Jastrow ratio and Jastrow strain derivative at q_alpha
+    RealType jratio = psi.evaluateJastrowRatio(W, iel);
+
+    ParticleSet::ParticleGradient dG_q;
+    ParticleSet::ParticleLaplacian dL_q;
+    dG_q.resize(W.getTotalNum());
+    dL_q.resize(W.getTotalNum());
+    dG_q = 0.0;
+    dL_q = 0.0;
+    ValueType dJ_q(0.0);
+    psi.getStrainGradJ(W, mu, nu, dJ_q, dG_q, dL_q);
+
+    const ValueType djratio = jratio * (dJ_q - dJ_ref);
+
+    // Undo move
+    W.rejectMove(iel);
+
+    // Angular quantities
+    const RealType zz = dot(dr, rrotsgrid_m[j]) * rinv;
+    const PosType u   = rrotsgrid_m[j];
+
+    // Build Legendre polynomials and derivatives
+    lpol[0]  = cone;
+    dlpol[0] = czero;
+    RealType lpolprev  = czero;
+    RealType dlpolprev = czero;
+    for (int l = 0; l < lmax; l++)
+    {
+      lpol[l + 1]  = (Lfactor1[l] * zz * lpol[l] - l * lpolprev) * Lfactor2[l];
+      dlpol[l + 1] = (Lfactor1[l] * (zz * dlpol[l] + lpol[l]) - l * dlpolprev) * Lfactor2[l];
+      lpolprev     = lpol[l];
+      dlpolprev    = dlpol[l];
+    }
+
+    // derivative of cos(theta)
+    const RealType dcosth =
+        u[mu] * dr[nu] * rinv
+        - zz * dr[mu] * dr[nu] * rinv * rinv;
+
+    // dq / d epsilon
+    GradType dq;
+    dq = 0.0;
+    //dq = W.R[iel] - dr;
+    dq[mu] += W.R[iel][nu]-dr[nu];
+    for (int idim = 0; idim < OHMMS_DIM; ++idim)
+      dq[idim] += u[idim] * drad_strain;
+
+    for (int iorb = 0; iorb < norbs; iorb++)
+    {
+      ValueType total_contrib = ValueType(0.0);
+
+      for (int l = 0; l < nchannel; l++)
+      {
+        const int lchan = angpp_m[l];
+
+        const RealType vterm = dvrad_loc[l] * drad_strain * lpol[lchan] * sgridweight_m[j];
+        const RealType pterm = vrad_loc[l] * dlpol[lchan] * dcosth * sgridweight_m[j];
+        const RealType base_pref = vrad_loc[l] * lpol[lchan] * sgridweight_m[j];
+
+        const ValueType phi_q = phi_row[iorb];
+        const ValueType dphi_q =
+            dphi_explicit_row[iorb] + dot(gradphi_row[iorb], dq);
+
+//	app_log()<<"j="<<j<<" l="<<l<<" iel="<<iel<<" iorb="<<iorb<<" dr="<<dr<<" q="<<W.R[iel]+deltaV_[j]<<" dq="<<dq<<" phi_q="<<phi_q<<" dphi_q="<<dphi_q<<" dphi_explicit="<<dphi_explicit_row[iorb]<<" gradphi_row="<<gradphi_row[iorb]<<" gradphi*dq="<<dot(gradphi_row[iorb], dq)<<std::endl;
+        total_contrib +=
+            ValueType(vterm) * jratio * phi_q
+          + ValueType(pterm) * jratio * phi_q
+          + ValueType(base_pref) * djratio * phi_q
+          + ValueType(base_pref) * jratio * dphi_q;
+      }
+
+      Bstrain[sid][thisIndex][iorb] += total_contrib;
+    }
+  }
+}
+
+
 ///Randomly rotate sgrid_m
 void NonLocalECPComponent::rotateQuadratureGrid(const TensorType& rmat)
 {
@@ -857,6 +1003,7 @@ void NonLocalECPComponent::calculateKnotPartialProduct(RealType r, const PosType
     RealType lsum = 0.0;
     for (int l = 0; l < nchannel; l++)
       lsum += vrad[l] * lpol[angpp_m[l]];
+
     knot_prods[j] = lsum * sgridweight_m[j];
   }
 }

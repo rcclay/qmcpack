@@ -560,13 +560,16 @@ public:
    * @param mu first strain index
    * @param nu second strain index
    * @param dstrain_phi strain derivative of orbital values
+   * @param strained_coordinates Stated convention.  Sometimes we want \phi_{\epsilon}(\mathbf{r}) at
+   *           arbitrary points.  strained_coordinates = false returns strained orbital value in original coordinate system.  
    */
   virtual void evaluateGradStrain(const ParticleSet& P,
                                   int first,
                                   int last,
                                   const int mu,
                                   const int nu,
-                                  ValueMatrix& dstrain_phi);
+                                  ValueMatrix& dstrain_phi,
+				  bool strained_coordinates = true);
 
   /** evaluate the strain derivatives of the values, gradients, and laplacians
    * of this single-particle orbital set for [first,last) particles
@@ -601,6 +604,9 @@ public:
    * @param dstrain_phi strain derivative of orbital values
    * @param dstrain_gradphi strain derivative of orbital gradients
    * @param dstrain_laplphi strain derivative of orbital laplacians
+   * @param strained_coordinates Stated convention.  Sometimes we want \phi_{\epsilon}(\mathbf{r}) at
+   *           arbitrary points.  strained_coordinates = false returns strained orbital value,gradient, 
+   *           and laplacian in original coordinate system.  
    */
   virtual void evaluateGradStrain(const ParticleSet& P,
                                   int first,
@@ -609,7 +615,8 @@ public:
                                   const int nu,
                                   ValueMatrix& dstrain_phi,
                                   GradMatrix& dstrain_gradphi,
-                                  ValueMatrix& dstrain_laplphi);
+                                  ValueMatrix& dstrain_laplphi,
+				  bool strained_coordinates = true);
 
   /** access the k point related to the given orbital */
   virtual PosType get_k(int orb) { return PosType(); }

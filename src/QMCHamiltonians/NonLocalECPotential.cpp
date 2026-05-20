@@ -502,6 +502,12 @@ void NonLocalECPotential::evaluateOneBodyOpMatrix(ParticleSet& P,
       if (!keepGrid)
         PPset[ipp]->rotateQuadratureGrid(generateRandomRotationMatrix(*myRNG));
 
+  B[0]=0.0;
+  B[1]=0.0;
+  app_log()<<"B_NLPP BEFORE UP\n";
+  app_log()<<B[0]<<std::endl;
+  app_log()<<"B_NLPP_BEFORE_DN\n";
+  app_log()<<B[1]<<std::endl;
   const auto& myTable = P.getDistTableAB(myTableIndex);
   for (int ig = 0; ig < P.groups(); ++ig) //loop over species
   {
@@ -514,6 +520,11 @@ void NonLocalECPotential::evaluateOneBodyOpMatrix(ParticleSet& P,
           PP[iat]->evaluateOneBodyOpMatrixContribution(P, iat, psi, jel, dist[iat], -displ[iat], B);
     }
   }
+
+  app_log()<<"--- B_nlpp_up = \n";
+  app_log()<<B[0]<<std::endl;
+  app_log()<<"--- B_nlpp_dn = \n";
+  app_log()<<B[1]<<std::endl;
 }
 
 void NonLocalECPotential::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
@@ -539,6 +550,33 @@ void NonLocalECPotential::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,
         if (PP[iat] != nullptr && dist[iat] < PP[iat]->getRmax())
           PP[iat]->evaluateOneBodyOpMatrixdRContribution(P, source, iat, iat_source, psi, jel, dist[iat], -displ[iat],
                                                          Bforce);
+    }
+  }
+}
+
+void NonLocalECPotential::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
+                                                             const TWFFastDerivWrapper& psi,
+                                                             const int mu,
+                                                             const int nu,
+                                                             std::vector<ValueMatrix>& Bstrain)
+{
+  bool keepGrid = true;
+  for (int ipp = 0; ipp < PPset.size(); ipp++)
+    if (PPset[ipp])
+      if (!keepGrid)
+        PPset[ipp]->rotateQuadratureGrid(generateRandomRotationMatrix(*myRNG));
+
+  const auto& myTable = P.getDistTableAB(myTableIndex);
+  for (int ig = 0; ig < P.groups(); ++ig) // loop over species
+  {
+    for (int jel = P.first(ig); jel < P.last(ig); ++jel)
+    {
+      const auto& dist  = myTable.getDistRow(jel);
+      const auto& displ = myTable.getDisplRow(jel);
+      for (int iat = 0; iat < PP.size(); iat++)
+        if (PP[iat] != nullptr && dist[iat] < PP[iat]->getRmax())
+          PP[iat]->evaluateOneBodyOpMatrixStrainContribution(P, iat, psi, jel, dist[iat], -displ[iat], mu, nu,
+                                                             Bstrain);
     }
   }
 }
