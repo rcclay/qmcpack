@@ -546,6 +546,34 @@ public:
                                    const OptVariables& optvars,
                                    std::vector<ValueType>& ratios,
                                    Matrix<ValueType>& dratios);
+  /** evaluate ratios and pure strain derivatives of ratios for virtual moves
+   *
+   *  For each virtual move in VP, computes
+   *  \f[
+   *    \mathrm{ratios}[k] = \frac{\Psi(\mathbf R_k')}{\Psi(\mathbf R)}
+   *  \f]
+   *  and
+   *  \f[
+   *    \mathrm{dratios}[k]
+   *    =
+   *    \frac{\partial}{\partial \epsilon_{\mu\nu}}
+   *    \left(
+   *      \frac{\Psi(\mathbf R_k')}{\Psi(\mathbf R)}
+   *    \right),
+   *  \f]
+   *  excluding any extra geometry-specific dependence of the virtual point itself on strain.
+   *
+   *  @param VP virtual particle set
+   *  @param mu first strain index
+   *  @param nu second strain index
+   *  @param ratios ratios with the virtual positions VP.R[k] for VP.refPtcl
+   *  @param dratios pure strain derivatives of those ratios
+   */
+  virtual void evaluateStrainDerivRatios(const VirtualParticleSet& VP,
+                                         const int mu,
+                                         const int nu,
+                                         std::vector<ValueType>& ratios,
+                                         std::vector<ValueType>& dratios);
 
   /** evaluate ratios and derivatives to evaluate the SOECP
    * @param VP VirtualParticleSet

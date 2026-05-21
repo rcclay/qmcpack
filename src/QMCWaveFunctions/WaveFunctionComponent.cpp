@@ -308,6 +308,17 @@ void WaveFunctionComponent::evaluateDerivRatios(const VirtualParticleSet& VP,
   evaluateRatios(VP, ratios);
 }
 
+void WaveFunctionComponent::evaluateStrainDerivRatios(const VirtualParticleSet& VP,
+                                                      const int mu,
+                                                      const int nu,
+                                                      std::vector<ValueType>& ratios,
+                                                      std::vector<ValueType>& dratios)
+{
+    throw std::logic_error("Bug!! " + getClassName() +
+                           "::evaluateStrainDerivRatios "
+                           "must be overloaded.");
+}
+
 void WaveFunctionComponent::evaluateSpinorDerivRatios(const VirtualParticleSet& VP,
                                                       const std::pair<ValueVector, ValueVector>& spinor_multiplier,
                                                       const OptVariables& optvars,

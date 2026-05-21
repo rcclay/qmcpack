@@ -259,6 +259,38 @@ public:
     */
   RealType calcJastrowRatioGrad(ParticleSet& P, const int iel, GradType& grad) const;
 
+   /** @brief Evaluate the Jastrow ratios and pure strain derivatives of those ratios
+   *         for a set of virtual moves.
+   *
+   *  For each virtual move in VP, this computes the total Jastrow ratio
+   *  \f[
+   *    \mathrm{ratios}[k] = \frac{\Psi_J(q_k)}{\Psi_J(r)}
+   *  \f]
+   *  and the pure strain derivative
+   *  \f[
+   *    \mathrm{dratios}[k]
+   *    =
+   *    \frac{\partial}{\partial \epsilon_{\mu\nu}}
+   *    \left(
+   *      \frac{\Psi_J(q_k)}{\Psi_J(r)}
+   *    \right),
+   *  \f]
+   *  excluding any extra geometry-specific dependence of the virtual point itself on strain.
+   *
+   *  This routine simply combines the corresponding per-component quantities from all
+   *  Jastrow WaveFunctionComponent objects by the product rule.
+   *
+   *  @param[in] VP virtual particle set
+   *  @param[in] mu first strain index
+   *  @param[in] nu second strain index
+   *  @param[out] ratios total Jastrow ratios for each virtual move
+   *  @param[out] dratios pure strain derivatives of those total Jastrow ratios
+   */
+  void evaluateJastrowStrainDerivRatios(const VirtualParticleSet& VP,
+                                        const int mu,
+                                        const int nu,
+                                        std::vector<ValueType>& ratios,
+                                        std::vector<ValueType>& dratios) const;
   /** @brief Return ionic gradient of J(r).
     *
     * @param[in] P electron particle set.

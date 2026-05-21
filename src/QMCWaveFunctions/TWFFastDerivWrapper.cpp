@@ -142,6 +142,47 @@ TWFFastDerivWrapper::RealType TWFFastDerivWrapper::calcJastrowRatioGrad(Particle
   return ratio_return;
 }
 
+void TWFFastDerivWrapper::evaluateJastrowStrainDerivRatios(const VirtualParticleSet& VP,
+                                                           const int mu,
+                                                           const int nu,
+                                                           std::vector<ValueType>& ratios,
+                                                           std::vector<ValueType>& dratios) const
+{
+  const int nvp = VP.getTotalNum();
+
+  ratios.resize(nvp);
+  dratios.resize(nvp);
+
+  std::fill(ratios.begin(), ratios.end(), ValueType(1.0));
+  std::fill(dratios.begin(), dratios.end(), ValueType(0.0));
+
+  std::vector<ValueType> ratios_comp(nvp);
+  std::vector<ValueType> dratios_comp(nvp);
+
+  for (int ic = 0; ic < jastrow_list_.size(); ++ic)
+  {
+    auto* jcomp = jastrow_list_[ic];
+    if (jcomp == nullptr)
+      continue;
+
+    jcomp->evaluateStrainDerivRatios(VP, mu, nu, ratios_comp, dratios_comp);
+
+    for (int k = 0; k < nvp; ++k)
+    {
+      const ValueType ratio_old   = ratios[k];
+      const ValueType dratio_old  = dratios[k];
+      const ValueType ratio_comp  = ratios_comp[k];
+      const ValueType dratio_comp = dratios_comp[k];
+
+      // Product rule:
+      // new_ratio  = old_ratio * ratio_comp
+      // new_dratio = old_dratio * ratio_comp + old_ratio * dratio_comp
+      dratios[k] = dratio_old * ratio_comp + ratio_old * dratio_comp;
+      ratios[k]  = ratio_old * ratio_comp;
+    }
+  }
+}
+
 TWFFastDerivWrapper::GradType TWFFastDerivWrapper::evaluateJastrowGradSource(ParticleSet& P,
                                                                              ParticleSet& source,
                                                                              const int iat) const

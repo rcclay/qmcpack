@@ -766,6 +766,71 @@ public:
     //RCC If QMCPACK returns -J, then this needs to be -d/dstrain J.  
     return -strain_grad;
   }
+
+
+  inline void evaluateStrainDerivRatios(const VirtualParticleSet& VP,
+                                                 const int mu,
+                                                 const int nu,
+                                                 std::vector<ValueType>& ratios,
+                                                 std::vector<ValueType>& dratios) override
+  {
+    const int refPtcl = VP.refPtcl;
+
+    const auto& ref_dist  = VP.getRefPS().getDistTableAB(myTableID).getDistRow(refPtcl);
+    const auto& ref_displ = VP.getRefPS().getDistTableAB(myTableID).getDisplRow(refPtcl);
+
+    // scalar strain derivative at the reference position
+    ValueType dJ_ref = ValueType(0.0);
+    for (int iat = 0; iat < Nions; ++iat)
+    {
+      const int gid = Ions.getGroupID(iat);
+      auto* func    = J1UniqueFunctors[gid].get();
+      if (func == nullptr)
+        continue;
+
+      valT dudr, d2udr2, d3udr3;
+      func->evaluate(ref_dist[iat], dudr, d2udr2, d3udr3);
+
+      const posT& dr = ref_displ[iat];
+      const valT r   = ref_dist[iat];
+
+      dJ_ref -= ValueType(dr[mu] * dr[nu] * dudr / r);
+    }
+
+    // ratio and strain derivative for each virtual point
+    const auto& vp_table = VP.getDistTableAB(myTableID);
+
+    for (int k = 0; k < ratios.size(); ++k)
+    {
+      const auto& dist  = vp_table.getDistRow(k);
+      const auto& displ = vp_table.getDisplRow(k);
+
+      // moved-point scalar J1 contribution
+      const ValueType J_q = computeU(dist);
+      ratios[k]           = std::exp(Vat[refPtcl] - J_q);
+
+      // scalar strain derivative at the virtual point
+      ValueType dJ_q = ValueType(0.0);
+      for (int iat = 0; iat < Nions; ++iat)
+      {
+        const int gid = Ions.getGroupID(iat);
+        auto* func    = J1UniqueFunctors[gid].get();
+        if (func == nullptr)
+          continue;
+
+        valT dudr, d2udr2, d3udr3;
+        func->evaluate(dist[iat], dudr, d2udr2, d3udr3);
+
+        const posT& dr = displ[iat];
+        const valT r   = dist[iat];
+
+        dJ_q -= ValueType(dr[mu] * dr[nu] * dudr / r);
+      }
+
+      dratios[k] = ratios[k] * (dJ_q - dJ_ref);
+    }
+  }
+
 };
 
 extern template class J1OrbitalSoA<BsplineFunctor<QMCTraits::RealType>>;
