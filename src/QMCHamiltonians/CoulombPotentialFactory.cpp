@@ -31,6 +31,8 @@
 #include "QMCHamiltonians/BareForce.h"
 #include "QMCHamiltonians/ForceCeperley.h"
 #include "QMCHamiltonians/ACForce.h"
+#include "QMCHamiltonians/ACStress.h"
+
 #if defined(HAVE_LIBFFTW)
 #include "QMCHamiltonians/MPC.h"
 #endif
@@ -220,6 +222,20 @@ void HamiltonianFactory::addForceHam(xmlNodePtr cur)
       std::unique_ptr<ACForce> acforce = std::make_unique<ACForce>(*source, *target, *psi_optional_, *targetH);
       acforce->put(cur);
       targetH->addOperator(std::move(acforce), title, false);
+    }
+  }
+  else if (mode == "acstress")
+  {
+    app_log() << "Adding Assaraf-Caffarel Stress Estimator.\n";
+    if (!psi_optional_)
+      throw UniformCommunicateError(
+          "Self-heading overlap estimator requires an explicitly associated wavefunction. Please specify the "
+          "wavefunction attribute of the hamiltonian node in the xml input.");
+    else
+    {
+      std::unique_ptr<ACStress> acstress = std::make_unique<ACStress>(*target, *psi_optional_, *targetH);
+      acstress->put(cur);
+      targetH->addOperator(std::move(acstress), title, false);
     }
   }
   else

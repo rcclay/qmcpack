@@ -19,6 +19,7 @@
 set(HAMSRCS
     HamiltonianPool.cpp
     ACForce.cpp
+    ACStress.cpp
     OperatorBase.cpp
     QMCHamiltonian.cpp
     Hdispatcher.cpp

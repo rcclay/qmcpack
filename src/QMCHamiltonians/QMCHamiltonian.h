@@ -61,6 +61,7 @@ public:
   using Walker_t         = OperatorBase::Walker_t;
   using WP               = WalkerProperties::Indexes;
   using ValueMatrix      = SPOSet::ValueMatrix;
+  using GradMatrix      = SPOSet::GradMatrix;
   enum
   {
     DIM = OHMMS_DIM
@@ -302,6 +303,19 @@ public:
                              TWFFastDerivWrapper& psi_wrapper,
                              ParticleSet::ParticlePos& dedr,
                              ParticleSet::ParticlePos& wf_grad);
+
+  /** evaluate local energy derivatives with respect to strain using the fast derivative pathway
+   * @param P target particle set (electrons)
+   * @param psi_in Trial wave function
+   * @param psi_wrapper fast derivative wrapper
+   * @param dEdStrain fast-derivative contribution to d/dε (H Psi / Psi)
+   * @param wf_strain_grad d/dε log(Psi)
+   */
+  void evaluateStrainDerivsFast(ParticleSet& P,
+                                TrialWaveFunction& psi_in,
+                                TWFFastDerivWrapper& psi_wrapper,
+                                Tensor<RealType, OHMMS_DIM>& dEdStrain,
+                                Tensor<RealType, OHMMS_DIM>& wf_strain_grad);
 
   /** Evaluate the electron gradient of the local energy.
   * @param psi Trial Wave Function

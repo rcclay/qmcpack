@@ -1281,4 +1281,154 @@ void QMCHamiltonian::evaluateIonDerivsFast(ParticleSet& P,
   }
   dEdR += hfdiag_;
 }
+
+void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
+                                              TrialWaveFunction& psi_in,
+                                              TWFFastDerivWrapper& psi_wrapper_in,
+                                              Tensor<RealType, OHMMS_DIM>& dEdStrain,
+                                              Tensor<RealType, OHMMS_DIM>& wf_strain_grad)
+{
+  ScopedTimer local_timer(eval_ion_derivs_fast_timer_);
+  P.update();
+
+  const int ngroups = psi_wrapper_in.numGroups();
+
+  // ------------------------------------------------------------------
+  // 1. Common matrices
+  // ------------------------------------------------------------------
+  std::vector<ValueMatrix> X_;
+  std::vector<ValueMatrix> Minv_;
+  std::vector<ValueMatrix> B_;
+  std::vector<ValueMatrix> B_gs_;
+  std::vector<ValueMatrix> M_;
+  std::vector<ValueMatrix> M_gs_;
+  std::vector<ValueMatrix> Minv_B_;
+  std::vector<ValueMatrix> Minv_Mv_;
+
+  // flat strain-derivative matrices
+  std::vector<ValueMatrix> dM_;
+  std::vector<ValueMatrix> dB_;
+  std::vector<ValueMatrix> dM_gs_;
+  std::vector<ValueMatrix> dB_gs_;
+
+  {
+    M_.resize(ngroups);
+    M_gs_.resize(ngroups);
+    X_.resize(ngroups);
+    B_.resize(ngroups);
+    B_gs_.resize(ngroups);
+    Minv_.resize(ngroups);
+    Minv_B_.resize(ngroups);
+    Minv_Mv_.resize(ngroups);
+
+    dM_.resize(ngroups);
+    dB_.resize(ngroups);
+    dM_gs_.resize(ngroups);
+    dB_gs_.resize(ngroups);
+
+    for (int gid = 0; gid < ngroups; gid++)
+    {
+      const int sid    = psi_wrapper_in.getTWFGroupIndex(gid);
+      const int first  = P.first(gid);
+      const int last   = P.last(gid);
+      const int nptcls = last - first;
+      const int norbs  = psi_wrapper_in.numOrbitals(sid);
+      const int nvirt  = norbs - nptcls;
+
+      M_[sid].resize(nptcls, norbs);
+      B_[sid].resize(nptcls, norbs);
+      Minv_B_[sid].resize(nptcls, norbs);
+      Minv_Mv_[sid].resize(nptcls, nvirt);
+
+      M_gs_[sid].resize(nptcls, nptcls);
+      Minv_[sid].resize(nptcls, nptcls);
+      B_gs_[sid].resize(nptcls, nptcls);
+      X_[sid].resize(nptcls, nptcls);
+
+      dM_[sid].resize(nptcls, norbs);
+      dB_[sid].resize(nptcls, norbs);
+
+      dM_gs_[sid].resize(nptcls, nptcls);
+      dB_gs_[sid].resize(nptcls, nptcls);
+    }
+
+    psi_wrapper_in.wipeMatrices(M_);
+    psi_wrapper_in.wipeMatrices(M_gs_);
+    psi_wrapper_in.wipeMatrices(X_);
+    psi_wrapper_in.wipeMatrices(B_);
+    psi_wrapper_in.wipeMatrices(Minv_);
+    psi_wrapper_in.wipeMatrices(B_gs_);
+    psi_wrapper_in.wipeMatrices(Minv_B_);
+    psi_wrapper_in.wipeMatrices(Minv_Mv_);
+
+    psi_wrapper_in.wipeMatrices(dM_);
+    psi_wrapper_in.wipeMatrices(dB_);
+    psi_wrapper_in.wipeMatrices(dM_gs_);
+    psi_wrapper_in.wipeMatrices(dB_gs_);
+  }
+
+  // ------------------------------------------------------------------
+  // 2. Build M, Minv, B, X once
+  // ------------------------------------------------------------------
+  psi_wrapper_in.getM(P, M_);
+  psi_wrapper_in.getGSMatrices(M_, M_gs_);
+  psi_wrapper_in.invertMatrices(M_gs_, Minv_);
+
+  for (int i = 0; i < H.size(); ++i)
+    if (H[i]->dependsOnWaveFunction())
+      H[i]->evaluateOneBodyOpMatrix(P, psi_wrapper_in, B_);
+
+  psi_wrapper_in.getGSMatrices(B_, B_gs_);
+  psi_wrapper_in.buildIntermediates(Minv_, B_, M_, X_, Minv_B_, Minv_Mv_);
+
+  // ------------------------------------------------------------------
+  // 3. Loop over strain components
+  // ------------------------------------------------------------------
+  dEdStrain      = 0.0;
+  wf_strain_grad = 0.0;
+
+  for (int mu = 0; mu < OHMMS_DIM; ++mu)
+    for (int nu = 0; nu < OHMMS_DIM; ++nu)
+    {
+      // scalar / gradient / laplacian strain derivative of total Jastrow
+      ValueType dJ_val(0.0);
+      ParticleSet::ParticleGradient dG_jastrow;
+      ParticleSet::ParticleLaplacian dL_jastrow;
+      dG_jastrow.resize(P.getTotalNum());
+      dL_jastrow.resize(P.getTotalNum());
+      dG_jastrow = 0.0;
+      dL_jastrow = 0.0;
+
+      psi_wrapper_in.getStrainGradJ(P, mu, nu, dJ_val, dG_jastrow, dL_jastrow);
+
+      // zero derivative buffers
+      psi_wrapper_in.wipeMatrices(dM_);
+      psi_wrapper_in.wipeMatrices(dB_);
+      psi_wrapper_in.wipeMatrices(dM_gs_);
+      psi_wrapper_in.wipeMatrices(dB_gs_);
+
+      // orbital strain derivative matrices
+      psi_wrapper_in.getStrainGradM(P, mu, nu, dM_);
+
+      // operator strain derivative B matrices
+      for (int i = 0; i < H.size(); ++i)
+        if (H[i]->dependsOnWaveFunction())
+          H[i]->evaluateOneBodyOpMatrixStrainDeriv(P, psi_wrapper_in, mu, nu, dB_);
+
+      // GS slices
+      psi_wrapper_in.getGSMatrices(dM_, dM_gs_);
+      psi_wrapper_in.getGSMatrices(dB_, dB_gs_);
+
+      // determinant contribution
+      ValueType fval_dmu_O = psi_wrapper_in.computeGSDerivative(Minv_, X_, dM_gs_, dB_gs_);
+      ValueType fval_dmu   = psi_wrapper_in.trAB(Minv_, dM_gs_);
+
+      // add Jastrow scalar strain derivative
+      fval_dmu += dJ_val;
+
+      dEdStrain(mu, nu)      = std::real(fval_dmu_O);
+      wf_strain_grad(mu, nu) = std::real(fval_dmu);
+    }
+}
+
 } // namespace qmcplusplus
