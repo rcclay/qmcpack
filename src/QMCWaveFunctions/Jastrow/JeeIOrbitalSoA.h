@@ -1287,6 +1287,359 @@ public:
       }
     return ion_deriv;
   }
+
+  inline void evaluateStrainDerivRatios(const VirtualParticleSet& VP,
+                                 const int mu,
+                                 const int nu,
+                                 std::vector<ValueType>& ratios,
+                                 std::vector<ValueType>& dratios) override
+  {
+    constexpr valT czero(0);
+    constexpr valT cone(1);
+    constexpr valT cminus(-1);
+
+    const auto& refPS = VP.getRefPS();
+    const int refPtcl = VP.refPtcl;
+    const int kg      = refPS.getGroupID(refPtcl);
+
+    const auto& ee_ref_table = refPS.getDistTableAA(ee_Table_ID_);
+    const auto& ei_ref_table = refPS.getDistTableAB(ei_Table_ID_);
+
+    const auto& ee_vp_table = VP.getDistTableAB(ee_Table_ID_);
+    const auto& ei_vp_table = VP.getDistTableAB(ei_Table_ID_);
+
+    const int nVP = VP.getTotalNum();
+    ratios.resize(nVP);
+    dratios.resize(nVP);
+
+    // -------------------------------
+    // Reference contribution S_ref and dS_ref
+    // -------------------------------
+    ValueType S_ref(czero);
+    ValueType dS_ref(czero);
+
+    std::vector<int> ions_nearby_ref;
+    for (int iat = 0; iat < Nion; ++iat)
+      if (ei_ref_table.getDistRow(refPtcl)[iat] < Ion_cutoff[iat])
+        ions_nearby_ref.push_back(iat);
+
+    for (int iind = 0; iind < ions_nearby_ref.size(); ++iind)
+    {
+      const int iat = ions_nearby_ref[iind];
+      const int ig  = Ions.GroupID[iat];
+
+      const valT r_kI = ei_ref_table.getDistRow(refPtcl)[iat];
+      const posT disp_Ik = cminus * ei_ref_table.getDisplRow(refPtcl)[iat];
+      const valT r_kI_inv = cone / r_kI;
+
+      for (int jg = 0; jg < eGroups; ++jg)
+      {
+        for (int jind = 0; jind < elecs_inside(jg, iat).size(); ++jind)
+        {
+          const int jel = elecs_inside(jg, iat)[jind];
+          if (jel == refPtcl)
+            continue;
+
+          const valT r_jI = elecs_inside_dist(jg, iat)[jind];
+          const posT disp_Ij = cminus * elecs_inside_displ(jg, iat)[jind];
+          const valT r_jI_inv = cone / r_jI;
+
+          valT r_jk;
+          posT disp_jk;
+          if (jel < refPtcl)
+          {
+            r_jk    = ee_ref_table.getDistRow(refPtcl)[jel];
+            disp_jk = ee_ref_table.getDisplRow(refPtcl)[jel];
+          }
+          else
+          {
+            r_jk    = ee_ref_table.getDistRow(jel)[refPtcl];
+            disp_jk = -ee_ref_table.getDisplRow(jel)[refPtcl];
+          }
+          const valT r_jk_inv = cone / r_jk;
+
+          FT& func = *F(ig, jg, kg);
+
+          TinyVector<RealType, 3> grad;
+          Tensor<RealType, 3> hess;
+          const valT uval = func.evaluate(r_jk, r_jI, r_kI, grad, hess);
+
+          S_ref -= ValueType(uval);
+
+          dS_ref -= ValueType(
+              grad[0] * disp_jk[mu] * disp_jk[nu] * r_jk_inv +
+              grad[1] * disp_Ij[mu] * disp_Ij[nu] * r_jI_inv +
+              grad[2] * disp_Ik[mu] * disp_Ik[nu] * r_kI_inv
+          );
+        }
+      }
+    }
+
+    // -------------------------------
+    // Virtual-point contributions
+    // -------------------------------
+    for (int ivp = 0; ivp < nVP; ++ivp)
+    {
+      ValueType S_q(czero);
+      ValueType dS_q(czero);
+
+      std::vector<int> ions_nearby_q;
+      for (int iat = 0; iat < Nion; ++iat)
+        if (ei_vp_table.getDistRow(ivp)[iat] < Ion_cutoff[iat])
+          ions_nearby_q.push_back(iat);
+
+      for (int iind = 0; iind < ions_nearby_q.size(); ++iind)
+      {
+        const int iat = ions_nearby_q[iind];
+        const int ig  = Ions.GroupID[iat];
+
+        const valT r_kI = ei_vp_table.getDistRow(ivp)[iat];
+        const posT disp_Ik = cminus * ei_vp_table.getDisplRow(ivp)[iat];
+        const valT r_kI_inv = cone / r_kI;
+
+        for (int jg = 0; jg < eGroups; ++jg)
+        {
+          for (int jind = 0; jind < elecs_inside(jg, iat).size(); ++jind)
+          {
+            const int jel = elecs_inside(jg, iat)[jind];
+            if (jel == refPtcl)
+              continue;
+
+            const valT r_jI = elecs_inside_dist(jg, iat)[jind];
+            const posT disp_Ij = cminus * elecs_inside_displ(jg, iat)[jind];
+            const valT r_jI_inv = cone / r_jI;
+
+            const valT r_jk = ee_vp_table.getDistRow(ivp)[jel];
+            const posT disp_jk = ee_vp_table.getDisplRow(ivp)[jel];
+            const valT r_jk_inv = cone / r_jk;
+
+            FT& func = *F(ig, jg, kg);
+
+            TinyVector<RealType, 3> grad;
+            Tensor<RealType, 3> hess;
+            const valT uval = func.evaluate(r_jk, r_jI, r_kI, grad, hess);
+
+            S_q -= ValueType(uval);
+
+            dS_q -= ValueType(
+                grad[0] * disp_jk[mu] * disp_jk[nu] * r_jk_inv +
+                grad[1] * disp_Ij[mu] * disp_Ij[nu] * r_jI_inv +
+                grad[2] * disp_Ik[mu] * disp_Ik[nu] * r_kI_inv
+            );
+          }
+        }
+      }
+
+      ratios[ivp]  = std::exp(S_q - S_ref);
+      dratios[ivp] = ratios[ivp] * (dS_q - dS_ref);
+    }
+  }
+
+  inline ValueType evalStrainGrad(const ParticleSet& P,
+                                  const int mu,
+                                  const int nu,
+                                  ParticleSet::ParticleGradient& G,
+                                  ParticleSet::ParticleLaplacian& L) override
+  {
+    constexpr valT czero(0);
+    constexpr valT cone(1);
+    constexpr valT cminus(-1);
+    constexpr valT ctwo(2);
+    constexpr valT lapfac = OHMMS_DIM - cone;
+
+    const auto& ee_table  = P.getDistTableAA(ee_Table_ID_);
+    const auto& ee_dists  = ee_table.getDistances();
+    const auto& ee_displs = ee_table.getDisplacements();
+
+    build_compact_list(P);
+
+    ValueType strain_grad = ValueType(czero);
+
+    for (int iat = 0; iat < Nion; ++iat)
+    {
+      const int ig = Ions.GroupID[iat];
+
+      for (int jg = 0; jg < eGroups; ++jg)
+      {
+        for (int jind = 0; jind < elecs_inside(jg, iat).size(); ++jind)
+        {
+          const int jel       = elecs_inside(jg, iat)[jind];
+          const valT r_jI     = elecs_inside_dist(jg, iat)[jind];
+          const posT disp_jI  = cminus * elecs_inside_displ(jg, iat)[jind];
+          const valT r_jI_inv = cone / r_jI;
+
+          for (int kg = 0; kg < eGroups; ++kg)
+          {
+            for (int kind = 0; kind < elecs_inside(kg, iat).size(); ++kind)
+            {
+              const int kel = elecs_inside(kg, iat)[kind];
+              if (kel >= jel)
+                continue;
+
+              const valT r_kI     = elecs_inside_dist(kg, iat)[kind];
+              const posT disp_kI  = cminus * elecs_inside_displ(kg, iat)[kind];
+              const valT r_kI_inv = cone / r_kI;
+
+              const valT r_jk     = ee_dists[jel][kel];
+              const posT disp_jk  = ee_displs[jel][kel];
+              const valT r_jk_inv = cone / r_jk;
+
+              const posT u_jk = disp_jk * r_jk_inv;
+              const posT u_jI = disp_jI * r_jI_inv;
+              const posT u_kI = disp_kI * r_kI_inv;
+
+              const valT dot_ujk_uIj = dot(u_jk, u_jI);
+              const valT dot_ujk_uIk = dot(u_jk, u_kI);
+
+              FT& func = *F(ig, jg, kg);
+
+              TinyVector<RealType, 3> grad;
+              Tensor<RealType, 3> hess;
+              TinyVector<Tensor<RealType, 3>, 3> d3;
+              const valT uval = func.evaluate(r_jk, r_jI, r_kI, grad, hess, d3);
+
+              // ---------------------------------------------------------
+              // Scalar strain derivative pieces: da, db, dc
+              // ---------------------------------------------------------
+              const valT da = disp_jk[mu] * disp_jk[nu] * r_jk_inv;
+              const valT db = disp_jI[mu] * disp_jI[nu] * r_jI_inv;
+              const valT dc = disp_kI[mu] * disp_kI[nu] * r_kI_inv;
+
+              // component contributes as S = -U
+              strain_grad -= ValueType(grad[0] * da + grad[1] * db + grad[2] * dc);
+
+              // ---------------------------------------------------------
+              // Strain derivatives of first radial derivatives
+              // ---------------------------------------------------------
+              const valT dUa =
+                  hess(0,0) * da + hess(0,1) * db + hess(0,2) * dc;
+
+              const valT dUb =
+                  hess(0,1) * da + hess(1,1) * db + hess(1,2) * dc;
+
+              const valT dUc =
+                  hess(0,2) * da + hess(1,2) * db + hess(2,2) * dc;
+
+              // ---------------------------------------------------------
+              // Gradient strain derivative
+              // ---------------------------------------------------------
+              posT dgrad_j(czero);
+              posT dgrad_k(czero);
+
+              for (int lambda = 0; lambda < OHMMS_DIM; ++lambda)
+              {
+                const valT duhat_jk =
+                    (lambda == mu ? disp_jk[nu] * r_jk_inv : czero)
+                    - disp_jk[lambda] * disp_jk[mu] * disp_jk[nu] *
+                          r_jk_inv * r_jk_inv * r_jk_inv;
+
+                const valT duhat_jI =
+                    (lambda == mu ? disp_jI[nu] * r_jI_inv : czero)
+                    - disp_jI[lambda] * disp_jI[mu] * disp_jI[nu] *
+                          r_jI_inv * r_jI_inv * r_jI_inv;
+
+                const valT duhat_kI =
+                    (lambda == mu ? disp_kI[nu] * r_kI_inv : czero)
+                    - disp_kI[lambda] * disp_kI[mu] * disp_kI[nu] *
+                          r_kI_inv * r_kI_inv * r_kI_inv;
+
+                // grad_j(U)
+                dgrad_j[lambda] =
+                    dUa * u_jk[lambda]
+                    + grad[0] * duhat_jk
+                    + dUb * u_jI[lambda]
+                    + grad[1] * duhat_jI;
+
+                // grad_k(U)
+                dgrad_k[lambda] =
+                    -dUa * u_jk[lambda]
+                    - grad[0] * duhat_jk
+                    + dUc * u_kI[lambda]
+                    + grad[2] * duhat_kI;
+              }
+
+              // component log is -U
+              G[jel] -= dgrad_j;
+              G[kel] -= dgrad_k;
+
+              // ---------------------------------------------------------
+              // Laplacian strain derivative
+              // ---------------------------------------------------------
+
+              // second derivative strain pieces
+              const valT dUaa =
+                  d3[0](0,0) * da + d3[0](0,1) * db + d3[0](0,2) * dc;
+
+              const valT dUbb =
+                  d3[0](1,1) * da + d3[1](1,1) * db + d3[1](1,2) * dc;
+
+              const valT dUcc =
+                  d3[0](2,2) * da + d3[1](2,2) * db + d3[2](2,2) * dc;
+
+              const valT dUab =
+                  d3[0](0,1) * da + d3[0](1,1) * db + d3[0](1,2) * dc;
+
+              const valT dUac =
+                  d3[0](0,2) * da + d3[0](1,2) * db + d3[0](2,2) * dc;
+
+              // derivatives of U_a/a, U_b/b, U_c/c
+              const valT dUa_over_a = dUa * r_jk_inv - grad[0] * da * r_jk_inv * r_jk_inv;
+              const valT dUb_over_b = dUb * r_jI_inv - grad[1] * db * r_jI_inv * r_jI_inv;
+              const valT dUc_over_c = dUc * r_kI_inv - grad[2] * dc * r_kI_inv * r_kI_inv;
+
+              // d alpha = d( u_jk . u_jI )
+              valT dalpha = czero;
+              valT dbeta  = czero;
+              for (int lambda = 0; lambda < OHMMS_DIM; ++lambda)
+              {
+                const valT duhat_jk =
+                    (lambda == mu ? disp_jk[nu] * r_jk_inv : czero)
+                    - disp_jk[lambda] * disp_jk[mu] * disp_jk[nu] *
+                          r_jk_inv * r_jk_inv * r_jk_inv;
+
+                const valT duhat_jI =
+                    (lambda == mu ? disp_jI[nu] * r_jI_inv : czero)
+                    - disp_jI[lambda] * disp_jI[mu] * disp_jI[nu] *
+                          r_jI_inv * r_jI_inv * r_jI_inv;
+
+                const valT duhat_kI =
+                    (lambda == mu ? disp_kI[nu] * r_kI_inv : czero)
+                    - disp_kI[lambda] * disp_kI[mu] * disp_kI[nu] *
+                          r_kI_inv * r_kI_inv * r_kI_inv;
+
+                dalpha += duhat_jk * u_jI[lambda] + u_jk[lambda] * duhat_jI;
+                dbeta  += duhat_jk * u_kI[lambda] + u_jk[lambda] * duhat_kI;
+              }
+
+              // Electron j laplacian contribution:
+              // Lambda_j = Uaa + lapfac * Ua/a - 2 Uab * alpha + Ubb + lapfac * Ub/b
+              const valT dLambda_j =
+                  dUaa
+                  + lapfac * dUa_over_a
+                  - ctwo * (dUab * dot_ujk_uIj + hess(0,1) * dalpha)
+                  + dUbb
+                  + lapfac * dUb_over_b;
+
+              // Electron k laplacian contribution:
+              // Lambda_k = Uaa + lapfac * Ua/a + 2 Uac * beta + Ucc + lapfac * Uc/c
+              const valT dLambda_k =
+                  dUaa
+                  + lapfac * dUa_over_a
+                  + ctwo * (dUac * dot_ujk_uIk + hess(0,2) * dbeta)
+                  + dUcc
+                  + lapfac * dUc_over_c;
+
+              // component log is -U
+              L[jel] -= dLambda_j;
+              L[kel] -= dLambda_k;
+            }
+          }
+        }
+      }
+    }
+
+    return strain_grad;
+  }
 };
 
 } // namespace qmcplusplus
