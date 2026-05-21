@@ -273,6 +273,12 @@ public:
 		           const int mu, const int nu, 
 		           ParticleSet::ParticleGradient& G,
 		           ParticleSet::ParticleLaplacian& L) override;
+
+  void evaluateStrainDerivRatios(const VirtualParticleSet& VP,
+                                 const int mu,
+                                 const int nu,
+                                 std::vector<ValueType>& ratios,
+                                 std::vector<ValueType>& dratios) override;
 };
 
 extern template class TwoBodyJastrow<BsplineFunctor<QMCTraits::RealType>>;

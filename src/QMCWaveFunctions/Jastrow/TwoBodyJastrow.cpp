@@ -1107,6 +1107,95 @@ typename TwoBodyJastrow<FT>::QTFull::ValueType TwoBodyJastrow<FT>::evalStrainGra
     return strain_grad;
 }
 
+template<typename FT>
+void TwoBodyJastrow<FT>::evaluateStrainDerivRatios(const VirtualParticleSet& VP,
+                                                   const int mu,
+                                                   const int nu,
+                                                   std::vector<ValueType>& ratios,
+                                                   std::vector<ValueType>& dratios)
+{
+  const int refPtcl = VP.refPtcl;
+  const int refGroup = VP.getRefPS().GroupID[refPtcl];
+
+  const auto& refPS      = VP.getRefPS();
+  const auto& ref_ee_dt  = refPS.getDistTableAA(my_table_ID_);
+  const auto& vp_ee_dt   = VP.getDistTableAB(my_table_ID_);
+
+  const auto& ref_dist   = ref_ee_dt.getDistRow(refPtcl);
+  const auto& ref_displ  = ref_ee_dt.getDisplRow(refPtcl);
+
+  const int nvp = VP.getTotalNum();
+  ratios.resize(nvp);
+  dratios.resize(nvp);
+
+  // -----------------------------------------
+  // 1. Compute reference scalar contribution and reference strain derivative
+  // -----------------------------------------
+  ValueType S_ref  = ValueType(0.0);
+  ValueType dS_ref = ValueType(0.0);
+
+  const int igt_ref = refGroup * NumGroups;
+
+  for (int j = 0; j < N; ++j)
+  {
+    if (j == refPtcl)
+      continue;
+
+    FT* func = F[igt_ref + refPS.GroupID[j]];
+    if (func == nullptr)
+      continue;
+
+    valT dudr(0.0), d2udr2(0.0), d3udr3(0.0);
+    const valT r = (j < refPtcl) ? ref_ee_dt.getDistRow(refPtcl)[j]
+                                 : ref_ee_dt.getDistRow(j)[refPtcl];
+
+    PosType dr;
+    if (j < refPtcl)
+      dr = ref_ee_dt.getDisplRow(refPtcl)[j];
+    else
+      dr = -ref_ee_dt.getDisplRow(j)[refPtcl];
+
+    const valT uval = func->evaluate(r, dudr, d2udr2, d3udr3);
+
+    S_ref  -= ValueType(uval);
+    dS_ref -= ValueType(dr[mu] * dr[nu] * dudr / r);
+  }
+
+  // -----------------------------------------
+  // 2. Loop over virtual points
+  // -----------------------------------------
+  for (int k = 0; k < nvp; ++k)
+  {
+    ValueType S_q  = ValueType(0.0);
+    ValueType dS_q = ValueType(0.0);
+
+    const auto& dist  = vp_ee_dt.getDistRow(k);
+    const auto& displ = vp_ee_dt.getDisplRow(k);
+
+    for (int j = 0; j < N; ++j)
+    {
+      if (j == refPtcl)
+        continue;
+
+      FT* func = F[igt_ref + refPS.GroupID[j]];
+      if (func == nullptr)
+        continue;
+
+      valT dudr(0.0), d2udr2(0.0), d3udr3(0.0);
+      const valT r = dist[j];
+      const PosType& dr = displ[j];
+
+      const valT uval = func->evaluate(r, dudr, d2udr2, d3udr3);
+
+      S_q  -= ValueType(uval);
+      dS_q -= ValueType(dr[mu] * dr[nu] * dudr / r);
+    }
+
+    ratios[k]  = std::exp(S_q - S_ref);
+    dratios[k] = ratios[k] * (dS_q - dS_ref);
+  }
+}
+
 template class TwoBodyJastrow<BsplineFunctor<QMCTraits::RealType>>;
 template class TwoBodyJastrow<PadeFunctor<QMCTraits::RealType>>;
 template class TwoBodyJastrow<UserFunctor<QMCTraits::RealType>>;

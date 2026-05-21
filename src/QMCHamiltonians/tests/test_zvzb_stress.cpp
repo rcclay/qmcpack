@@ -31,51 +31,6 @@
 namespace qmcplusplus
 {
 
-void create_C_pbc_particlesets2(ParticleSet& elec, ParticleSet& ions)
-{
-  ions.setName("ion0");
-  ions.create({2});
-  ions.R[0] = {0.1, 0.1, 0.1};
-  ions.R[1] = {1.6865805750, 1.6865805750, 1.6865805750};
-  ions.R[0][0] += -1e-5;
-  SpeciesSet& ion_species       = ions.getSpeciesSet();
-  int pIdx                      = ion_species.addSpecies("C");
-  int pChargeIdx                = ion_species.addAttribute("charge");
-  int iatnumber                 = ion_species.addAttribute("atomic_number");
-  ion_species(pChargeIdx, pIdx) = 4;
-  ion_species(iatnumber, pIdx)  = 6;
-
-  elec.setName("e");
-  elec.create({4, 4});
-  elec.R[0] = {3.6006741306e+00, 1.0104445324e+00, 3.9141099719e+00};
-  elec.R[1] = {2.6451694427e+00, 3.4448681473e+00, 5.8351296103e+00};
-  elec.R[2] = {2.5458446692e+00, 4.5219372791e+00, 4.4785209995e+00};
-  elec.R[3] = {2.8301650128e+00, 1.5351128324e+00, 1.5004137310e+00};
-  elec.R[4] = {5.6422291182e+00, 2.9968904592e+00, 3.3039907052e+00};
-  elec.R[5] = {2.6062992989e+00, 4.0493925313e-01, 2.5900053291e+00};
-  elec.R[6] = {8.1001577415e-01, 9.7303865512e-01, 1.3901383112e+00};
-  elec.R[7] = {1.6343332400e+00, 6.1895704609e-01, 1.2145253306e+00};
-
-  SpeciesSet& tspecies       = elec.getSpeciesSet();
-  int upIdx                  = tspecies.addSpecies("u");
-  int dnIdx                  = tspecies.addSpecies("d");
-  int chargeIdx              = tspecies.addAttribute("charge");
-  int massIdx                = tspecies.addAttribute("mass");
-  tspecies(chargeIdx, upIdx) = -1;
-  tspecies(massIdx, upIdx)   = 1.0;
-  tspecies(chargeIdx, dnIdx) = -1;
-  tspecies(massIdx, dnIdx)   = 1.0;
-
-
-  ions.resetGroups();
-  elec.resetGroups();
-  ions.createSK();
-  elec.createSK();
-  elec.addTable(elec);
-  elec.addTable(ions);
-  elec.update();
-}
-
 void create_C_pbc_strained_particlesets(ParticleSet& elec, ParticleSet& ions)
 {
   ions.setName("ion0");
@@ -174,7 +129,7 @@ TEST_CASE("ZVZB stress test PBC no-Jastrow", "[hamiltonian]")
          <pairpot type=\"coulomb\" name=\"ElecElec\" source=\"e\" target=\"e\"/> \
          <pairpot type=\"coulomb\" name=\"IonIon\" source=\"ion0\" target=\"ion0\"/> \
          <pairpot name=\"PseudoPot\" type=\"pseudo\" source=\"ion0\" wavefunction=\"psi0\" format=\"xml\" algorithm=\"non-batched\"> \
-           <pseudo elementType=\"C\" href=\"C.BFD.xml\"/> \
+           <pseudo elementType=\"C\" href=\"C.ccECP.xml\"/> \
          </pairpot> \
          </hamiltonian>";
 
@@ -290,10 +245,10 @@ TEST_CASE("ZVZB stress test PBC no-Jastrow", "[hamiltonian]")
   twf.invertMatrices(M_gs, minv);
   twf.buildX(minv, B_gs, X);
 
-  app_log()<<" B_MATRIX_UP = "<<std::endl;
-  app_log()<<B_gs[0]<<std::endl;
-  app_log()<<" B_MATRIX_DN = "<<std::endl;
-  app_log()<<B_gs[1]<<std::endl;
+  //app_log()<<" B_MATRIX_UP = "<<std::endl;
+  //app_log()<<B_gs[0]<<std::endl;
+  //app_log()<<" B_MATRIX_DN = "<<std::endl;
+  //app_log()<<B_gs[1]<<std::endl;
   for (int id = 0; id < matlist.size(); id++)
   {
     //    int ptclnum = twf.numParticles(id);
@@ -319,14 +274,14 @@ TEST_CASE("ZVZB stress test PBC no-Jastrow", "[hamiltonian]")
   CHECK(keobs == Approx(7.3599525590e+00));
 
   app_log() << " KEVal = " << keval << std::endl;
-  app_log()<<"M_gs_up=\n";
-  app_log()<<M_gs[0]<<std::endl;
-  app_log()<<"minv_up=\n";
-  app_log()<<minv[0]<<std::endl;
-  app_log()<<"M_gs_dn=\n";
-  app_log()<<M_gs[1]<<std::endl;
-  app_log()<<"minv_dn=\n";
-  app_log()<<minv[1]<<std::endl;
+ // app_log()<<"M_gs_up=\n";
+ // app_log()<<M_gs[0]<<std::endl;
+ // app_log()<<"minv_up=\n";
+ // app_log()<<minv[0]<<std::endl;
+ // app_log()<<"M_gs_dn=\n";
+ // app_log()<<M_gs[1]<<std::endl;
+ // app_log()<<"minv_dn=\n";
+ // app_log()<<minv[1]<<std::endl;
 
   ValueMatrix sref_kin,s_kin;
   ValueMatrix sref_logpsi,s_logpsi;
@@ -360,24 +315,24 @@ TEST_CASE("ZVZB stress test PBC no-Jastrow", "[hamiltonian]")
 
       twf.getStrainGradM(elec, i, j, dM);
       twf.getGSMatrices(dM, dM_gs);
-      app_log()<<"ORBITAL INFO   STRAIN"<<" "<<i<<" "<<j<<"\n";
-      app_log()<<"  M_up="<<std::endl;
-      app_log()<<M_gs[0]<<std::endl;
-      app_log()<<"  dM_up="<<std::endl;
-      app_log()<<dM_gs[0]<<std::endl;
-      app_log()<<"  M_dn="<<std::endl;
-      app_log()<<M_gs[1]<<std::endl;
-      app_log()<<"  dM_dn="<<std::endl;
-      app_log()<<dM_gs[1]<<std::endl;
-      app_log()<<std::endl;
+     // app_log()<<"ORBITAL INFO   STRAIN"<<" "<<i<<" "<<j<<"\n";
+     // app_log()<<"  M_up="<<std::endl;
+     // app_log()<<M_gs[0]<<std::endl;
+     // app_log()<<"  dM_up="<<std::endl;
+     // app_log()<<dM_gs[0]<<std::endl;
+     // app_log()<<"  M_dn="<<std::endl;
+     // app_log()<<M_gs[1]<<std::endl;
+     // app_log()<<"  dM_dn="<<std::endl;
+     // app_log()<<dM_gs[1]<<std::endl;
+      //app_log()<<std::endl;
 
       kinop->evaluateOneBodyOpMatrixStrainDeriv(elec, twf, i,j, dB);
 
       twf.getGSMatrices(dB, dB_gs);
-      app_log()<<"  dBkin_up=\n";
-      app_log()<<dB_gs[0]<<std::endl;
-      app_log()<<"  dBkin_dn=\n";
-      app_log()<<dB_gs[1]<<std::endl;
+      //app_log()<<"  dBkin_up=\n";
+      //app_log()<<dB_gs[0]<<std::endl;
+      //app_log()<<"  dBkin_dn=\n";
+      //app_log()<<dB_gs[1]<<std::endl;
       s_kin[i][j] = twf.computeGSDerivative(minv, X, dM_gs, dB_gs);
       s_logpsi[i][j] = twf.trAB(minv,dM_gs);
       app_log()<<"S="<<i<<" "<<j<<" "<<s_logpsi[i][j]<<" "<<sref_kin[i][j]<<" "<<s_kin[i][j]<<std::endl;
@@ -410,7 +365,41 @@ TEST_CASE("ZVZB stress test PBC no-Jastrow", "[hamiltonian]")
   convertToReal(nlpp, nlpp_obs);
 
   app_log() << "NLPP = " << nlpp << std::endl;
+  ValueMatrix s_nlpp;
+  s_nlpp.resize(3,3);
 
+  for (int i=0; i<3; i++)
+    for(int j=0; j<3; j++)
+    {
+  
+      twf.wipeMatrices(dM);
+      twf.wipeMatrices(dB);
+      twf.wipeMatrices(dM_gs);
+      twf.wipeMatrices(dB_gs);
+
+      twf.getStrainGradM(elec, i, j, dM);
+      twf.getGSMatrices(dM, dM_gs);
+      app_log()<<"ORBITAL INFO   STRAIN"<<" "<<i<<" "<<j<<"\n";
+      app_log()<<"  M_up="<<std::endl;
+      app_log()<<M_gs[0]<<std::endl;
+      app_log()<<"  dM_up="<<std::endl;
+      app_log()<<dM_gs[0]<<std::endl;
+      app_log()<<"  M_dn="<<std::endl;
+      app_log()<<M_gs[1]<<std::endl;
+      app_log()<<"  dM_dn="<<std::endl;
+      app_log()<<dM_gs[1]<<std::endl;
+      app_log()<<std::endl;
+
+      nlppop->evaluateOneBodyOpMatrixStrainDeriv(elec, twf, i,j, dB);
+
+      twf.getGSMatrices(dB, dB_gs);
+      app_log()<<"  dBnlpp_up=\n";
+      app_log()<<dB_gs[0]<<std::endl;
+      app_log()<<"  dBnlpp_dn=\n";
+      app_log()<<dB_gs[1]<<std::endl;
+      s_nlpp[i][j] = twf.computeGSDerivative(minv, X, dM_gs, dB_gs);
+      app_log()<<"S="<<i<<" "<<j<<" "<<s_nlpp[i][j]<<std::endl;
+   }
   CHECK(nlpp_obs == Approx(-2.4018757000e-02));
 }
 
@@ -467,7 +456,7 @@ TEST_CASE("ZVZB stress test PBC Jastrow", "[hamiltonian]")
          <pairpot type=\"coulomb\" name=\"ElecElec\" source=\"e\" target=\"e\"/> \
          <pairpot type=\"coulomb\" name=\"IonIon\" source=\"ion0\" target=\"ion0\"/> \
          <pairpot name=\"PseudoPot\" type=\"pseudo\" source=\"ion0\" wavefunction=\"psi0\" format=\"xml\" algorithm=\"non-batched\"> \
-           <pseudo elementType=\"C\" href=\"C.BFD.xml\"/> \
+           <pseudo elementType=\"C\" href=\"C.ccECP.xml\"/> \
          </pairpot> \
          </hamiltonian>";
 
@@ -606,10 +595,12 @@ TEST_CASE("ZVZB stress test PBC Jastrow", "[hamiltonian]")
   RealType jval = twf.evaluateJastrowVGL(elec,dG, dL);
 
   dG=0;dL=0;
+  app_log()<<"dL before = "<<dL<<std::endl;
   twf.getStrainGradJ(elec,0,0,mystrain,dG,dL);
 	
   app_log()<<" J = "<<jval<<" dJ/dstrain = "<<mystrain<<std::endl;
   app_log()<<" dG/dstrain = "<<dG<<std::endl;
+  app_log()<<" dL/dstrain = "<<dL<<std::endl;
   dB_gs=tmp_gs;
   dB_gs=tmp_gs;
 
@@ -717,6 +708,41 @@ TEST_CASE("ZVZB stress test PBC Jastrow", "[hamiltonian]")
 
   app_log() << "NLPP = " << nlpp << std::endl;
 
+  ValueMatrix s_nlpp;
+  s_nlpp.resize(3,3);
+
+  for (int i=0; i<3; i++)
+    for(int j=0; j<3; j++)
+    {
+  
+      twf.wipeMatrices(dM);
+      twf.wipeMatrices(dB);
+      twf.wipeMatrices(dM_gs);
+      twf.wipeMatrices(dB_gs);
+
+      twf.getStrainGradM(elec, i, j, dM);
+      twf.getGSMatrices(dM, dM_gs);
+      app_log()<<"ORBITAL INFO   STRAIN"<<" "<<i<<" "<<j<<"\n";
+      app_log()<<"  M_up="<<std::endl;
+      app_log()<<M_gs[0]<<std::endl;
+      app_log()<<"  dM_up="<<std::endl;
+      app_log()<<dM_gs[0]<<std::endl;
+      app_log()<<"  M_dn="<<std::endl;
+      app_log()<<M_gs[1]<<std::endl;
+      app_log()<<"  dM_dn="<<std::endl;
+      app_log()<<dM_gs[1]<<std::endl;
+      app_log()<<std::endl;
+
+      nlppop->evaluateOneBodyOpMatrixStrainDeriv(elec, twf, i,j, dB);
+
+      twf.getGSMatrices(dB, dB_gs);
+      app_log()<<"  dBnlpp_up=\n";
+      app_log()<<dB_gs[0]<<std::endl;
+      app_log()<<"  dBnlpp_dn=\n";
+      app_log()<<dB_gs[1]<<std::endl;
+      s_nlpp[i][j] = twf.computeGSDerivative(minv, X, dM_gs, dB_gs);
+      app_log()<<"S="<<i<<" "<<j<<" "<<s_nlpp[i][j]<<std::endl;
+   }
   CHECK(nlpp_obs == Approx(-2.4018757000e-02));
 }
 
