@@ -594,7 +594,6 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixContribution(ParticleSet& W,
     W.makeMove(iel, deltaV_[j], false); //Update distance tables.
     psi.getRowM(W, iel, phi_row);
     RealType jratio = psi.evaluateJastrowRatio(W, iel);
-    app_log()<<"iat="<<iat<<" iel="<<iel<<" j="<<j<<" jratio="<<jratio<<std::endl;
     W.rejectMove(iel);
 
     temp_row = knot_pots_[j] * jratio * phi_row;
@@ -927,7 +926,6 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixStrainContribution(ParticleSet
     const ValueType extra_jratio_term = jratio * dot(gradJ_q, delta_q_extra);
 
     const ValueType djratio = djratio_pure + extra_jratio_term;
-    app_log()<<"iat="<<iat<<" iel="<<iel<<" j="<<j<<" r="<<r<<" dr="<<dr<<" ratio="<<jratio<<" djratio_pure="<<djratio_pure<<" extra_j_term="<<extra_jratio_term<<" djratio="<<djratio<<std::endl;
     // ----------------------------------------------------------------
     // 5. Angular derivative pieces
     // ----------------------------------------------------------------

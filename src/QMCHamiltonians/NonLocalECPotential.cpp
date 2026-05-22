@@ -502,12 +502,6 @@ void NonLocalECPotential::evaluateOneBodyOpMatrix(ParticleSet& P,
       if (!keepGrid)
         PPset[ipp]->rotateQuadratureGrid(generateRandomRotationMatrix(*myRNG));
 
-  B[0]=0.0;
-  B[1]=0.0;
-  app_log()<<"B_NLPP BEFORE UP\n";
-  app_log()<<B[0]<<std::endl;
-  app_log()<<"B_NLPP_BEFORE_DN\n";
-  app_log()<<B[1]<<std::endl;
   const auto& myTable = P.getDistTableAB(myTableIndex);
   for (int ig = 0; ig < P.groups(); ++ig) //loop over species
   {
@@ -520,11 +514,6 @@ void NonLocalECPotential::evaluateOneBodyOpMatrix(ParticleSet& P,
           PP[iat]->evaluateOneBodyOpMatrixContribution(P, iat, psi, jel, dist[iat], -displ[iat], B);
     }
   }
-
-  app_log()<<"--- B_nlpp_up = \n";
-  app_log()<<B[0]<<std::endl;
-  app_log()<<"--- B_nlpp_dn = \n";
-  app_log()<<B[1]<<std::endl;
 }
 
 void NonLocalECPotential::evaluateOneBodyOpMatrixForceDeriv(ParticleSet& P,

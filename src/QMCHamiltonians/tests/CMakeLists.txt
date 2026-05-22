@@ -81,3 +81,20 @@ foreach(CATEGORY coulomb force ham ewald2d)
   add_unit_test(${UTEST_NAME} 1 1 $<TARGET_FILE:${UTEST_EXE}>)
   set_tests_properties(${UTEST_NAME} PROPERTIES WORKING_DIRECTORY ${UTEST_DIR})
 endforeach()
+
+# Stress test reference files
+set(ZVZB_STRESS_TESTDATA_DIR
+    ${PROJECT_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp_strained_cplx)
+
+set(ZVZB_STRESS_TEST_FILES
+    pwscf.pwscf.h5
+    qmc_strained.noj.wfj.xml
+    qmc_strained.wfj.xml)
+
+foreach(_file IN LISTS ZVZB_STRESS_TEST_FILES)
+  add_custom_command(TARGET test_hamiltonian_force POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+            ${ZVZB_STRESS_TESTDATA_DIR}/${_file}
+            $<TARGET_FILE_DIR:test_hamiltonian_force>/${_file}
+  )
+endforeach()
