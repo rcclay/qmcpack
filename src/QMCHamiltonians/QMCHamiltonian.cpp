@@ -1444,6 +1444,7 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
           ValueType hf_tmp(0.0);
           ValueType pulay_tmp(0.0);
           H[i]->evaluateStressDerivs(P, mu, nu, psi_in, hf_tmp, pulay_tmp);
+	  app_log()<<"mu="<<mu<<" nu="<<nu<<" name="<<H[i]->getName()<<" stress="<<hf_tmp<<std::endl;
           hfdiag += hf_tmp;
           pulaydiag += pulay_tmp;
         }

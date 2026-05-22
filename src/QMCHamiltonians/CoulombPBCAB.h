@@ -156,7 +156,7 @@ public:
                          ParticleSet::ParticlePos& hf_terms,
                          ParticleSet::ParticlePos& pulay_terms) override;
 
-  SymTensor<RealType, OHMMS_DIM> evaluateStressTensor(ParticleSet& P);
+//  SymTensor<RealType, OHMMS_DIM> evaluateStressTensor(ParticleSet& P);
 
   void evaluateStressDerivs(ParticleSet& P,
                             const int mu,

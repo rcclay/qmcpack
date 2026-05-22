@@ -44,7 +44,8 @@ CoulombPBCAB::CoulombPBCAB(ParticleSet& ions, ParticleSet& elns, bool computeFor
     : ForceBase(ions, elns),
       myTableIndex(elns.addTable(ions)),
       myConst(0.0),
-      ComputeForces(computeForces),
+      //ComputeForces(computeForces),
+      ComputeForces(true),
       Peln(elns),
       pset_ions_(ions)
 {
@@ -722,71 +723,121 @@ void CoulombPBCAB::evalPerParticleConsts(Vector<RealType>& pp_consts_src, Vector
   }
 }
 
-SymTensor<CoulombPBCAB::RealType, OHMMS_DIM> CoulombPBCAB::evaluateStressTensor(ParticleSet& P)
+void CoulombPBCAB::evaluateStressDerivs(ParticleSet& P,
+                                        const int mu,
+                                        const int nu,
+                                        TrialWaveFunction& psi,
+                                        ValueType& hf_term,
+                                        ValueType& pulay_term)
 {
-  SymTensor<RealType, OHMMS_DIM> stress_ab = 0.0;
+  (void)psi;
+  pulay_term = ValueType(0.0);
 
   if (!dAB)
-    throw std::runtime_error("CoulombPBCAB::evaluateStressTensor requires dAB to be initialized.");
+    throw std::runtime_error("CoulombPBCAB::evaluateStressDerivs requires dAB to be initialized.");
 
-  // --- Short-range AB contribution ---
+  SymTensor<RealType, OHMMS_DIM> stress_ab = 0.0;
+
+  // ------------------------------------------------------------------
+  // 1. Short-range contribution: differentiate the actual stored spline Vat[a]/r
+  // ------------------------------------------------------------------
   {
     const auto& d_ab(P.getDistTableAB(myTableIndex));
-    for (int jpart = 0; jpart < NptclB; ++jpart)
+
+    for (int b = 0; b < NptclB; ++b)
     {
-      const auto& drijs = d_ab.getDisplRow(jpart);
-      const auto& rijs  = d_ab.getDistRow(jpart);
-      const RealType q  = Qat[jpart];
-      for (int iat = 0; iat < NptclA; ++iat)
-        stress_ab += Zat[iat] * q * dAB->evaluateSR_dstrain(drijs[iat], rijs[iat]);
+      const auto& dist  = d_ab.getDistRow(b);
+      const auto& drij  = d_ab.getDisplRow(b);
+
+      const RealType q = Qat[b];
+
+      for (int a = 0; a < NptclA; ++a)
+      {
+        if (Vat[a] == nullptr)
+          continue;
+
+        const RealType r = dist[a];
+        const PosType& dr = drij[a];
+        const RealType rinv = 1.0 / r;
+
+        // Evaluate the actual short-range radial spline stored in Vat[a]
+        RealType v(0.0), dvdr_times_r(0.0), d2v(0.0);
+        v = Vat[a]->splint(r, dvdr_times_r, d2v);
+
+        // evalSR uses Z_a Q_b * Vat[a](r) / r
+        // so f(r) = Vat[a](r)/r
+        // df/dr = (Vat'[r] * r - Vat[r]) / r^2
+        // Here dvdr_times_r is the derivative of the spline function itself.
+        // Since the spline stores r*V_short or equivalent effective short-range radial object,
+        // this is exactly the derivative of the stored spline.
+        const RealType dfdr = (dvdr_times_r - v * rinv) * rinv;
+
+        const RealType pair_pref = Zat[a] * q;
+        const RealType strain_r  = dr[mu] * dr[nu] * rinv;
+
+        stress_ab(mu, nu) += pair_pref * strain_r * dfdr;
+      }
     }
   }
 
-  // --- Long-range AB contribution ---
+  // ------------------------------------------------------------------
+  // 2. Long-range contribution from derivative handler
+  // ------------------------------------------------------------------
   {
     const StructFact& RhoKA(pset_ions_.getSK());
     const StructFact& RhoKB(P.getSK());
+
+    SymTensor<RealType, OHMMS_DIM> lr_stress = 0.0;
 
     for (int i = 0; i < NumSpeciesA; i++)
     {
       SymTensor<RealType, OHMMS_DIM> esum = 0.0;
       for (int j = 0; j < NumSpeciesB; j++)
+      {
         esum += Qspec[j] *
             dAB->evaluateStress(pset_ions_.getSimulationCell().getKLists().getKShell(),
                                 RhoKA.rhok_r[i], RhoKA.rhok_i[i],
                                 RhoKB.rhok_r[j], RhoKB.rhok_i[j]);
-      stress_ab += Zspec[i] * esum;
+      }
+      lr_stress += Zspec[i] * esum;
     }
+
+    stress_ab += lr_stress;
   }
 
-  // --- Constant/background contribution ---
+  // ------------------------------------------------------------------
+  // 3. Constant/background contribution from derivative handler
+  // ------------------------------------------------------------------
   {
+    SymTensor<RealType, OHMMS_DIM> const_stress = 0.0;
     SymTensor<RealType, OHMMS_DIM> vs_k0 = dAB->evaluateSR_k0_dstrain();
-    SymTensor<RealType, OHMMS_DIM> const_ab = 0.0;
-    RealType v1;
 
+    RealType v1(0.0);
+
+    // electron-side constant
     for (int i = 0; i < NptclB; ++i)
     {
       v1 = 0.0;
       for (int s = 0; s < NumSpeciesA; ++s)
         v1 += NofSpeciesA[s] * Zspec[s];
-      const_ab += (-0.5 * Qat[i] * v1) * vs_k0;
+      const_stress += (-0.5 * Qat[i] * v1) * vs_k0;
     }
 
+    // ion-side constant
     for (int i = 0; i < NptclA; ++i)
     {
       v1 = 0.0;
       for (int s = 0; s < NumSpeciesB; ++s)
         v1 += NofSpeciesB[s] * Qspec[s];
-      const_ab += (-0.5 * Zat[i] * v1) * vs_k0;
+      const_stress += (-0.5 * Zat[i] * v1) * vs_k0;
     }
 
-    stress_ab += const_ab;
+    stress_ab += const_stress;
   }
 
-  return stress_ab;
+  hf_term = ValueType(stress_ab(mu, nu));
 }
-
+/*
 void CoulombPBCAB::evaluateStressDerivs(ParticleSet& P,
                                         const int mu,
                                         const int nu,
@@ -799,7 +850,7 @@ void CoulombPBCAB::evaluateStressDerivs(ParticleSet& P,
 
   SymTensor<RealType, OHMMS_DIM> stress_tensor = evaluateStressTensor(P);
   hf_term = ValueType(stress_tensor(mu, nu));
-}
+}*/
 
 void CoulombPBCAB::createResource(ResourceCollection& collection) const
 {
