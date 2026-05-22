@@ -196,15 +196,15 @@ struct CoulombPBCAA : public OperatorDependsOnlyOnParticleSet, public ForceBase
   void setObservables(PropertySetType& plist) override
   {
     OperatorBase::setObservables(plist);
-    if (ComputeForces)
-      setObservablesF(plist);
+//    if (ComputeForces)
+//      setObservablesF(plist);
   }
 
   void setParticlePropertyList(PropertySetType& plist, int offset) override
   {
     OperatorBase::setParticlePropertyList(plist, offset);
-    if (ComputeForces)
-      setParticleSetF(plist, offset);
+//    if (ComputeForces)
+//      setParticleSetF(plist, offset);
   }
 
   /** initialize a shared resource and hand it to a collection

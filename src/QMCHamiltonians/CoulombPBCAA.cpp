@@ -140,8 +140,8 @@ void CoulombPBCAA::inactiveInitialization(ParticleSet& ref)
 void CoulombPBCAA::addObservables(PropertySetType& plist, BufferType& collectables)
 {
   addValue(plist);
-  if (ComputeForces)
-    addObservablesF(plist);
+ // if (ComputeForces)
+ //   addObservablesF(plist);
 }
 
 void CoulombPBCAA::updateSource(ParticleSet& s)

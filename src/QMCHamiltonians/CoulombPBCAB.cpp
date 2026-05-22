@@ -68,8 +68,8 @@ CoulombPBCAB::~CoulombPBCAB() = default;
 void CoulombPBCAB::addObservables(PropertySetType& plist, BufferType& collectables)
 {
   my_index_ = plist.add(name_.c_str());
-  if (ComputeForces)
-    addObservablesF(plist);
+//  if (ComputeForces)
+//    addObservablesF(plist);
 }
 
 
