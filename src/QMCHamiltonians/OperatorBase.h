@@ -361,6 +361,22 @@ public:
                                  ParticleSet::ParticlePos& hf_term,
                                  ParticleSet::ParticlePos& pulay_term);
 
+  /** evaluate direct stress derivative contribution dH/de_{mu,nu}
+   *  for operators that do not explicitly depend on the wavefunction
+   *
+   *  @param P target particle set
+   *  @param mu first strain index
+   *  @param nu second strain index
+   *  @param psi wavefunction (unused for most direct operators, but included for interface consistency)
+   *  @param hf_term direct Hellmann-Feynman/operator derivative contribution
+   *  @param pulay_term Pulay-like contribution (usually zero for direct operators)
+   */
+  virtual void evaluateStressDerivs(ParticleSet& P,
+                                    const int mu,
+                                    const int nu,
+                                    TrialWaveFunction& psi,
+                                    ValueType& hf_term,
+                                    ValueType& pulay_term);
   /** 
    * @brief Evaluate "B" matrix for observable.  Filippi scheme for computing fast derivatives.
 

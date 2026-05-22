@@ -19,6 +19,8 @@
 #include "QMCWaveFunctions/TrialWaveFunction.h"
 #include "QMCHamiltonians/StressPBC.h"
 #include "Utilities/RuntimeOptions.h"
+#include "QMCHamiltonians/CoulombPBCAA.h"
+#include "QMCHamiltonians/CoulombPBCAB.h"
 
 #include <stdio.h>
 #include <string>
@@ -108,4 +110,85 @@ TEST_CASE("Stress BCC H Ewald3D", "[hamiltonian]")
 
   LRCoulombSingleton::CoulombDerivHandler.reset(nullptr);
 }
+
+TEST_CASE("Coulomb stress derivatives vs StressPBC reference", "[hamiltonian]")
+{
+  using ValueType = QMCTraits::ValueType;
+  using RealType  = QMCTraits::RealType;
+
+  Lattice lattice;
+  lattice.BoxBConds = true; // periodic
+  lattice.R.diagonal(3.24957306);
+  lattice.LR_dim_cutoff = 40;
+  lattice.reset();
+
+  const SimulationCell simulation_cell(lattice);
+  ParticleSet ions(simulation_cell);
+  ParticleSet elec(simulation_cell);
+
+  ions.setName("ion");
+  ions.create({2});
+  ions.R[0] = {0.0, 0.0, 0.0};
+  ions.R[1] = {1.62478653, 1.62478653, 1.62478653};
+  SpeciesSet& ion_species       = ions.getSpeciesSet();
+  int ion_sp                    = ion_species.addSpecies("H");
+  int ion_charge_idx            = ion_species.addAttribute("charge");
+  ion_species(ion_charge_idx, ion_sp) = 1;
+  ions.resetGroups();
+  ions.createSK();
+  ions.update();
+
+  elec.setName("elec");
+  elec.create({2});
+  elec.R[0] = {0.4, 0.4, 0.4};
+  elec.R[1] = {2.02478653, 2.02478653, 2.02478653};
+  SpeciesSet& elec_species       = elec.getSpeciesSet();
+  int upIdx                      = elec_species.addSpecies("u");
+  int elec_charge_idx            = elec_species.addAttribute("charge");
+  int elec_mass_idx              = elec_species.addAttribute("mass");
+  elec_species(elec_charge_idx, upIdx) = -1;
+  elec_species(elec_mass_idx, upIdx)   = 1.0;
+  elec.resetGroups();
+  elec.createSK();
+  elec.update();
+
+  RuntimeOptions runtime_options;
+  TrialWaveFunction psi(runtime_options);
+
+  LRCoulombSingleton::CoulombHandler = std::make_unique<EwaldHandler3D>(ions);
+  LRCoulombSingleton::CoulombHandler->initBreakup(ions);
+  LRCoulombSingleton::CoulombDerivHandler = std::make_unique<EwaldHandler3D>(ions);
+  LRCoulombSingleton::CoulombDerivHandler->initBreakup(ions);
+
+  // Trusted reference
+  StressPBC stress_ref(ions, elec);
+  elec.update();
+  stress_ref.evaluate(psi, elec);
+
+  // New operator-level implementations
+  CoulombPBCAA caa_elec(elec, true, true, false);
+  CoulombPBCAB cab(ions, elec,true);
+
+  for (int mu = 0; mu < OHMMS_DIM; ++mu)
+    for (int nu = 0; nu < OHMMS_DIM; ++nu)
+    {
+      ValueType hf_tmp(0.0), pulay_tmp(0.0);
+      app_log()<<" mu="<<mu<<" nu="<<nu<<std::endl;
+      // electron-electron
+      caa_elec.evaluateStressDerivs(elec, mu, nu, psi, hf_tmp, pulay_tmp);
+      CHECK(std::real(hf_tmp) == Approx(-34.3145981159*stress_ref.getStressEE()(mu, nu)));
+      CHECK(std::real(pulay_tmp) == Approx(0.0));
+
+      // electron-ion
+      hf_tmp = ValueType(0.0);
+      pulay_tmp = ValueType(0.0);
+      cab.evaluateStressDerivs(elec, mu, nu, psi, hf_tmp, pulay_tmp);
+      CHECK(std::real(hf_tmp) == Approx(-34.3145981159*stress_ref.getStressEI()(mu, nu)));
+      CHECK(std::real(pulay_tmp) == Approx(0.0));
+    }
+
+  LRCoulombSingleton::CoulombHandler.reset(nullptr);
+  LRCoulombSingleton::CoulombDerivHandler.reset(nullptr);
+}
+
 } // namespace qmcplusplus

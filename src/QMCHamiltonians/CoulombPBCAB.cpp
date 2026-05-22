@@ -722,6 +722,85 @@ void CoulombPBCAB::evalPerParticleConsts(Vector<RealType>& pp_consts_src, Vector
   }
 }
 
+SymTensor<CoulombPBCAB::RealType, OHMMS_DIM> CoulombPBCAB::evaluateStressTensor(ParticleSet& P)
+{
+  SymTensor<RealType, OHMMS_DIM> stress_ab = 0.0;
+
+  if (!dAB)
+    throw std::runtime_error("CoulombPBCAB::evaluateStressTensor requires dAB to be initialized.");
+
+  // --- Short-range AB contribution ---
+  {
+    const auto& d_ab(P.getDistTableAB(myTableIndex));
+    for (int jpart = 0; jpart < NptclB; ++jpart)
+    {
+      const auto& drijs = d_ab.getDisplRow(jpart);
+      const auto& rijs  = d_ab.getDistRow(jpart);
+      const RealType q  = Qat[jpart];
+      for (int iat = 0; iat < NptclA; ++iat)
+        stress_ab += Zat[iat] * q * dAB->evaluateSR_dstrain(drijs[iat], rijs[iat]);
+    }
+  }
+
+  // --- Long-range AB contribution ---
+  {
+    const StructFact& RhoKA(pset_ions_.getSK());
+    const StructFact& RhoKB(P.getSK());
+
+    for (int i = 0; i < NumSpeciesA; i++)
+    {
+      SymTensor<RealType, OHMMS_DIM> esum = 0.0;
+      for (int j = 0; j < NumSpeciesB; j++)
+        esum += Qspec[j] *
+            dAB->evaluateStress(pset_ions_.getSimulationCell().getKLists().getKShell(),
+                                RhoKA.rhok_r[i], RhoKA.rhok_i[i],
+                                RhoKB.rhok_r[j], RhoKB.rhok_i[j]);
+      stress_ab += Zspec[i] * esum;
+    }
+  }
+
+  // --- Constant/background contribution ---
+  {
+    SymTensor<RealType, OHMMS_DIM> vs_k0 = dAB->evaluateSR_k0_dstrain();
+    SymTensor<RealType, OHMMS_DIM> const_ab = 0.0;
+    RealType v1;
+
+    for (int i = 0; i < NptclB; ++i)
+    {
+      v1 = 0.0;
+      for (int s = 0; s < NumSpeciesA; ++s)
+        v1 += NofSpeciesA[s] * Zspec[s];
+      const_ab += (-0.5 * Qat[i] * v1) * vs_k0;
+    }
+
+    for (int i = 0; i < NptclA; ++i)
+    {
+      v1 = 0.0;
+      for (int s = 0; s < NumSpeciesB; ++s)
+        v1 += NofSpeciesB[s] * Qspec[s];
+      const_ab += (-0.5 * Zat[i] * v1) * vs_k0;
+    }
+
+    stress_ab += const_ab;
+  }
+
+  return stress_ab;
+}
+
+void CoulombPBCAB::evaluateStressDerivs(ParticleSet& P,
+                                        const int mu,
+                                        const int nu,
+                                        TrialWaveFunction& psi,
+                                        ValueType& hf_term,
+                                        ValueType& pulay_term)
+{
+  (void)psi;
+  pulay_term = ValueType(0.0);
+
+  SymTensor<RealType, OHMMS_DIM> stress_tensor = evaluateStressTensor(P);
+  hf_term = ValueType(stress_tensor(mu, nu));
+}
+
 void CoulombPBCAB::createResource(ResourceCollection& collection) const
 {
   auto new_res = std::make_unique<CoulombPBCABMultiWalkerResource>();

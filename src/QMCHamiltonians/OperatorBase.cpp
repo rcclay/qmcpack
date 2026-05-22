@@ -170,6 +170,17 @@ void OperatorBase::evaluateIonDerivs(ParticleSet& P,
                                      ParticleSet::ParticlePos& pulay_term)
 {}
 
+void OperatorBase::evaluateStressDerivs(ParticleSet& P,
+                                        const int mu,
+                                        const int nu,
+                                        TrialWaveFunction& psi,
+                                        ValueType& hf_term,
+                                        ValueType& pulay_term)
+{
+  hf_term = ValueType(0.0);
+  pulay_term = ValueType(0.0);
+}
+
 void OperatorBase::updateSource(ParticleSet& s) {}
 
 OperatorBase::Return_t OperatorBase::getEnsembleAverage() { return 0.0; }

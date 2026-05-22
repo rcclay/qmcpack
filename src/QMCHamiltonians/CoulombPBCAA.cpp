@@ -362,6 +362,94 @@ void CoulombPBCAA::evaluateIonDerivs(ParticleSet& P,
   //No pulay term.
 }
 
+SymTensor<CoulombPBCAA::RealType, OHMMS_DIM> CoulombPBCAA::evaluateStressTensor(ParticleSet& P)
+{
+  SymTensor<RealType, OHMMS_DIM> stress_aa = 0.0;
+
+  if (!dAA)
+    throw std::runtime_error("CoulombPBCAA::evaluateStressTensor requires dAA to be initialized.");
+
+  // --- Short-range AA contribution ---
+  {
+    const auto& d_aa = P.getDistTableAA(d_aa_ID);
+    for (int ipart = 0; ipart < NumCenters; ++ipart)
+    {
+      SymTensor<RealType, OHMMS_DIM> esum = 0.0;
+      const auto& drijs = d_aa.getDisplRow(ipart);
+      const auto& rijs  = d_aa.getDistRow(ipart);
+      for (int jpart = 0; jpart < ipart; ++jpart)
+        esum += P.Z[jpart] * dAA->evaluateSR_dstrain(drijs[jpart], rijs[jpart]);
+      stress_aa += P.Z[ipart] * esum;
+    }
+  }
+
+  // --- Long-range AA contribution ---
+  {
+    const StructFact& PtclRhoK(P.getSK());
+    for (int spec1 = 0; spec1 < NumSpecies; spec1++)
+    {
+      const RealType Z1 = Zspec[spec1];
+      for (int spec2 = spec1; spec2 < NumSpecies; spec2++)
+      {
+        SymTensor<RealType, OHMMS_DIM> temp =
+            dAA->evaluateStress(P.getSimulationCell().getKLists().getKShell(),
+                                PtclRhoK.rhok_r[spec1], PtclRhoK.rhok_i[spec1],
+                                PtclRhoK.rhok_r[spec2], PtclRhoK.rhok_i[spec2]);
+        if (spec2 == spec1)
+          temp *= 0.5;
+        stress_aa += Z1 * Zspec[spec2] * temp;
+      }
+    }
+  }
+
+  // --- Constant/self/background contribution ---
+  {
+    SymTensor<RealType, OHMMS_DIM> tmpconsts = 0.0;
+    SymTensor<RealType, OHMMS_DIM> vl_r0 = dAA->evaluateLR_r0_dstrain();
+
+    for (int ipart = 0; ipart < NumCenters; ++ipart)
+      tmpconsts += -.5 * P.Z[ipart] * P.Z[ipart] * vl_r0;
+
+    SymTensor<RealType, OHMMS_DIM> vs_k0 = dAA->evaluateSR_k0_dstrain();
+
+    for (int ipart = 0; ipart < NumCenters; ++ipart)
+    {
+      RealType v1 = 0.0;
+      for (int spec = 0; spec < NumSpecies; ++spec)
+        v1 += -.5 * P.Z[ipart] * NofSpecies[spec] * Zspec[spec];
+      tmpconsts += v1 * vs_k0;
+    }
+
+    stress_aa += tmpconsts;
+  }
+
+  return stress_aa;
+}
+
+void CoulombPBCAA::evaluateStressDerivs(ParticleSet& P,
+                                        const int mu,
+                                        const int nu,
+                                        TrialWaveFunction& psi,
+                                        ValueType& hf_term,
+                                        ValueType& pulay_term)
+{
+  (void)psi;
+  pulay_term = ValueType(0.0);
+
+  // active => electron-electron, use P
+  // inactive => ion-ion, use Ps (source particle set stored in object)
+  if (is_active)
+  {
+    SymTensor<RealType, OHMMS_DIM> stress_tensor = evaluateStressTensor(P);
+    hf_term = ValueType(stress_tensor(mu, nu));
+  }
+  else
+  {
+    SymTensor<RealType, OHMMS_DIM> stress_tensor = evaluateStressTensor(Ps);
+    hf_term = ValueType(stress_tensor(mu, nu));
+  }
+}
+
 #if !defined(REMOVE_TRACEMANAGER)
 CoulombPBCAA::Return_t CoulombPBCAA::evaluate_sp(ParticleSet& P)
 {

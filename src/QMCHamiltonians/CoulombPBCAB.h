@@ -156,6 +156,15 @@ public:
                          ParticleSet::ParticlePos& hf_terms,
                          ParticleSet::ParticlePos& pulay_terms) override;
 
+  SymTensor<RealType, OHMMS_DIM> evaluateStressTensor(ParticleSet& P);
+
+  void evaluateStressDerivs(ParticleSet& P,
+                            const int mu,
+                            const int nu,
+                            TrialWaveFunction& psi,
+                            ValueType& hf_term,
+                            ValueType& pulay_term) override;
+
   /** Do nothing */
   bool put(xmlNodePtr cur) override { return true; }
 

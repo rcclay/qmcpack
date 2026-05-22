@@ -22,7 +22,7 @@
 #include "QMCHamiltonians/ForceBase.h"
 #include "LongRange/LRCoulombSingleton.h"
 #include "Particle/DistanceTable.h"
-
+#include "OhmmsPETE/SymTensor.h"
 namespace qmcplusplus
 {
 
@@ -140,6 +140,17 @@ struct CoulombPBCAA : public OperatorDependsOnlyOnParticleSet, public ForceBase
                          TrialWaveFunction& psi,
                          ParticleSet::ParticlePos& hf_terms,
                          ParticleSet::ParticlePos& pulay_terms) override;
+
+  /** evaluate the full Coulomb AA stress tensor contribution */
+  SymTensor<RealType, OHMMS_DIM> evaluateStressTensor(ParticleSet& P);
+
+  /** evaluate direct stress derivative component dH/de_{mu,nu} */
+  void evaluateStressDerivs(ParticleSet& P,
+                            const int mu,
+                            const int nu,
+                            TrialWaveFunction& psi,
+                            ValueType& hf_term,
+                            ValueType& pulay_term) override;
 
   /**
    *  calls  eval(LR|SR){withForces} and updates eS and eL updates new_value_
