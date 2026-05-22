@@ -1307,6 +1307,8 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
 
   // flat strain-derivative matrices
   std::vector<ValueMatrix> dM_;
+  std::vector<GradMatrix> dGradM_;
+  std::vector<ValueMatrix> dLaplM_;
   std::vector<ValueMatrix> dB_;
   std::vector<ValueMatrix> dM_gs_;
   std::vector<ValueMatrix> dB_gs_;
@@ -1322,6 +1324,8 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
     Minv_Mv_.resize(ngroups);
 
     dM_.resize(ngroups);
+    dGradM_.resize(ngroups);
+    dLaplM_.resize(ngroups);
     dB_.resize(ngroups);
     dM_gs_.resize(ngroups);
     dB_gs_.resize(ngroups);
@@ -1346,6 +1350,8 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
       X_[sid].resize(nptcls, nptcls);
 
       dM_[sid].resize(nptcls, norbs);
+      dGradM_[sid].resize(nptcls, norbs);
+      dLaplM_[sid].resize(nptcls, norbs);
       dB_[sid].resize(nptcls, norbs);
 
       dM_gs_[sid].resize(nptcls, nptcls);
@@ -1362,6 +1368,7 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
     psi_wrapper_in.wipeMatrices(Minv_Mv_);
 
     psi_wrapper_in.wipeMatrices(dM_);
+    psi_wrapper_in.wipeMatrices(dLaplM_);
     psi_wrapper_in.wipeMatrices(dB_);
     psi_wrapper_in.wipeMatrices(dM_gs_);
     psi_wrapper_in.wipeMatrices(dB_gs_);
@@ -1390,7 +1397,7 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
   for (int mu = 0; mu < OHMMS_DIM; ++mu)
     for (int nu = 0; nu < OHMMS_DIM; ++nu)
     {
-      // scalar / gradient / laplacian strain derivative of total Jastrow
+      // Jastrow strain derivative
       ValueType dJ_val(0.0);
       ParticleSet::ParticleGradient dG_jastrow;
       ParticleSet::ParticleLaplacian dL_jastrow;
@@ -1403,14 +1410,15 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
 
       // zero derivative buffers
       psi_wrapper_in.wipeMatrices(dM_);
+      psi_wrapper_in.wipeMatrices(dLaplM_);
       psi_wrapper_in.wipeMatrices(dB_);
       psi_wrapper_in.wipeMatrices(dM_gs_);
       psi_wrapper_in.wipeMatrices(dB_gs_);
 
       // orbital strain derivative matrices
-      psi_wrapper_in.getStrainGradM(P, mu, nu, dM_);
+      psi_wrapper_in.getStrainGradM(P, mu, nu, dM_, dGradM_, dLaplM_);
 
-      // operator strain derivative B matrices
+      // operator strain derivative B matrices for wavefunction-dependent operators
       for (int i = 0; i < H.size(); ++i)
         if (H[i]->dependsOnWaveFunction())
           H[i]->evaluateOneBodyOpMatrixStrainDeriv(P, psi_wrapper_in, mu, nu, dB_);
@@ -1419,14 +1427,29 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
       psi_wrapper_in.getGSMatrices(dM_, dM_gs_);
       psi_wrapper_in.getGSMatrices(dB_, dB_gs_);
 
-      // determinant contribution
+      // determinant contribution from wavefunction-dependent operators
       ValueType fval_dmu_O = psi_wrapper_in.computeGSDerivative(Minv_, X_, dM_gs_, dB_gs_);
       ValueType fval_dmu   = psi_wrapper_in.trAB(Minv_, dM_gs_);
 
-      // add Jastrow scalar strain derivative
+      // add Jastrow scalar strain derivative to d/dε log Psi
       fval_dmu += dJ_val;
 
-      dEdStrain(mu, nu)      = std::real(fval_dmu_O);
+      // direct strain derivative contributions from operators that do not depend on the wavefunction
+      ValueType hfdiag(0.0);
+      ValueType pulaydiag(0.0);
+
+      for (int i = 0; i < H.size(); ++i)
+        if (!H[i]->dependsOnWaveFunction())
+        {
+          ValueType hf_tmp(0.0);
+          ValueType pulay_tmp(0.0);
+          H[i]->evaluateStressDerivs(P, mu, nu, psi_in, hf_tmp, pulay_tmp);
+          hfdiag += hf_tmp;
+          pulaydiag += pulay_tmp;
+        }
+
+      // For now, pulaydiag is expected to be zero for the direct Coulomb terms.
+      dEdStrain(mu, nu)      = std::real(fval_dmu_O + hfdiag);
       wf_strain_grad(mu, nu) = std::real(fval_dmu);
     }
 }
