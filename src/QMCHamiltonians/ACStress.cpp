@@ -16,6 +16,14 @@
 
 namespace qmcplusplus
 {
+constexpr std::array<std::pair<int, int>, 6> symm_pairs = {{
+    {0, 0},
+    {1, 1},
+    {2, 2},
+    {0, 1},
+    {0, 2},
+    {1, 2}
+}};
 
 ACStress::ACStress(ParticleSet& target, TrialWaveFunction& psi_in, QMCHamiltonian& H)
     : ham_(H),
@@ -97,27 +105,27 @@ ACStress::Return_t ACStress::evaluate(TrialWaveFunction& psi, ParticleSet& P)
   return 0.0;
 }
 
+
 void ACStress::addObservables(PropertySetType& plist, BufferType& collectables)
 {
   if (first_stress_index_ < 0)
     first_stress_index_ = plist.size();
 
-  for (int mu = 0; mu < OHMMS_DIM; ++mu)
-    for (int nu = 0; nu < OHMMS_DIM; ++nu)
-    {
-      const std::string muStr(std::to_string(mu));
-      const std::string nuStr(std::to_string(nu));
+  for (const auto& [mu, nu] : symm_pairs)
+  {
+    const std::string muStr(std::to_string(mu));
+    const std::string nuStr(std::to_string(nu));
 
-      const std::string hfname("ACStress_hf_" + muStr + "_" + nuStr);
-      const std::string pulayname("ACStress_pulay_" + muStr + "_" + nuStr);
-      const std::string wfgradname1("ACStress_Ewfgrad_" + muStr + "_" + nuStr);
-      const std::string wfgradname2("ACStress_wfgrad_" + muStr + "_" + nuStr);
+    const std::string hfname("ACStress_hf_" + muStr + "_" + nuStr);
+    const std::string pulayname("ACStress_pulay_" + muStr + "_" + nuStr);
+    const std::string wfgradname1("ACStress_Ewfgrad_" + muStr + "_" + nuStr);
+    const std::string wfgradname2("ACStress_wfgrad_" + muStr + "_" + nuStr);
 
-      plist.add(hfname);
-      plist.add(pulayname);
-      plist.add(wfgradname1);
-      plist.add(wfgradname2);
-    }
+    plist.add(hfname);
+    plist.add(pulayname);
+    plist.add(wfgradname1);
+    plist.add(wfgradname2);
+  }
 }
 
 ACStress::RealType ACStress::compute_regularizer_f(const ParticleSet::ParticleGradient& G, const RealType epsilon)
@@ -145,32 +153,71 @@ ACStress::RealType ACStress::compute_regularizer_f(const ParticleSet::ParticleGr
 
   return regvalue;
 }
+
 void ACStress::setObservables(PropertySetType& plist)
 {
   int myindex = first_stress_index_;
 
-  for (int mu = 0; mu < OHMMS_DIM; ++mu)
-    for (int nu = 0; nu < OHMMS_DIM; ++nu)
+  for (const auto& [mu, nu] : symm_pairs)
+  {
+    RealType hf_val     = 0.0;
+    RealType pulay_val  = 0.0;
+    RealType wfgrad_val = 0.0;
+
+    if (mu == nu)
     {
-      plist[myindex++] = hf_stress_(mu, nu) * f_epsilon_;
-      plist[myindex++] = pulay_stress_(mu, nu) * f_epsilon_;
-      plist[myindex++] = ham_.getLocalEnergy() * wf_strain_grad_(mu, nu) * f_epsilon_;
-      plist[myindex++] = wf_strain_grad_(mu, nu) * f_epsilon_;
+      hf_val     = hf_stress_(mu, nu);
+      pulay_val  = pulay_stress_(mu, nu);
+      wfgrad_val = wf_strain_grad_(mu, nu);
     }
+    else
+    {
+      hf_val =
+          0.5 * (hf_stress_(mu, nu) + hf_stress_(nu, mu));
+      pulay_val =
+          0.5 * (pulay_stress_(mu, nu) + pulay_stress_(nu, mu));
+      wfgrad_val =
+          0.5 * (wf_strain_grad_(mu, nu) + wf_strain_grad_(nu, mu));
+    }
+
+    plist[myindex++] = hf_val * f_epsilon_;
+    plist[myindex++] = pulay_val * f_epsilon_;
+    plist[myindex++] = ham_.getLocalEnergy() * wfgrad_val * f_epsilon_;
+    plist[myindex++] = wfgrad_val * f_epsilon_;
+  }
 }
 
 void ACStress::setParticlePropertyList(PropertySetType& plist, int offset)
 {
   int myindex = first_stress_index_ + offset;
 
-  for (int mu = 0; mu < OHMMS_DIM; ++mu)
-    for (int nu = 0; nu < OHMMS_DIM; ++nu)
+  for (const auto& [mu, nu] : symm_pairs)
+  {
+    RealType hf_val     = 0.0;
+    RealType pulay_val  = 0.0;
+    RealType wfgrad_val = 0.0;
+
+    if (mu == nu)
     {
-      plist[myindex++] = hf_stress_(mu, nu) * f_epsilon_;
-      plist[myindex++] = pulay_stress_(mu, nu) * f_epsilon_;
-      plist[myindex++] = ham_.getLocalEnergy() * wf_strain_grad_(mu, nu) * f_epsilon_;
-      plist[myindex++] = wf_strain_grad_(mu, nu) * f_epsilon_;
+      hf_val     = hf_stress_(mu, nu);
+      pulay_val  = pulay_stress_(mu, nu);
+      wfgrad_val = wf_strain_grad_(mu, nu);
     }
+    else
+    {
+      hf_val =
+          0.5 * (hf_stress_(mu, nu) + hf_stress_(nu, mu));
+      pulay_val =
+          0.5 * (pulay_stress_(mu, nu) + pulay_stress_(nu, mu));
+      wfgrad_val =
+          0.5 * (wf_strain_grad_(mu, nu) + wf_strain_grad_(nu, mu));
+    }
+
+    plist[myindex++] = hf_val * f_epsilon_;
+    plist[myindex++] = pulay_val * f_epsilon_;
+    plist[myindex++] = ham_.getLocalEnergy() * wfgrad_val * f_epsilon_;
+    plist[myindex++] = wfgrad_val * f_epsilon_;
+  }
 }
 
 } // namespace qmcplusplus
