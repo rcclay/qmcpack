@@ -69,6 +69,7 @@ public:
   const StressTensor& getPulayStress() const { return pulay_stress_; }
   const StressTensor& getWFStressGrad() const { return wf_strain_grad_; }
 
+  static RealType compute_regularizer_f(const ParticleSet::ParticleGradient& G, const RealType epsilon);
 private:
   QMCHamiltonian& ham_;
 
@@ -81,6 +82,9 @@ private:
   StressTensor pulay_stress_;
   /// d/dε log(Psi)
   StressTensor wf_strain_grad_;
+  
+  RealType reg_epsilon_;
+  RealType f_epsilon_;
 };
 
 } // namespace qmcplusplus

@@ -12,18 +12,22 @@
 #include "ACStress.h"
 #include "OhmmsData/AttributeSet.h"
 #include "QMCWaveFunctions/TWFFastDerivWrapper.h"
+#include "CPU/VectorOps.h"
 
 namespace qmcplusplus
 {
 
 ACStress::ACStress(ParticleSet& target, TrialWaveFunction& psi_in, QMCHamiltonian& H)
-    : ham_(H), first_stress_index_(-1)
+    : ham_(H),
+      first_stress_index_(-1),
+      reg_epsilon_(0.0),
+      f_epsilon_(1.0)
 {
   setName("ACStress");
 
-  hf_stress_       = 0.0;
-  pulay_stress_    = 0.0;
-  wf_strain_grad_  = 0.0;
+  hf_stress_      = 0.0;
+  pulay_stress_   = 0.0;
+  wf_strain_grad_ = 0.0;
 
   psi_in.getOrCreateTWFFastDerivWrapper(target);
 }
@@ -40,10 +44,15 @@ std::unique_ptr<OperatorBase> ACStress::makeClone(ParticleSet& qp, TrialWaveFunc
   myclone->first_stress_index_      = first_stress_index_;
   return myclone;
 }
-
 bool ACStress::put(xmlNodePtr cur)
 {
-  // No tunable options in the first implementation
+  OhmmsAttributeSet attr;
+  attr.add(reg_epsilon_, "epsilon");
+  attr.put(cur);
+
+  if (reg_epsilon_ < 0)
+    throw std::runtime_error("ACStress::put(): epsilon<0 not allowed.");
+
   return true;
 }
 
@@ -84,6 +93,7 @@ ACStress::Return_t ACStress::evaluate(TrialWaveFunction& psi, ParticleSet& P)
   // remaining AC-style pieces explicitly in setObservables().
   pulay_stress_ = 0.0;
 
+  f_epsilon_ = compute_regularizer_f(psi.G, reg_epsilon_);
   return 0.0;
 }
 
@@ -110,6 +120,31 @@ void ACStress::addObservables(PropertySetType& plist, BufferType& collectables)
     }
 }
 
+ACStress::RealType ACStress::compute_regularizer_f(const ParticleSet::ParticleGradient& G, const RealType epsilon)
+{
+  if (std::abs(epsilon) < 1e-6)
+    return 1.0;
+
+  RealType gdotg = 0.0;
+#if defined(QMC_COMPLEX)
+  gdotg = Dot_CC(G, G);
+#else
+  gdotg = Dot(G, G);
+#endif
+
+  RealType gmag = std::sqrt(gdotg);
+  double xovereps = 1.0 / (epsilon * gmag);
+
+  RealType regvalue = 0.0;
+  if (xovereps >= 1.0)
+    regvalue = 1.0;
+  else
+    regvalue = 7.0 * std::pow(xovereps, 6.0)
+             - 15.0 * std::pow(xovereps, 4.0)
+             +  9.0 * std::pow(xovereps, 2.0);
+
+  return regvalue;
+}
 void ACStress::setObservables(PropertySetType& plist)
 {
   int myindex = first_stress_index_;
@@ -117,13 +152,10 @@ void ACStress::setObservables(PropertySetType& plist)
   for (int mu = 0; mu < OHMMS_DIM; ++mu)
     for (int nu = 0; nu < OHMMS_DIM; ++nu)
     {
-      // Sign convention consistent with stress = -(1/V) dE/dε is left to the
-      // downstream interpretation / normalization layer.
-      // For now, follow the ACForce style and store the raw pieces.
-      plist[myindex++] = hf_stress_(mu, nu);
-      plist[myindex++] = pulay_stress_(mu, nu);
-      plist[myindex++] = ham_.getLocalEnergy() * wf_strain_grad_(mu, nu);
-      plist[myindex++] = wf_strain_grad_(mu, nu);
+      plist[myindex++] = hf_stress_(mu, nu) * f_epsilon_;
+      plist[myindex++] = pulay_stress_(mu, nu) * f_epsilon_;
+      plist[myindex++] = ham_.getLocalEnergy() * wf_strain_grad_(mu, nu) * f_epsilon_;
+      plist[myindex++] = wf_strain_grad_(mu, nu) * f_epsilon_;
     }
 }
 
@@ -134,10 +166,10 @@ void ACStress::setParticlePropertyList(PropertySetType& plist, int offset)
   for (int mu = 0; mu < OHMMS_DIM; ++mu)
     for (int nu = 0; nu < OHMMS_DIM; ++nu)
     {
-      plist[myindex++] = hf_stress_(mu, nu);
-      plist[myindex++] = pulay_stress_(mu, nu);
-      plist[myindex++] = ham_.getLocalEnergy() * wf_strain_grad_(mu, nu);
-      plist[myindex++] = wf_strain_grad_(mu, nu);
+      plist[myindex++] = hf_stress_(mu, nu) * f_epsilon_;
+      plist[myindex++] = pulay_stress_(mu, nu) * f_epsilon_;
+      plist[myindex++] = ham_.getLocalEnergy() * wf_strain_grad_(mu, nu) * f_epsilon_;
+      plist[myindex++] = wf_strain_grad_(mu, nu) * f_epsilon_;
     }
 }
 
