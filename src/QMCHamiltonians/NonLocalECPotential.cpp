@@ -564,7 +564,7 @@ void NonLocalECPotential::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
       const auto& displ = myTable.getDisplRow(jel);
       for (int iat = 0; iat < PP.size(); iat++)
         if (PP[iat] != nullptr && dist[iat] < PP[iat]->getRmax())
-          PP[iat]->evaluateOneBodyOpMatrixStrainContribution(P, iat, psi, jel, dist[iat], -displ[iat], mu, nu,
+          PP[iat]->evaluateOneBodyOpMatrixStrainContribution(P,*vp_, iat, psi, jel, dist[iat], -displ[iat], mu, nu,
                                                              Bstrain);
     }
   }

@@ -378,7 +378,7 @@ TEST_CASE("ZVZB stress matrix", "[hamiltonian]")
       "<hamiltonian name=\"h0\" pbc=\"yes\" type=\"generic\" target=\"e\"> \
          <pairpot type=\"coulomb\" name=\"ElecElec\" source=\"e\" target=\"e\"/> \
          <pairpot type=\"coulomb\" name=\"IonIon\" source=\"ion0\" target=\"ion0\"/> \
-         <pairpot name=\"PseudoPot\" type=\"pseudo\" source=\"ion0\" wavefunction=\"psi0\" format=\"xml\" algorithm=\"non-batched\"> \
+         <pairpot name=\"PseudoPot\" type=\"pseudo\" source=\"ion0\" wavefunction=\"psi0\" format=\"xml\" algorithm=\"batched\"> \
            <pseudo elementType=\"C\" href=\"C.ccECP.xml\"/> \
          </pairpot> \
        </hamiltonian>";

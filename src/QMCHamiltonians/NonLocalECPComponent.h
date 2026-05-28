@@ -331,6 +331,7 @@ public:
    * @param[in,out] Bstrain adds the contribution of iel and iat to the strain derivative of the B matrix
    */
   void evaluateOneBodyOpMatrixStrainContribution(ParticleSet& P,
+		                                 VirtualParticleSet& vp,
                                                  const int iat,
                                                  const TWFFastDerivWrapper& psi,
                                                  const int iel,

@@ -812,6 +812,7 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixdRContribution(ParticleSet& W,
 }
 
 void NonLocalECPComponent::evaluateOneBodyOpMatrixStrainContribution(ParticleSet& W,
+		                                                     VirtualParticleSet& vp,
                                                                      const int iat,
                                                                      const TWFFastDerivWrapper& psi,
                                                                      const int iel,
@@ -854,6 +855,8 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixStrainContribution(ParticleSet
   std::vector<ValueType> jratios;
   std::vector<ValueType> djratios_pure;
 
+  jratios.resize(nknot);
+  djratios_pure.resize(nknot);
   // NOTE:
   // This requires access to a VirtualParticleSet corresponding to W.
   // If you already have one in the caller or component context, use it.
@@ -868,7 +871,7 @@ void NonLocalECPComponent::evaluateOneBodyOpMatrixStrainContribution(ParticleSet
   //   or
   //   (b) local construction if you have the right context
   //
-  VirtualParticleSet vp(W);
+ // VirtualParticleSet vp(W);
   vp.makeMoves(W, iel, deltaV_, true, iat);
   psi.evaluateJastrowStrainDerivRatios(vp, mu, nu, jratios, djratios_pure);
 
