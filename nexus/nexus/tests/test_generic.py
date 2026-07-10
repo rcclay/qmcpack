@@ -6,25 +6,24 @@ from ..generic import generic_settings
 generic_settings.raise_error = True
 
 from pathlib import Path
-from .. import testing
+from . import isolate_nexus_core, FakeLog
 from ..testing import failed,FailedTest
-from ..testing import divert_nexus_log,restore_nexus_log,FakeLog
 from ..testing import object_eq,object_neq
+from ..generic import obj
+from ..generic import warn, NexusDevWarning, NexusUserWarning, nxs_deprecate
 
 TEST_FILES = {
     "old_nxs_pwscf_input.p": Path(__file__+"/../test_generic_files/old_nxs_pwscf_input.p").resolve(),
     "old_nxs_sim.p":         Path(__file__+"/../test_generic_files/old_nxs_sim.p").resolve(),
     "old_nxs_pwscf_input_numpy_1.p": Path(__file__+"/../test_generic_files/old_nxs_pwscf_input_numpy_1.p").resolve(),
     "old_nxs_sim_numpy_1.p":         Path(__file__+"/../test_generic_files/old_nxs_sim_numpy_1.p").resolve(),
-}
+    }
 
-
+@isolate_nexus_core
 def test_logging():
-    from ..generic import log,warn,error
+    from ..generic import log,error
     from ..generic import generic_settings,NexusError
 
-    # send messages to object rather than stdout
-    divert_nexus_log()
     logfile = generic_settings.devlog
 
     # test log
@@ -65,25 +64,7 @@ def test_logging():
     log(s2,logfile=logfile2)
     assert(logfile.s=='')
     assert(logfile2.s==s2+'\n')
-    
 
-    # test warn
-    logfile.reset()
-    s = 'this is a warning'
-    warn(s)
-    so = '''
-  warning:
-    this is a warning
-'''
-    assert(logfile.s==so)
-    logfile.reset()
-    s = 'this is a warning'
-    warn(s,header='Special')
-    so = '''
-  Special warning:
-    this is a warning
-'''
-    assert(logfile.s==so)
 
     # test error
     #   in testing environment, should raise an error
@@ -118,21 +99,16 @@ def test_logging():
     except Exception as e:
         failed(str(e))
     #end try
-
-    restore_nexus_log()
-
 #end def test_logging
 
 
-
-def test_intrinsics():
+@isolate_nexus_core
+def test_intrinsics(tmp_path):
     # test object_interface functions
     import os
     from ..generic import obj,object_interface
     from ..generic import generic_settings,NexusError
     from numpy import array,bool_
-
-    tpath = testing.setup_unit_test_output_directory('generic','test_intrinsics')
 
     # test object set/get
     # make a simple object
@@ -296,7 +272,7 @@ def test_intrinsics():
     assert('a' not in o2)
 
     # test save/load
-    save_file = os.path.join(tpath,'o.p')
+    save_file = tmp_path / "o.p"
     o.save(save_file)
     o2 = obj()
     o2.load(save_file)
@@ -367,8 +343,7 @@ def test_intrinsics():
     os.remove('log.out')
     assert(so==s)
 
-    # send messages to object rather than stdout
-    divert_nexus_log()
+
     logfile = object_interface._logfile
 
     #   simple message
@@ -412,25 +387,6 @@ def test_intrinsics():
     o.log(s2,logfile=logfile2)
     assert(logfile.s=='')
     assert(logfile2.s==s2+'\n')
-    
-
-    # test warn
-    logfile.reset()
-    s = 'this is a warning'
-    o.warn(s)
-    so = '''
-  DerivedObj warning:
-    this is a warning
-'''
-    assert(logfile.s==so)
-    logfile.reset()
-    s = 'this is a warning'
-    o.warn(s,header='Special')
-    so = '''
-  Special warning:
-    this is a warning
-'''
-    assert(logfile.s==so)
 
     # test error
     #   in testing environment, should raise an error
@@ -472,17 +428,12 @@ def test_intrinsics():
     except Exception as e:
         failed(str(e))
     #end try
-
-    # restore logging function
-    restore_nexus_log()
-
 #end def test_intrinsics
-
 
 
 def test_extensions():
     # test obj functions
-    from ..generic import obj,NexusError
+    from ..generic import NexusError
 
     # make a simple object
     o = obj(
@@ -1135,12 +1086,11 @@ def test_extensions():
     #end for
     o2 = o.serial()
     assert(object_eq(o2,oref))
-
 #end def test_extensions
+
 
 def test_old_nexus_unpickle():
     import numpy as np
-    from ..generic import obj
 
     sim_obj = obj()
     if np.lib.NumpyVersion(np.__version__) >= '2.0.0b1':
@@ -1265,3 +1215,30 @@ def test_old_nexus_unpickle():
     assert(inp_obj.system.smearing    == "fermi-dirac")
     assert(inp_obj.system.tot_charge  == 0)
 #end def test_old_nexus_unpickle
+
+
+@isolate_nexus_core
+def test_warn():
+    with pytest.warns(NexusUserWarning, match="This is a test warning"):
+        warn("This is a test warning", warn_type="user")
+
+    with pytest.warns(NexusDevWarning, match="This is a developer warning"):
+        warn("This is a developer warning", warn_type="dev")
+    
+    with pytest.warns(NexusUserWarning, match="This is a warning from inside obj"):
+        obj().warn("This is a warning from inside obj")
+#end def test_warn
+
+
+@isolate_nexus_core
+def test_nxs_deprecate():
+
+    @nxs_deprecate(since="2.3.9", replacement="Some other function")
+    def deprecated_function():
+        pass
+
+    with pytest.warns(
+        DeprecationWarning,
+        match="deprecated_function is deprecated as of Nexus version 2.3.9, and will be removed in a future update."
+        ):
+        deprecated_function()
