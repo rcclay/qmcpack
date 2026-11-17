@@ -21,7 +21,7 @@ set(UTEST_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(COULOMB_SRCS test_coulomb_pbcAB.cpp test_coulomb_pbcAB_ewald.cpp test_coulomb_pbcAA.cpp
                  test_coulomb_pbcAA_ewald.cpp test_EwaldRef.cpp)
 set(EWALD2D_SRCS test_ewald2d.cpp test_ewald_quasi2d.cpp)
-set(FORCE_SRCS test_force.cpp test_force_ewald.cpp test_stress.cpp test_spacewarp.cpp test_zvzb_stress.cpp)
+set(FORCE_SRCS test_force.cpp test_force_ewald.cpp test_stress.cpp test_spacewarp.cpp)
 set(ECP_SRCS test_NonLocalECPotential.cpp test_ecp_builder.cpp test_ecp.cpp test_NonLocalTOperator.cpp)
 set(HAM_SRCS
     test_bare_kinetic.cpp
@@ -39,9 +39,11 @@ if(NOT QMC_COMPLEX)
   set(HAM_SRCS ${HAM_SRCS} test_RotatedSPOs_NLPP.cpp)
 else()
   set(HAM_SRCS ${HAM_SRCS} test_SOECPotential.cpp)
+  # ZVZB stress matrix test contracts complex-only VGHGH data; only meaningful for QMC_COMPLEX builds.
+  set(FORCE_SRCS ${FORCE_SRCS} test_zvzb_stress.cpp)
 endif()
 
-set(FORCE_SRCS ${FORCE_SRCS} test_ion_derivs.cpp test_zvzb_stress.cpp)
+set(FORCE_SRCS ${FORCE_SRCS} test_ion_derivs.cpp)
 
 set(ALIASED_FILES)
 make_file_alias(${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp/pwscf.pwscf.h5 diamondC_1x1x1.pwscf.h5)
@@ -51,6 +53,12 @@ set(UTEST_INPUT_FILES ${ALIASED_FILES}
     ${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1-Gaussian_pp_Tw_cplx/C_diamond-twist-third.h5
     ${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1-Gaussian_pp_Tw_cplx/C_diamond-twist-third-cart.h5
     fname Na2.structure.xml simple.txt)
+
+# ZVZB stress matrix test data: referenced by their literal filenames via href in the wfj.xml inputs below.
+list(APPEND UTEST_INPUT_FILES
+    ${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp_strained_cplx/pwscf.pwscf.h5
+    ${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp_strained_cplx/qmc_strained.noj.wfj.xml
+    ${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp_strained_cplx/qmc_strained.wfj.xml)
 
 foreach(fname cn.wfnoj.xml cn.wfj.xml cn.msd-wfnoj.xml cn.msd-1det-wfnoj.xml cn.msd-1det-wfj.xml cn.msd-wfj.xml C_diamond-twist-third-cart.wfj.xml)
   list(APPEND UTEST_INPUT_FILES ${qmcpack_SOURCE_DIR}/src/QMCWaveFunctions/tests/${fname})
@@ -73,23 +81,6 @@ foreach(CATEGORY coulomb force ham ewald2d ecp)
 
   add_unit_test(BASENAME ${UTEST_NAME} TEST_BINARY $<TARGET_FILE:${UTEST_EXE}> INPUT_FILES ${UTEST_INPUT_FILES})
   add_unit_test(BASENAME ${UTEST_NAME} PROCS 2 THREADS 3 TEST_BINARY $<TARGET_FILE:${UTEST_EXE}> INPUT_FILES ${UTEST_INPUT_FILES} )
-endforeach()
-
-# Stress test reference files
-set(ZVZB_STRESS_TESTDATA_DIR
-    ${PROJECT_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp_strained_cplx)
-
-set(ZVZB_STRESS_TEST_FILES
-    pwscf.pwscf.h5
-    qmc_strained.noj.wfj.xml
-    qmc_strained.wfj.xml)
-
-foreach(_file IN LISTS ZVZB_STRESS_TEST_FILES)
-  add_custom_command(TARGET test_hamiltonian_force POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-            ${ZVZB_STRESS_TESTDATA_DIR}/${_file}
-            $<TARGET_FILE_DIR:test_hamiltonian_force>/${_file}
-  )
 endforeach()
 
 get_property(CURRENT_TESTS DIRECTORY PROPERTY TESTS)
