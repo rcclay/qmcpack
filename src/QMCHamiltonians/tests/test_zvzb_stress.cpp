@@ -362,6 +362,11 @@ TEST_CASE("ZVZB stress matrix", "[hamiltonian]")
 {
   Communicate& c(*OHMMS::Controller);
 
+  // Force a fresh Ewald breakup for this test's lattice; crucial if not first test.
+  LRCoulombSingleton::CoulombHandler      = nullptr;
+  LRCoulombSingleton::CoulombDerivHandler = nullptr;
+  LRCoulombSingleton::this_lr_type        = LRCoulombSingleton::EWALD;
+
   Lattice lattice;
   lattice.BoxBConds[0] = 1;
   lattice.BoxBConds[1] = 1;
@@ -369,8 +374,7 @@ TEST_CASE("ZVZB stress matrix", "[hamiltonian]")
   lattice.R = {3.37653431, 3.37653431, -0.00674632,
                -0.00674632, 3.37653431, 3.37653431,
                3.36304166, 0.00674632, 3.36304166};
-  lattice.LR_dim_cutoff            = 30;
-  LRCoulombSingleton::this_lr_type = LRCoulombSingleton::EWALD;
+  lattice.LR_dim_cutoff = 30;
   lattice.reset();
 
   const SimulationCell simulation_cell(lattice);
@@ -890,6 +894,10 @@ TEST_CASE("ZVZB stress matrix", "[hamiltonian]")
       check_matrix_element(mats.dB_nlpp, 1, 3, 1, QMCTraits::ValueType(-0.0001693070321,-0.002827411262));
     }
   }
+
+  // Don't leak this test's Ewald breakup into whatever test runs next.
+  LRCoulombSingleton::CoulombHandler      = nullptr;
+  LRCoulombSingleton::CoulombDerivHandler = nullptr;
 }
 
 } // namespace qmcplusplus
