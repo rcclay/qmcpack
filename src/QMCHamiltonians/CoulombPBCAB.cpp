@@ -44,8 +44,7 @@ CoulombPBCAB::CoulombPBCAB(ParticleSet& ions, ParticleSet& elns, bool computeFor
     : ForceBase(ions, elns),
       myTableIndex(elns.addTable(ions)),
       myConst(0.0),
-      //ComputeForces(computeForces),
-      ComputeForces(true),
+      ComputeForces(computeForces),
       Peln(elns),
       pset_ions_(ions)
 {
@@ -68,8 +67,8 @@ CoulombPBCAB::~CoulombPBCAB() = default;
 void CoulombPBCAB::addObservables(PropertySetType& plist, BufferType& collectables)
 {
   my_index_ = plist.add(name_.c_str());
-//  if (ComputeForces)
-//    addObservablesF(plist);
+  if (ComputeForces)
+    addObservablesF(plist);
 }
 
 
