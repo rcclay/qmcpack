@@ -42,6 +42,8 @@ void PWOrbitalSet::resize(PWBasisPtr bset, bool cleanup)
   BasisSetSize = myBasisSet->NumPlaneWaves;
   C            = new ValueMatrix(OrbitalSetSize, BasisSetSize);
   Temp.resize(OrbitalSetSize, PW_MAXINDEX);
+  TempHess.resize(OrbitalSetSize, OHMMS_DIM * OHMMS_DIM);
+  TempGradHess.resize(OrbitalSetSize, OHMMS_DIM * OHMMS_DIM * OHMMS_DIM);
   app_log() << "  PWOrbitalSet::resize OrbitalSetSize =" << OrbitalSetSize << " BasisSetSize = " << BasisSetSize
             << std::endl;
 }
@@ -130,24 +132,21 @@ void PWOrbitalSet::evaluateVGH(const ParticleSet& P,
                                HessVector& grad_grad_psi)
 {
   myBasisSet->evaluateAll(P, iat);
+  myBasisSet->evaluateHessian();
   MatrixOperators::product(*C, myBasisSet->Z, Temp);
+  MatrixOperators::product(*C, myBasisSet->Zh, TempHess);
 
-  const ValueType* restrict tptr = Temp.data();
-  for (int j = 0; j < OrbitalSetSize; j++, tptr += PW_MAXINDEX)
+  const ValueType* restrict value_ptr   = Temp.data();
+  const ValueType* restrict hessian_ptr = TempHess.data();
+  for (int j = 0; j < OrbitalSetSize; j++, value_ptr += PW_MAXINDEX, hessian_ptr += OHMMS_DIM * OHMMS_DIM)
   {
-    psi[j] = tptr[PW_VALUE];
+    psi[j] = value_ptr[PW_VALUE];
 
-    dpsi[j] = GradType(tptr[PW_GRADX], tptr[PW_GRADY], tptr[PW_GRADZ]);
+    dpsi[j] = GradType(value_ptr[PW_GRADX], value_ptr[PW_GRADY], value_ptr[PW_GRADZ]);
 
-    grad_grad_psi[j](0, 0) = tptr[PW_HESS00];
-    grad_grad_psi[j](0, 1) = tptr[PW_HESS01];
-    grad_grad_psi[j](0, 2) = tptr[PW_HESS02];
-    grad_grad_psi[j](1, 0) = tptr[PW_HESS10];
-    grad_grad_psi[j](1, 1) = tptr[PW_HESS11];
-    grad_grad_psi[j](1, 2) = tptr[PW_HESS12];
-    grad_grad_psi[j](2, 0) = tptr[PW_HESS20];
-    grad_grad_psi[j](2, 1) = tptr[PW_HESS21];
-    grad_grad_psi[j](2, 2) = tptr[PW_HESS22];
+    for (int row = 0; row < OHMMS_DIM; ++row)
+      for (int column = 0; column < OHMMS_DIM; ++column)
+        grad_grad_psi[j](row, column) = hessian_ptr[row * OHMMS_DIM + column];
   }
 }
 
@@ -159,54 +158,30 @@ void PWOrbitalSet::evaluateVGHGH(const ParticleSet& P,
                                  GGGVector& grad_grad_grad_psi)
 {
   myBasisSet->evaluateAll(P, iat);
+  myBasisSet->evaluateHessian();
+  myBasisSet->evaluateGradHessian();
   MatrixOperators::product(*C, myBasisSet->Z, Temp);
+  MatrixOperators::product(*C, myBasisSet->Zh, TempHess);
+  MatrixOperators::product(*C, myBasisSet->Zgh, TempGradHess);
 
-  const ValueType* restrict tptr = Temp.data();
-  for (int j = 0; j < OrbitalSetSize; j++, tptr += PW_MAXINDEX)
+  const ValueType* restrict value_ptr    = Temp.data();
+  const ValueType* restrict hessian_ptr  = TempHess.data();
+  const ValueType* restrict gradhess_ptr = TempGradHess.data();
+  for (int j = 0; j < OrbitalSetSize; j++, value_ptr += PW_MAXINDEX, hessian_ptr += OHMMS_DIM * OHMMS_DIM,
+           gradhess_ptr += OHMMS_DIM * OHMMS_DIM * OHMMS_DIM)
   {
-    psi[j] = tptr[PW_VALUE];
+    psi[j] = value_ptr[PW_VALUE];
 
-    dpsi[j] = GradType(tptr[PW_GRADX], tptr[PW_GRADY], tptr[PW_GRADZ]);
+    dpsi[j] = GradType(value_ptr[PW_GRADX], value_ptr[PW_GRADY], value_ptr[PW_GRADZ]);
 
-    grad_grad_psi[j](0, 0) = tptr[PW_HESS00];
-    grad_grad_psi[j](0, 1) = tptr[PW_HESS01];
-    grad_grad_psi[j](0, 2) = tptr[PW_HESS02];
-    grad_grad_psi[j](1, 0) = tptr[PW_HESS10];
-    grad_grad_psi[j](1, 1) = tptr[PW_HESS11];
-    grad_grad_psi[j](1, 2) = tptr[PW_HESS12];
-    grad_grad_psi[j](2, 0) = tptr[PW_HESS20];
-    grad_grad_psi[j](2, 1) = tptr[PW_HESS21];
-    grad_grad_psi[j](2, 2) = tptr[PW_HESS22];
+    for (int row = 0; row < OHMMS_DIM; ++row)
+      for (int column = 0; column < OHMMS_DIM; ++column)
+        grad_grad_psi[j](row, column) = hessian_ptr[row * OHMMS_DIM + column];
 
-    grad_grad_grad_psi[j][0](0, 0) = tptr[PW_GHESS000];
-    grad_grad_grad_psi[j][0](0, 1) = tptr[PW_GHESS001];
-    grad_grad_grad_psi[j][0](0, 2) = tptr[PW_GHESS002];
-    grad_grad_grad_psi[j][0](1, 0) = tptr[PW_GHESS010];
-    grad_grad_grad_psi[j][0](1, 1) = tptr[PW_GHESS011];
-    grad_grad_grad_psi[j][0](1, 2) = tptr[PW_GHESS012];
-    grad_grad_grad_psi[j][0](2, 0) = tptr[PW_GHESS020];
-    grad_grad_grad_psi[j][0](2, 1) = tptr[PW_GHESS021];
-    grad_grad_grad_psi[j][0](2, 2) = tptr[PW_GHESS022];
-
-    grad_grad_grad_psi[j][1](0, 0) = tptr[PW_GHESS100];
-    grad_grad_grad_psi[j][1](0, 1) = tptr[PW_GHESS101];
-    grad_grad_grad_psi[j][1](0, 2) = tptr[PW_GHESS102];
-    grad_grad_grad_psi[j][1](1, 0) = tptr[PW_GHESS110];
-    grad_grad_grad_psi[j][1](1, 1) = tptr[PW_GHESS111];
-    grad_grad_grad_psi[j][1](1, 2) = tptr[PW_GHESS112];
-    grad_grad_grad_psi[j][1](2, 0) = tptr[PW_GHESS120];
-    grad_grad_grad_psi[j][1](2, 1) = tptr[PW_GHESS121];
-    grad_grad_grad_psi[j][1](2, 2) = tptr[PW_GHESS122];
-
-    grad_grad_grad_psi[j][2](0, 0) = tptr[PW_GHESS200];
-    grad_grad_grad_psi[j][2](0, 1) = tptr[PW_GHESS201];
-    grad_grad_grad_psi[j][2](0, 2) = tptr[PW_GHESS202];
-    grad_grad_grad_psi[j][2](1, 0) = tptr[PW_GHESS210];
-    grad_grad_grad_psi[j][2](1, 1) = tptr[PW_GHESS211];
-    grad_grad_grad_psi[j][2](1, 2) = tptr[PW_GHESS212];
-    grad_grad_grad_psi[j][2](2, 0) = tptr[PW_GHESS220];
-    grad_grad_grad_psi[j][2](2, 1) = tptr[PW_GHESS221];
-    grad_grad_grad_psi[j][2](2, 2) = tptr[PW_GHESS222];
+    for (int i = 0; i < OHMMS_DIM; ++i)
+      for (int row = 0; row < OHMMS_DIM; ++row)
+        for (int column = 0; column < OHMMS_DIM; ++column)
+          grad_grad_grad_psi[j][i](row, column) = gradhess_ptr[(i * OHMMS_DIM + row) * OHMMS_DIM + column];
   }
 }
 
@@ -217,12 +192,24 @@ void PWOrbitalSet::evaluate_notranspose(const ParticleSet& P,
                                         GradMatrix& dlogdet,
                                         HessMatrix& grad_grad_logdet)
 {
-  for (int iat = first, i = 0; iat < last; iat++, i++)
+  for (int iat = first, i = 0; iat < last; ++iat, ++i)
   {
-    ValueVector v(logdet[i], logdet.cols());
-    GradVector g(dlogdet[i], dlogdet.cols());
-    HessVector h(grad_grad_logdet[i], grad_grad_logdet.cols());
-    evaluateVGH(P, iat, v, g, h);
+    myBasisSet->evaluateAll(P, iat);
+    myBasisSet->evaluateHessian();
+    MatrixOperators::product(*C, myBasisSet->Z, Temp);
+    MatrixOperators::product(*C, myBasisSet->Zh, TempHess);
+    const ValueType* restrict value_ptr   = Temp.data();
+    const ValueType* restrict hessian_ptr = TempHess.data();
+    for (int orbital_index = 0; orbital_index < OrbitalSetSize;
+         ++orbital_index, value_ptr += PW_MAXINDEX, hessian_ptr += OHMMS_DIM * OHMMS_DIM)
+    {
+      logdet(i, orbital_index)  = value_ptr[PW_VALUE];
+      dlogdet(i, orbital_index) =
+          GradType(value_ptr[PW_GRADX], value_ptr[PW_GRADY], value_ptr[PW_GRADZ]);
+      for (int row = 0; row < OHMMS_DIM; ++row)
+        for (int column = 0; column < OHMMS_DIM; ++column)
+          grad_grad_logdet(i, orbital_index)(row, column) = hessian_ptr[row * OHMMS_DIM + column];
+    }
   }
 }
 

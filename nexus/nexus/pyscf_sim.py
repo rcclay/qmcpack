@@ -18,10 +18,11 @@
 
 import os
 import textwrap
+
 from .developer import obj
-from .simulation import Simulation
-from .pyscf_input import PyscfInput, generate_pyscf_input
 from .pyscf_analyzer import PyscfAnalyzer
+from .pyscf_input import PyscfInput, generate_pyscf_input
+from .simulation import Simulation
 
 
 class Pyscf(Simulation):
@@ -30,8 +31,8 @@ class Pyscf(Simulation):
     generic_identifier = 'pyscf'
     infile_extension   = '.py'
     application        = 'python3'
-    application_properties = set(['serial','mpi'])
-    application_results    = set(['orbitals','wavefunction'])
+    application_properties = frozenset({'serial','mpi'})
+    application_results    = frozenset({'orbitals','wavefunction'})
 
 
     def check_result(self,result_name,sim):
@@ -61,14 +62,15 @@ class Pyscf(Simulation):
                     kpoints = inp.kpoints
                 #end if
                 result.kpoints = kpoints.copy()
-                result.orb_files = ['{}.twistnum_{}.h5'.format(inp.prefix,str(n).zfill(3)) for n in range(len(kpoints))]
+                result.orb_files = [f'{inp.prefix}.twistnum_{str(n).zfill(3)}.h5' for n in range(len(kpoints))]
             #end if
             result.h5_file  = os.path.join(self.locdir,h5_file)
             result.location = self.locdir
         elif result_name=='wavefunction':
             result.chkfile = os.path.join(self.locdir,self.input.chkfile)
         else:
-            self.error('ability to get result '+result_name+' has not been implemented')
+            msg = 'ability to get result '+result_name+' has not been implemented'
+            raise NotImplementedError(msg)
         #end if
         return result
     #end def get_result
@@ -77,7 +79,8 @@ class Pyscf(Simulation):
     def incorporate_result(self,result_name,result,sim):
         not_implemented = False
         if not_implemented:
-            self.error('ability to incorporate result '+result_name+' has not been implemented')
+            msg = 'ability to incorporate result '+result_name+' has not been implemented'
+            raise NotImplementedError(msg)
         #end if
     #end def incorporate_result
 
@@ -108,7 +111,7 @@ class Pyscf(Simulation):
 
         if self.failed:
             error_txt = textwrap.indent(errors, "  ", lambda _: True)
-            self.log(
+            self.nxs_print(
                 "\n"
                 "PySCF run failed!\n"
                 "Error File Contents:\n\n"

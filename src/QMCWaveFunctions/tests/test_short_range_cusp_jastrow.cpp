@@ -8,11 +8,9 @@
 //
 // File created by: Eric Neuscamman, eneuscamman@berkeley.edu, University of California, Berkeley
 //////////////////////////////////////////////////////////////////////////////////////
+#include <catch2/catch_test_macros.hpp>
+#include "Utilities/for_testing/Catch2Approx.h"
 
-
-#include "catch.hpp"
-
-#include "Configuration.h"
 #include "Message/Communicate.h"
 #include "OhmmsData/Libxml2Doc.h"
 #include "QMCWaveFunctions/Jastrow/ShortRangeCuspFunctor.h"
@@ -129,7 +127,7 @@ TEST_CASE("ShortRangeCuspJastrowFunctor", "[wavefunction]")
   {
     const std::string var_name = var_param.name(i);
     const RealType old_param   = std::real(var_param[var_name]);
-    //std::cout << "checking parameter " << var_name << std::endl;
+    //app_log() << "checking parameter " << var_name << std::endl;
 
     RealType dudr_h     = 10000000.0; // initialize to a wrong value
     RealType d2udr2_h   = 10000000.0; // initialize to a wrong value

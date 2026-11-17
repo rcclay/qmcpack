@@ -8,9 +8,8 @@
 //
 // File refactored from: Refactored from test_manager.cpp
 //////////////////////////////////////////////////////////////////////////////////////
-
-
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include "Utilities/for_testing/Catch2Approx.h"
 
 #include "Message/Communicate.h"
 #include "OhmmsData/Libxml2Doc.h"
@@ -31,8 +30,8 @@ namespace qmcplusplus
 {
 TEST_CASE("EstimatorManagerCrowd::EstimatorManagerCrowd", "[estimators]")
 {
-  ProjectData test_project("test", ProjectData::DriverVersion::BATCH);
-  Communicate* comm = OHMMS::Controller;
+  ProjectData test_project;
+  Communicate& comm(*OHMMS::Controller);
 
   using namespace testing;
   Libxml2Document estimators_doc = createEstimatorManagerNewInputXML();
@@ -57,8 +56,8 @@ TEST_CASE("EstimatorManagerCrowd::EstimatorManagerCrowd", "[estimators]")
 
 TEST_CASE("EstimatorManagerCrowd PerParticleHamiltonianLogger integration", "[estimators]")
 {
-  ProjectData test_project("test", ProjectData::DriverVersion::BATCH);
-  Communicate* comm = OHMMS::Controller;
+  ProjectData test_project;
+  Communicate& comm(*OHMMS::Controller);
 
   using namespace testing;
   Libxml2Document estimators_doc = createEstimatorManagerNewVMCInputXML();

@@ -8,11 +8,9 @@
 //
 // File created by: Cody A. Melton, cmelton@sandia.gov, Sandia National Laboratories
 //////////////////////////////////////////////////////////////////////////////////////
+#include <catch2/catch_test_macros.hpp>
+#include "Utilities/for_testing/Catch2Approx.h"
 
-
-#include "catch.hpp"
-
-#include "Configuration.h"
 #include "Message/Communicate.h"
 #include "Numerics/OneDimGridBase.h"
 #include "ParticleIO/XMLParticleIO.h"
@@ -30,7 +28,7 @@ void test_cartesian_ao()
 
   SECTION(section_name.str())
   {
-    Communicate* c = OHMMS::Controller;
+    Communicate& c(*OHMMS::Controller);
 
     const SimulationCell simulation_cell;
     auto elec_ptr = std::make_unique<ParticleSet>(simulation_cell);
@@ -97,7 +95,7 @@ void test_dirac_ao()
 
   SECTION(section_name.str())
   {
-    Communicate* c = OHMMS::Controller;
+    Communicate& c(*OHMMS::Controller);
 
     const SimulationCell simulation_cell;
     auto elec_ptr = std::make_unique<ParticleSet>(simulation_cell);

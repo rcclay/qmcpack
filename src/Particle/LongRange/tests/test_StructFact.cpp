@@ -8,12 +8,11 @@
 //
 // File created by: Yubo "Paul" Yang, yubo.paul.yang@gmail.com, University of Illinois Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
-
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include "Utilities/for_testing/Catch2Approx.h"
 
 #include <vector>
 #include <complex>
-#include "Configuration.h"
 #include "ParticleSet.h"
 #include "LongRange/StructFact.h"
 
@@ -65,7 +64,7 @@ TEST_CASE("StructFact", "[lrhandler]")
     for (int ik = 0; ik < simulation_cell.getKLists().getNumK(); ik++)
       rhok_sum += std::complex<QMCTraits::FullPrecRealType>(sk.rhok_r[i][ik], sk.rhok_i[i][ik]);
 
-    //std::cout << std::setprecision(14) << rhok_sum << std::endl;
+    //app_log() << std::setprecision(14) << rhok_sum << std::endl;
     CHECK(ComplexApprox(rhok_sum).epsilon(5e-5) == rhok_sum_ref[i]);
   }
 }
