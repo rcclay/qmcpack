@@ -52,8 +52,7 @@ CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces, bo
       is_active(active),
       FirstTime(true),
       myConst(0.0),
-      //ComputeForces(computeForces),
-      ComputeForces(true),
+      ComputeForces(computeForces),
       quasi2d(LRCoulombSingleton::this_lr_type == LRCoulombSingleton::QUASI2D),
       Ps(ref),
       use_offload_(active && !computeForces && use_offload),
@@ -140,8 +139,8 @@ void CoulombPBCAA::inactiveInitialization(ParticleSet& ref)
 void CoulombPBCAA::addObservables(PropertySetType& plist, BufferType& collectables)
 {
   addValue(plist);
- // if (ComputeForces)
- //   addObservablesF(plist);
+  if (ComputeForces)
+    addObservablesF(plist);
 }
 
 void CoulombPBCAA::updateSource(ParticleSet& s)
