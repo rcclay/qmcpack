@@ -5,7 +5,8 @@
 // Copyright (c) 2026 QMCPACK developers.
 //////////////////////////////////////////////////////////////////////////////////////
 
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include "Utilities/for_testing/Catch2Approx.h"
 
 #include "type_traits/template_types.hpp"
 #include "type_traits/ConvertToReal.h"
@@ -173,7 +174,7 @@ inline StressTestSystem build_stress_test_system(std::unique_ptr<ParticleSet>&& 
                                                  std::unique_ptr<ParticleSet>&& elec_uptr,
                                                  const std::string& wfn_xml_file,
                                                  const std::string& hamiltonian_xml,
-                                                 Communicate* comm)
+                                                 Communicate& comm)
 {
   StressTestSystem sys;
 
@@ -359,7 +360,7 @@ inline void print_stress_contractions(const std::string& label,
 //
 TEST_CASE("ZVZB stress matrix", "[hamiltonian]")
 {
-  Communicate* c = OHMMS::Controller;
+  Communicate& c(*OHMMS::Controller);
 
   Lattice lattice;
   lattice.BoxBConds[0] = 1;
