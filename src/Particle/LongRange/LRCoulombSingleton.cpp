@@ -117,7 +117,8 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getDerivH
     }
     else if (this_lr_type == ESLER)
     {
-      APP_ABORT("\n  Derivatives are not supported with Esler Optimized Breakup.\n");
+      APP_ABORT("\n  Derivatives (forces, stress tensor) are not supported with the Esler Optimized Breakup (the default).\n"
+               "  Select a derivative-capable handler, e.g. <parameter name=\"LR_handler\">ewald</parameter> in <simulationcell>.\n");
     }
     else
     {

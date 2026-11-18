@@ -354,7 +354,8 @@ SymTensor<CoulombPBCAA::RealType, OHMMS_DIM> CoulombPBCAA::evaluateStressTensor(
   SymTensor<RealType, OHMMS_DIM> stress_aa = 0.0;
 
   if (!dAA)
-    throw std::runtime_error("CoulombPBCAA::evaluateStressTensor requires dAA to be initialized.");
+    throw std::runtime_error("CoulombPBCAA::evaluateStressTensor requires dAA to be initialized. "
+                             "Set forces=\"yes\" on this coulomb pairpot.");
 
   // --- Short-range AA contribution ---
   {

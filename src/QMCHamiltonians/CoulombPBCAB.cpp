@@ -728,7 +728,8 @@ void CoulombPBCAB::evaluateStressDerivs(ParticleSet& P,
   pulay_term = ValueType(0.0);
 
   if (!dAB)
-    throw std::runtime_error("CoulombPBCAB::evaluateStressDerivs requires dAB to be initialized.");
+    throw std::runtime_error("CoulombPBCAB::evaluateStressDerivs requires dAB to be initialized. "
+                             "Set forces=\"yes\" on the pseudopotential pairpot (it builds the ion-electron CoulombPBCAB).");
 
   SymTensor<RealType, OHMMS_DIM> stress_ab = 0.0;
 
