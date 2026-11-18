@@ -13,6 +13,7 @@
 #include "OhmmsData/AttributeSet.h"
 #include "QMCWaveFunctions/TWFFastDerivWrapper.h"
 #include "CPU/VectorOps.h"
+#include <mutex>
 
 namespace qmcplusplus
 {
@@ -82,6 +83,15 @@ ACStress::Return_t ACStress::evaluate(TrialWaveFunction& psi, ParticleSet& P)
   hf_stress_      = 0.0;
   pulay_stress_   = 0.0;
   wf_strain_grad_ = 0.0;
+
+  // The batched drivers evaluate auxiliary operators one walker at a time, and there are no multi-walker or
+  // offload kernels for the strain fast-derivative path, so every walker runs on the host.
+  static std::once_flag fallback_logged;
+  std::call_once(fallback_logged, [] {
+    app_log() << "  ACStress: strain derivatives are evaluated per walker with the host single-walker "
+                 "implementation (no multi-walker/offload kernels available)."
+              << std::endl;
+  });
 
   TWFFastDerivWrapper& psiwrapper_ = psi.getOrCreateTWFFastDerivWrapper(P);
 
