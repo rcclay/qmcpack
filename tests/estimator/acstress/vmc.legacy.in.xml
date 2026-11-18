@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<simulation>
+   <project id="vmc" series="0">
+      <application name="qmcpack" role="molecu" class="serial" version="1.0"/>
+      <parameter name="driver_version">legacy</parameter>
+   </project>
+   <random seed="97"/>
+   <qmcsystem>
+      <simulationcell>
+         <parameter name="lattice" units="bohr">
+            3.37653431   3.37653431  -0.00674632
+           -0.00674632   3.37653431   3.37653431
+            3.36304166   0.00674632   3.36304166
+         </parameter>
+         <parameter name="bconds">p p p</parameter>
+         <parameter name="LR_dim_cutoff">30</parameter>
+         <parameter name="LR_handler">ewald</parameter>
+      </simulationcell>
+      <particleset name="e" random="yes">
+         <group name="u" size="4" mass="1.0">
+            <parameter name="charge">-1</parameter>
+            <parameter name="mass">1.0</parameter>
+         </group>
+         <group name="d" size="4" mass="1.0">
+            <parameter name="charge">-1</parameter>
+            <parameter name="mass">1.0</parameter>
+         </group>
+      </particleset>
+      <particleset name="ion0">
+         <group name="C" size="2" mass="21894.7135906">
+            <parameter name="charge">4</parameter>
+            <parameter name="valence">4</parameter>
+            <parameter name="atomicnumber">6</parameter>
+            <parameter name="mass">21894.7135906</parameter>
+            <attrib name="position" datatype="posArray" condition="0">
+               0.00000000   0.00000000   0.00000000
+               1.68320741   1.68995374   1.68320741
+            </attrib>
+         </group>
+      </particleset>
+      <wavefunction name="psi0" target="e">
+         <sposet_builder type="pw" href="pwscf.pwscf.h5" tilematrix="1 0 0 0 1 0 0 0 1" twistnum="0" source="ion0" version="0.10" meshfactor="1.0" precision="double" truncate="no">
+            <sposet type="pw" name="spo_ud" size="4" spindataset="0"/>
+         </sposet_builder>
+         <determinantset>
+            <slaterdeterminant>
+               <determinant id="updet" group="u" sposet="spo_ud" size="4"/>
+               <determinant id="downdet" group="d" sposet="spo_ud" size="4"/>
+            </slaterdeterminant>
+         </determinantset>
+	  <jastrow type="One-Body" name="J1" function="bspline" source="ion0" print="yes">
+            <correlation elementType="C" size="5" rcut="2.3768" cusp="0.0">
+               <coefficients id="eC" type="Array">                  
+-0.1722679582 -0.1302576899 -0.1072991063 -0.07035761539 -0.03605220631 
+               </coefficients>
+            </correlation>
+    </jastrow> 
+         <jastrow type="Two-Body" name="J2" function="bspline" print="yes">
+            <correlation speciesA="u" speciesB="u" size="5" rcut="2.3768">
+               <coefficients id="uu" type="Array">                  
+0.279399452 0.1885867062 0.1222046973 0.06383196121 0.03020067115
+               </coefficients>
+            </correlation>
+            <correlation speciesA="u" speciesB="d" size="5" rcut="2.3768">
+               <coefficients id="ud" type="Array">                  
+0.4717665655 0.3014093348 0.1819022411 0.09290935137 0.04097997108
+               </coefficients>
+            </correlation>
+    </jastrow>  
+    
+      </wavefunction>
+      <hamiltonian name="h0" type="generic" target="e" wavefunction="psi0">
+         <pairpot type="coulomb" name="ElecElec" source="e" target="e" forces="yes"/>
+         <pairpot type="coulomb" name="IonIon" source="ion0" target="ion0" forces="yes"/>
+         <pairpot name="PseudoPot" type="pseudo" source="ion0" wavefunction="psi0" format="xml" algorithm="batched" forces="yes">
+            <pseudo elementType="C" href="C.ccECP.xml"/>
+         </pairpot>
+         <estimator type="Force" name="acs" mode="acstress"/>
+      </hamiltonian>
+   </qmcsystem>
+   <qmc method="vmc" move="pbyp" checkpoint="0">
+      <parameter name="walkers">1</parameter>
+      <parameter name="warmupSteps">2</parameter>
+      <parameter name="blocks">5</parameter>
+      <parameter name="steps">2</parameter>
+      <parameter name="subSteps">2</parameter>
+      <parameter name="timestep">0.3</parameter>
+      <parameter name="useDrift">yes</parameter>
+   </qmc>
+</simulation>

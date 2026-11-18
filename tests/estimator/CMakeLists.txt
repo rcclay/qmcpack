@@ -104,5 +104,25 @@ if(add_tests)
   endif()
 endif()
 
+# ACStress (zero-variance zero-bias stress). Needs the complex-only strained plane-wave data, and like
+# acforce it is skipped in mixed precision.  The orbital file is shared with tests/solids to avoid a copy.
+if(QMC_COMPLEX AND NOT QMC_MIXED_PRECISION)
+  foreach(acstress_driver legacy batch)
+    set(acstress_name deterministic-estimator-acstress-${acstress_driver})
+    simple_run_and_check(
+      BASE_NAME ${acstress_name}
+      BASE_DIR "${qmcpack_SOURCE_DIR}/tests/estimator/acstress"
+      INPUT_FILE vmc.${acstress_driver}.in.xml
+      THREADS 2
+      CHECK_SCRIPT check_stress.py
+      CHECK_ARGS ${acstress_driver})
+    symlink_list_of_files(
+      "${qmcpack_SOURCE_DIR}/tests/solids/diamondC_1x1x1_pp_strained_cplx/pwscf.pwscf.h5"
+      "${CMAKE_CURRENT_BINARY_DIR}/${acstress_name}-r1-t2")
+  endforeach()
+else()
+  message(VERBOSE "Skipping deterministic-estimator-acstress tests (needs QMC_COMPLEX, not QMC_MIXED_PRECISION)")
+endif()
+
 get_property(CURRENT_TESTS DIRECTORY PROPERTY TESTS)
 add_labels_for_tests("${CURRENT_TESTS}")
