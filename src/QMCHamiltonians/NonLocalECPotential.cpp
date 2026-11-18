@@ -18,6 +18,7 @@
 #include "NonLocalECPotential.h"
 
 #include <optional>
+#include <stdexcept>
 
 #include <DistanceTable.h>
 #include <IteratorUtility.h>
@@ -548,6 +549,11 @@ void NonLocalECPotential::evaluateOneBodyOpMatrixStrainDeriv(ParticleSet& P,
                                                              const int nu,
                                                              std::vector<ValueMatrix>& Bstrain)
 {
+  if (!vp_)
+    throw std::runtime_error("NonLocalECPotential::evaluateOneBodyOpMatrixStrainDeriv requires a "
+                             "VirtualParticleSet. Set algorithm=\"batched\" on the pseudopotential pairpot "
+                             "when using the strain estimator.");
+
   bool keepGrid = true;
   for (int ipp = 0; ipp < PPset.size(); ipp++)
     if (PPset[ipp])
