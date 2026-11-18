@@ -173,7 +173,7 @@ protected:
                               const RefVectorWithLeader<ParticleSet>& p_list,
                               bool compute_txy_all,
                               std::optional<ListenerOption<Real>> listeners,
-                              bool keepGrid = true);
+                              bool keepGrid = false);
 
   ///random number generator
   RandomBase<FullPrecRealType>* myRNG;
@@ -217,7 +217,7 @@ private:
    * @param compute_txy_all whether to compute Txy for all the electrons affected by NLPP
    * @param keepGrid.  If true, does not randomize the quadrature grid before evaluation.  
    */
-  void evaluateImpl(TrialWaveFunction& psi, ParticleSet& P, bool compute_txy_all, bool keepGrid = true);
+  void evaluateImpl(TrialWaveFunction& psi, ParticleSet& P, bool compute_txy_all, bool keepGrid = false);
 
   /** compute the T move transition probability for a given electron
    * member variable nonLocalOps.Txy is updated
