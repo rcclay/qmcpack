@@ -317,6 +317,25 @@ public:
                                 Tensor<RealType, OHMMS_DIM>& dEdStrain,
                                 Tensor<RealType, OHMMS_DIM>& wf_strain_grad);
 
+  /** Multi-walker version of evaluateStrainDerivsFast.
+   *
+   * There is no batched/offload implementation of the strain fast-derivative path yet, so this is the
+   * seam where one can be added. It currently falls back to calling the single-walker host
+   * implementation once per walker, so results are identical to evaluateStrainDerivsFast.
+   * Every walker must have its own TWFFastDerivWrapper (TrialWaveFunction::getOrCreateTWFFastDerivWrapper).
+   *
+   * @param ham_list per-walker Hamiltonians
+   * @param wf_list per-walker trial wave functions
+   * @param p_list per-walker electron particle sets
+   * @param dEdStrain_list per-walker output, see evaluateStrainDerivsFast
+   * @param wf_strain_grad_list per-walker output, see evaluateStrainDerivsFast
+   */
+  static void mw_evaluateStrainDerivsFast(const RefVectorWithLeader<QMCHamiltonian>& ham_list,
+                                          const RefVectorWithLeader<TrialWaveFunction>& wf_list,
+                                          const RefVectorWithLeader<ParticleSet>& p_list,
+                                          const RefVector<Tensor<RealType, OHMMS_DIM>>& dEdStrain_list,
+                                          const RefVector<Tensor<RealType, OHMMS_DIM>>& wf_strain_grad_list);
+
   /** Evaluate the electron gradient of the local energy.
   * @param psi Trial Wave Function
   * @param P electron particle set

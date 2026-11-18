@@ -900,4 +900,96 @@ TEST_CASE("ZVZB stress matrix", "[hamiltonian]")
   LRCoulombSingleton::CoulombDerivHandler = nullptr;
 }
 
+
+/** mw_evaluateStrainDerivsFast currently falls back to the single-walker host path, so its per-walker
+ *  results must equal evaluateStrainDerivsFast called walker by walker.
+ */
+TEST_CASE("ZVZB mw_evaluateStrainDerivsFast matches single walker", "[hamiltonian]")
+{
+  using StrainTensor = Tensor<QMCTraits::RealType, OHMMS_DIM>;
+  Communicate& c(*OHMMS::Controller);
+
+  // Force a fresh Ewald breakup for this test's lattice; crucial if not first test.
+  LRCoulombSingleton::CoulombHandler      = nullptr;
+  LRCoulombSingleton::CoulombDerivHandler = nullptr;
+  LRCoulombSingleton::this_lr_type        = LRCoulombSingleton::EWALD;
+
+  Lattice lattice;
+  lattice.BoxBConds[0] = 1;
+  lattice.BoxBConds[1] = 1;
+  lattice.BoxBConds[2] = 1;
+  lattice.R = {3.37653431, 3.37653431, -0.00674632,
+               -0.00674632, 3.37653431, 3.37653431,
+               3.36304166, 0.00674632, 3.36304166};
+  lattice.LR_dim_cutoff = 30;
+  lattice.reset();
+
+  const SimulationCell simulation_cell(lattice);
+
+  // forces="yes" is required on every coulomb term for the stress derivatives.
+  const char* hamiltonian_xml =
+      "<hamiltonian name=\"h0\" pbc=\"yes\" type=\"generic\" target=\"e\"> \
+         <pairpot type=\"coulomb\" name=\"ElecElec\" source=\"e\" target=\"e\" forces=\"yes\"/> \
+         <pairpot type=\"coulomb\" name=\"IonIon\" source=\"ion0\" target=\"ion0\" forces=\"yes\"/> \
+         <pairpot name=\"PseudoPot\" type=\"pseudo\" source=\"ion0\" wavefunction=\"psi0\" format=\"xml\" algorithm=\"batched\" forces=\"yes\"> \
+           <pseudo elementType=\"C\" href=\"C.ccECP.xml\"/> \
+         </pairpot> \
+       </hamiltonian>";
+
+  auto ions_ptr = std::make_unique<ParticleSet>(simulation_cell);
+  auto elec_ptr = std::make_unique<ParticleSet>(simulation_cell);
+  create_C_pbc_strained_particlesets(*elec_ptr, *ions_ptr);
+
+  auto sys = build_stress_test_system(std::move(ions_ptr), std::move(elec_ptr), "qmc_strained.wfj.xml",
+                                      hamiltonian_xml, c);
+
+  // Second walker: same system with one electron displaced, so the two walkers give different tensors.
+  ParticleSet elec2(sys.elec());
+  elec2.R[0] += QMCTraits::PosType(0.1, -0.05, 0.07);
+  elec2.update();
+  auto psi2 = sys.psi().makeClone(elec2);
+  auto ham2 = sys.ham().makeClone(elec2, *psi2);
+  psi2->evaluateLog(elec2);
+  sys.psi().evaluateLog(sys.elec());
+
+  StrainTensor ref_dE[2], ref_wf[2], mw_dE[2], mw_wf[2];
+  sys.ham().evaluateStrainDerivsFast(sys.elec(), sys.psi(), sys.psi().getOrCreateTWFFastDerivWrapper(sys.elec()),
+                                     ref_dE[0], ref_wf[0]);
+  ham2->evaluateStrainDerivsFast(elec2, *psi2, psi2->getOrCreateTWFFastDerivWrapper(elec2), ref_dE[1], ref_wf[1]);
+
+  RefVectorWithLeader<QMCHamiltonian> ham_list(sys.ham());
+  ham_list.push_back(sys.ham());
+  ham_list.push_back(*ham2);
+  RefVectorWithLeader<TrialWaveFunction> wf_list(sys.psi());
+  wf_list.push_back(sys.psi());
+  wf_list.push_back(*psi2);
+  RefVectorWithLeader<ParticleSet> p_list(sys.elec());
+  p_list.push_back(sys.elec());
+  p_list.push_back(elec2);
+  RefVector<StrainTensor> dE_list;
+  RefVector<StrainTensor> wf_list_out;
+  for (int iw = 0; iw < 2; ++iw)
+  {
+    dE_list.push_back(mw_dE[iw]);
+    wf_list_out.push_back(mw_wf[iw]);
+  }
+
+  QMCHamiltonian::mw_evaluateStrainDerivsFast(ham_list, wf_list, p_list, dE_list, wf_list_out);
+
+  for (int iw = 0; iw < 2; ++iw)
+    for (int mu = 0; mu < OHMMS_DIM; ++mu)
+      for (int nu = 0; nu < OHMMS_DIM; ++nu)
+      {
+        CHECK(mw_dE[iw](mu, nu) == ref_dE[iw](mu, nu));
+        CHECK(mw_wf[iw](mu, nu) == ref_wf[iw](mu, nu));
+      }
+
+  // The two walkers must actually differ, otherwise the comparison above proves little.
+  CHECK(ref_wf[0](0, 0) != Approx(ref_wf[1](0, 0)));
+  CHECK(ref_dE[0](0, 0) != Approx(ref_dE[1](0, 0)));
+
+  LRCoulombSingleton::CoulombHandler      = nullptr;
+  LRCoulombSingleton::CoulombDerivHandler = nullptr;
+}
+
 } // namespace qmcplusplus

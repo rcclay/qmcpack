@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 #include <config.h>
+#include <stdexcept>
 #include "QMCHamiltonian.h"
 #include "Particle/DistanceTable.h"
 #include "QMCWaveFunctions/TrialWaveFunction.h"
@@ -1501,6 +1502,23 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
       dEdStrain(mu, nu)      = std::real(fval_dmu_O + hfdiag);
       wf_strain_grad(mu, nu) = std::real(fval_dmu);
     }
+}
+
+void QMCHamiltonian::mw_evaluateStrainDerivsFast(const RefVectorWithLeader<QMCHamiltonian>& ham_list,
+                                                 const RefVectorWithLeader<TrialWaveFunction>& wf_list,
+                                                 const RefVectorWithLeader<ParticleSet>& p_list,
+                                                 const RefVector<Tensor<RealType, OHMMS_DIM>>& dEdStrain_list,
+                                                 const RefVector<Tensor<RealType, OHMMS_DIM>>& wf_strain_grad_list)
+{
+  const size_t nw = ham_list.size();
+  if (wf_list.size() != nw || p_list.size() != nw || dEdStrain_list.size() != nw || wf_strain_grad_list.size() != nw)
+    throw std::runtime_error("QMCHamiltonian::mw_evaluateStrainDerivsFast: inconsistent walker list sizes.");
+
+  // Host single-walker fallback: no multi-walker implementation exists yet.
+  for (size_t iw = 0; iw < nw; ++iw)
+    ham_list[iw].evaluateStrainDerivsFast(p_list[iw], wf_list[iw],
+                                          wf_list[iw].getOrCreateTWFFastDerivWrapper(p_list[iw]),
+                                          dEdStrain_list[iw], wf_strain_grad_list[iw]);
 }
 
 } // namespace qmcplusplus
