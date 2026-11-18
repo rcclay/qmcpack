@@ -909,10 +909,24 @@ TEST_CASE("ZVZB mw_evaluateStrainDerivsFast matches single walker", "[hamiltonia
   using StrainTensor = Tensor<QMCTraits::RealType, OHMMS_DIM>;
   Communicate& c(*OHMMS::Controller);
 
-  // Force a fresh Ewald breakup for this test's lattice; crucial if not first test.
-  LRCoulombSingleton::CoulombHandler      = nullptr;
-  LRCoulombSingleton::CoulombDerivHandler = nullptr;
-  LRCoulombSingleton::this_lr_type        = LRCoulombSingleton::EWALD;
+  // These are process-wide statics: force a fresh Ewald breakup for this lattice and restore the previous
+  // state on exit (also when a CHECK fails) so later tests in this binary are not affected.
+  struct LRCoulombSingletonGuard
+  {
+    const LRCoulombSingleton::lr_type saved_type = LRCoulombSingleton::this_lr_type;
+    LRCoulombSingletonGuard()
+    {
+      LRCoulombSingleton::CoulombHandler      = nullptr;
+      LRCoulombSingleton::CoulombDerivHandler = nullptr;
+      LRCoulombSingleton::this_lr_type        = LRCoulombSingleton::EWALD;
+    }
+    ~LRCoulombSingletonGuard()
+    {
+      LRCoulombSingleton::CoulombHandler      = nullptr;
+      LRCoulombSingleton::CoulombDerivHandler = nullptr;
+      LRCoulombSingleton::this_lr_type        = saved_type;
+    }
+  } lr_guard;
 
   Lattice lattice;
   lattice.BoxBConds[0] = 1;
@@ -987,9 +1001,6 @@ TEST_CASE("ZVZB mw_evaluateStrainDerivsFast matches single walker", "[hamiltonia
   // The two walkers must actually differ, otherwise the comparison above proves little.
   CHECK(ref_wf[0](0, 0) != Approx(ref_wf[1](0, 0)));
   CHECK(ref_dE[0](0, 0) != Approx(ref_dE[1](0, 0)));
-
-  LRCoulombSingleton::CoulombHandler      = nullptr;
-  LRCoulombSingleton::CoulombDerivHandler = nullptr;
 }
 
 } // namespace qmcplusplus
