@@ -1391,7 +1391,12 @@ void TrialWaveFunction::acquireResource(ResourceCollection& collection,
   {
     RefVectorWithLeader<TWFFastDerivWrapper> wrapper_list(*wf_leader.twf_fastderiv_);
     for (int iw = 0; iw < wf_list.size(); ++iw)
+    {
+      if (!wf_list[iw].twf_fastderiv_)
+        throw std::runtime_error("TrialWaveFunction::acquireResource: the leader has a TWFFastDerivWrapper but walker " +
+                                 std::to_string(iw) + " does not.");
       wrapper_list.push_back(*wf_list[iw].twf_fastderiv_);
+    }
     wf_leader.twf_fastderiv_->acquireResource(collection, wrapper_list);
   }
 }
