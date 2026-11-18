@@ -57,7 +57,9 @@ QMCHamiltonian::QMCHamiltonian(const std::string& aname)
       ham_timer_(createGlobalTimer("Hamiltonian:" + aname + "::evaluate", timer_level_medium)),
       eval_vals_derivs_timer_(createGlobalTimer("Hamiltonian:" + aname + "::ValueParamDerivs", timer_level_medium)),
       eval_ion_derivs_fast_timer_(
-          createGlobalTimer("Hamiltonian:" + aname + ":::evaluateIonDerivsFast", timer_level_medium))
+          createGlobalTimer("Hamiltonian:" + aname + ":::evaluateIonDerivsFast", timer_level_medium)),
+      eval_strain_derivs_fast_timer_(
+          createGlobalTimer("Hamiltonian:" + aname + ":::evaluateStrainDerivsFast", timer_level_medium))
 #if !defined(REMOVE_TRACEMANAGER)
       ,
       streaming_position(false),
@@ -1335,7 +1337,7 @@ void QMCHamiltonian::evaluateStrainDerivsFast(ParticleSet& P,
                                               Tensor<RealType, OHMMS_DIM>& dEdStrain,
                                               Tensor<RealType, OHMMS_DIM>& wf_strain_grad)
 {
-  ScopedTimer local_timer(eval_ion_derivs_fast_timer_);
+  ScopedTimer local_timer(eval_strain_derivs_fast_timer_);
   P.update();
 
   const int ngroups = psi_wrapper_in.numGroups();

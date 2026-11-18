@@ -456,6 +456,8 @@ private:
   NewTimer& eval_vals_derivs_timer_;
   /// Total timer for H ion deriv evaluation;
   NewTimer& eval_ion_derivs_fast_timer_;
+  /// Total timer for H strain deriv evaluation
+  NewTimer& eval_strain_derivs_fast_timer_;
   /// timers for H components
   std::vector<std::reference_wrapper<NewTimer>> my_timers_;
   ///types of component operators
