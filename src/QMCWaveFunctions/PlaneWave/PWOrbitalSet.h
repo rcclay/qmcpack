@@ -90,6 +90,23 @@ public:
   /// Evaluate all orbital values, Cartesian gradients, and Laplacians.
   void evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi) override;
 
+  /// Evaluate all orbital values, Cartesian gradients, and full Hessians at P.activeR(iat).
+  void evaluateVGH(const ParticleSet& P,
+                   int iat,
+                   ValueVector& psi,
+                   GradVector& dpsi,
+                   HessVector& grad_grad_psi) override;
+
+  /** Evaluate all orbital values, gradients, Hessians, and third derivatives at P.activeR(iat).
+   * grad_grad_grad_psi[j][i](row, column) is d^3 psi_j / dx_i dx_row dx_column.
+   */
+  void evaluateVGHGH(const ParticleSet& P,
+                     int iat,
+                     ValueVector& psi,
+                     GradVector& dpsi,
+                     HessVector& grad_grad_psi,
+                     GGGVector& grad_grad_grad_psi) override;
+
   /** Evaluate VGL for particles in [first, last).
    * Output matrices require last-first rows and OrbitalSetSize columns.
    */
@@ -99,18 +116,6 @@ public:
                             ValueMatrix& logdet,
                             GradMatrix& dlogdet,
                             ValueMatrix& d2logdet) override;
-  void evaluateVGH(const ParticleSet& P,
-                   int iat,
-                   ValueVector& psi,
-                   GradVector& dpsi,
-                   HessVector& grad_grad_psi) override;
-
-  void evaluateVGHGH(const ParticleSet& P,
-                     int iat,
-                     ValueVector& psi,
-                     GradVector& dpsi,
-                     HessVector& grad_grad_psi,
-                     GGGVector& grad_grad_grad_psi) override;
 
   /** Evaluate values, Cartesian gradients, and full Hessians for [first, last).
    * Output matrices use the same particle/ orbital layout as the VGL overload.
@@ -122,7 +127,7 @@ public:
                             GradMatrix& dlogdet,
                             HessMatrix& grad_grad_logdet) override;
 
-  /// Evaluate values, Cartesian gradients, full Hessians, and third derivatives for [first, last).
+  /// Evaluate values, gradients, full Hessians, and third derivatives for [first, last).
   void evaluate_notranspose(const ParticleSet& P,
                             int first,
                             int last,

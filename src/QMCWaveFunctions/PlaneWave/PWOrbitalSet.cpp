@@ -105,26 +105,6 @@ void PWOrbitalSet::evaluateVGL(const ParticleSet& P, int iat, ValueVector& psi, 
   }
 }
 
-void PWOrbitalSet::evaluate_notranspose(const ParticleSet& P,
-                                        int first,
-                                        int last,
-                                        ValueMatrix& logdet,
-                                        GradMatrix& dlogdet,
-                                        ValueMatrix& d2logdet)
-{
-  for (int iat = first, i = 0; iat < last; iat++, i++)
-  {
-    myBasisSet->evaluateAll(P, iat);
-    MatrixOperators::product(*C, myBasisSet->Z, Temp);
-    const ValueType* restrict tptr = Temp.data();
-    for (int j = 0; j < OrbitalSetSize; j++, tptr += PW_MAXINDEX)
-    {
-      logdet(i, j)   = tptr[PW_VALUE];
-      d2logdet(i, j) = tptr[PW_LAP];
-      dlogdet(i, j)  = GradType(tptr[PW_GRADX], tptr[PW_GRADY], tptr[PW_GRADZ]);
-    }
-  }
-}
 void PWOrbitalSet::evaluateVGH(const ParticleSet& P,
                                int iat,
                                ValueVector& psi,
@@ -140,8 +120,7 @@ void PWOrbitalSet::evaluateVGH(const ParticleSet& P,
   const ValueType* restrict hessian_ptr = TempHess.data();
   for (int j = 0; j < OrbitalSetSize; j++, value_ptr += PW_MAXINDEX, hessian_ptr += OHMMS_DIM * OHMMS_DIM)
   {
-    psi[j] = value_ptr[PW_VALUE];
-
+    psi[j]  = value_ptr[PW_VALUE];
     dpsi[j] = GradType(value_ptr[PW_GRADX], value_ptr[PW_GRADY], value_ptr[PW_GRADZ]);
 
     for (int row = 0; row < OHMMS_DIM; ++row)
@@ -170,8 +149,7 @@ void PWOrbitalSet::evaluateVGHGH(const ParticleSet& P,
   for (int j = 0; j < OrbitalSetSize; j++, value_ptr += PW_MAXINDEX, hessian_ptr += OHMMS_DIM * OHMMS_DIM,
            gradhess_ptr += OHMMS_DIM * OHMMS_DIM * OHMMS_DIM)
   {
-    psi[j] = value_ptr[PW_VALUE];
-
+    psi[j]  = value_ptr[PW_VALUE];
     dpsi[j] = GradType(value_ptr[PW_GRADX], value_ptr[PW_GRADY], value_ptr[PW_GRADZ]);
 
     for (int row = 0; row < OHMMS_DIM; ++row)
@@ -182,6 +160,27 @@ void PWOrbitalSet::evaluateVGHGH(const ParticleSet& P,
       for (int row = 0; row < OHMMS_DIM; ++row)
         for (int column = 0; column < OHMMS_DIM; ++column)
           grad_grad_grad_psi[j][i](row, column) = gradhess_ptr[(i * OHMMS_DIM + row) * OHMMS_DIM + column];
+  }
+}
+
+void PWOrbitalSet::evaluate_notranspose(const ParticleSet& P,
+                                        int first,
+                                        int last,
+                                        ValueMatrix& logdet,
+                                        GradMatrix& dlogdet,
+                                        ValueMatrix& d2logdet)
+{
+  for (int iat = first, i = 0; iat < last; iat++, i++)
+  {
+    myBasisSet->evaluateAll(P, iat);
+    MatrixOperators::product(*C, myBasisSet->Z, Temp);
+    const ValueType* restrict tptr = Temp.data();
+    for (int j = 0; j < OrbitalSetSize; j++, tptr += PW_MAXINDEX)
+    {
+      logdet(i, j)   = tptr[PW_VALUE];
+      d2logdet(i, j) = tptr[PW_LAP];
+      dlogdet(i, j)  = GradType(tptr[PW_GRADX], tptr[PW_GRADY], tptr[PW_GRADZ]);
+    }
   }
 }
 
