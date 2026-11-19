@@ -727,8 +727,10 @@ void CoulombPBCAB::evaluateStressDerivs(ParticleSet& P,
   (void)psi;
   pulay_term = ValueType(0.0);
 
+  // The derivative handler is only built in initBreakup when forces are requested.
+  // Stress needs it too, so build it on demand.
   if (!dAB)
-    throw std::runtime_error("CoulombPBCAB::evaluateStressDerivs requires dAB to be initialized.");
+    dAB = LRCoulombSingleton::getDerivHandler(P);
 
   SymTensor<RealType, OHMMS_DIM> stress_ab = 0.0;
 

@@ -24,6 +24,7 @@
 #include "LongRange/EwaldHandler3D.h"
 #include "LongRange/EwaldHandler2D.h"
 #include <numeric>
+#include <mutex>
 namespace qmcplusplus
 {
 //initialization of the static data
@@ -103,6 +104,10 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getHandle
 std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getDerivHandler(ParticleSet& ref)
 {
   //APP_ABORT("SR Coulomb Basis Handler has cloning issues.  Stress also has some kinks");
+  // Operators may request this lazily from concurrent crowd threads (e.g. stress evaluation),
+  // so serialize creation of and cloning from the shared handler.
+  static std::mutex deriv_handler_mutex;
+  std::lock_guard<std::mutex> lock(deriv_handler_mutex);
   if (CoulombDerivHandler == 0)
   {
     if (this_lr_type == EWALD)
@@ -128,7 +133,6 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getDerivH
   }
   else
   {
-    app_log() << "  Clone CoulombDerivHandler. " << std::endl;
     return std::unique_ptr<LRHandlerType>(CoulombDerivHandler->makeClone(ref));
   }
 }

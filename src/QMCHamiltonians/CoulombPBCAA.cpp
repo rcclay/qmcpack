@@ -353,8 +353,10 @@ SymTensor<CoulombPBCAA::RealType, OHMMS_DIM> CoulombPBCAA::evaluateStressTensor(
 {
   SymTensor<RealType, OHMMS_DIM> stress_aa = 0.0;
 
+  // The derivative handler is only built in initBreakup when forces are requested.
+  // Stress needs it too, so build it on demand.
   if (!dAA)
-    throw std::runtime_error("CoulombPBCAA::evaluateStressTensor requires dAA to be initialized.");
+    dAA = LRCoulombSingleton::getDerivHandler(P);
 
   // --- Short-range AA contribution ---
   {

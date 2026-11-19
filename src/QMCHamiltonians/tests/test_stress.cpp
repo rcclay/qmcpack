@@ -166,7 +166,8 @@ TEST_CASE("Coulomb stress derivatives vs StressPBC reference", "[hamiltonian]")
 
   // New operator-level implementations
   CoulombPBCAA caa_elec(elec, true, true, false);
-  CoulombPBCAB cab(ions, elec,true);
+  // computeForces=false mirrors production runs without forces; dAB must be built lazily for stress
+  CoulombPBCAB cab(ions, elec, false);
 
   for (int mu = 0; mu < OHMMS_DIM; ++mu)
     for (int nu = 0; nu < OHMMS_DIM; ++nu)
