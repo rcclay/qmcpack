@@ -941,8 +941,11 @@ void TWFFastDerivWrapper::buildIntermediates(const std::vector<ValueMatrix>& Min
     // n: all orbs (o+v)
 
     // Minv_Mv = Minv[o,e].M[e,v]
-    BLAS::gemm('n', 'n', nvirt, ptclnum, ptclnum, 1.0, M[id].data() + ptclnum, M[id].cols(), Minv[id].data(),
-               Minv[id].cols(), 0.0, Minv_Mv[id].data(), Minv_Mv[id].cols());
+    // Skip when there are no virtual orbitals: an empty product has LDC=0, which is an
+    // illegal GEMM argument (LDC >= max(1,M)) that MKL reports even though other BLAS tolerate it.
+    if (nvirt > 0)
+      BLAS::gemm('n', 'n', nvirt, ptclnum, ptclnum, 1.0, M[id].data() + ptclnum, M[id].cols(), Minv[id].data(),
+                 Minv[id].cols(), 0.0, Minv_Mv[id].data(), Minv_Mv[id].cols());
 
     // Minv_B = Minv[o,e].B[e,n]
     BLAS::gemm('n', 'n', norb, ptclnum, ptclnum, 1.0, B[id].data(), B[id].cols(), Minv[id].data(), Minv[id].cols(), 0.0,
